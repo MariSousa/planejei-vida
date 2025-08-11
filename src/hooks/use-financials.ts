@@ -78,7 +78,7 @@ export const useFinancials = () => {
 
       const unsubscribes = collections.map(col => {
         let q;
-        if (['income', 'expenses', 'advices'].includes(col)) {
+        if (['income', 'expenses'].includes(col)) {
           q = getMonthlyQuery(col);
         } else if (col === 'debts') {
           q = query(collection(db, `users/${user.uid}/${col}`), orderBy('dueDate', 'asc'));
