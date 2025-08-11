@@ -45,7 +45,7 @@ export interface Advice {
 }
 
 export interface Contribution {
-    id: string;
+    id:string;
     amount: number;
     type: 'add' | 'withdraw';
     date: string;
@@ -61,5 +61,14 @@ export interface CustomCategory {
 export interface Favorite {
     id: string;
     name: string;
+    date: string;
+}
+
+export interface Investment {
+    id: string;
+    type: string;
+    institution: string;
+    amount: number;
+    yieldRate: number;
     date: string;
 }

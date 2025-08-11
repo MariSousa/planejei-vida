@@ -1,0 +1,203 @@
+
+'use client';
+
+import { useFinancials } from '@/hooks/use-financials';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { PiggyBank, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PrivateRoute } from '@/components/private-route';
+
+const formSchema = z.object({
+  type: z.string().min(2, { message: 'O tipo deve ter pelo menos 2 caracteres.' }),
+  institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
+  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
+});
+
+function InvestmentsPageContent() {
+  const { investments, addInvestment, removeInvestment, isClient } = useFinancials();
+  const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      type: '',
+      institution: '',
+      amount: undefined,
+      yieldRate: undefined,
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    addInvestment(values);
+    toast({
+      title: 'Investimento Adicionado!',
+      description: `Seu investimento em ${values.type} foi adicionado.`,
+      className: 'border-accent'
+    });
+    form.reset();
+  }
+  
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  };
+
+  const totalInvested = investments.reduce((acc, item) => acc + item.amount, 0);
+
+  if (!isClient) {
+    return (
+      <div className="grid gap-8 md:grid-cols-2">
+        <Skeleton className="h-[480px]" />
+        <Skeleton className="h-[500px]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Adicionar Novo Investimento</CardTitle>
+            <CardDescription>Cadastre seus ativos para acompanhar seus rendimentos.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Investimento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: CDB, Tesouro Selic" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="institution"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instituição Financeira</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Meu Banco, Corretora X" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor Investido (R$)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="yieldRate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rendimento (% do CDI)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit">Adicionar Investimento</Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Meus Investimentos</CardTitle>
+            <CardDescription>Sua carteira de investimentos cadastrada.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Instituição</TableHead>
+                    <TableHead>Rendimento</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {investments.length > 0 ? (
+                    investments.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.type}</TableCell>
+                        <TableCell>{item.institution}</TableCell>
+                        <TableCell>{item.yieldRate}% CDI</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => removeInvestment(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remover</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        <PiggyBank className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        Nenhum investimento registrado.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={3} className="font-bold">Total Investido</TableCell>
+                        <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totalInvested)}</TableCell>
+                    </TableRow>
+                </TableFooter>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default function InvestmentsPage() {
+    return (
+        <PrivateRoute>
+            <InvestmentsPageContent />
+        </PrivateRoute>
+    )
+}
