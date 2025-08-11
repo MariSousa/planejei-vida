@@ -153,6 +153,7 @@ export const useFinancials = () => {
   const removeDebt = useCallback((id: string) => deleteDocById('debts', id), [user]);
   const removeGoal = useCallback((id: string) => deleteDocById('goals', id), [user]);
   const removeAdvice = useCallback((id: string) => deleteDocById('advices', id), [user]);
+  const removeCategory = useCallback((id: string) => deleteDocById('categories', id), [user]);
 
   const updateGoalContribution = useCallback(async (goalId: string, amount: number, type: 'add' | 'withdraw') => {
     if (!user) return;
@@ -254,6 +255,7 @@ export const useFinancials = () => {
     removeDebt,
     removeGoal,
     removeAdvice,
+    removeCategory,
     updateGoalContribution,
     totals,
     expensesByCategory,

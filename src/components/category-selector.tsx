@@ -5,8 +5,8 @@ import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Search, ChevronRight, Heart, Star } from 'lucide-react';
-import { expenseCategoryGroups } from '@/lib/categories';
+import { Search, ChevronRight, Heart, Star, Trash2 } from 'lucide-react';
+import { expenseCategoryGroups, getIconForCategory } from '@/lib/categories';
 import { type CustomCategory } from '@/types';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,7 @@ interface CategorySelectorProps {
   favoriteCategories: string[];
   onSelect: (category: string) => void;
   onFavoriteToggle: (category: string, isFavorite: boolean) => void;
+  onRemoveCategory: (categoryId: string) => void;
   selectedValue?: string;
 }
 
@@ -23,7 +24,8 @@ export function CategorySelector({
     customCategories, 
     favoriteCategories, 
     onSelect, 
-    onFavoriteToggle, 
+    onFavoriteToggle,
+    onRemoveCategory,
     selectedValue 
 }: CategorySelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,9 +35,14 @@ export function CategorySelector({
     const customGroup = {
       label: 'Personalizadas',
       icon: Star,
-      options: customCategories.map(c => c.name),
+      options: customCategories.map(c => ({ id: c.id, name: c.name})),
     };
-    return customCategories.length > 0 ? [...expenseCategoryGroups, customGroup] : expenseCategoryGroups;
+    const defaultGroups = expenseCategoryGroups.map(group => ({
+        ...group,
+        options: group.options.map(opt => ({ id: opt, name: opt }))
+    }));
+
+    return customCategories.length > 0 ? [...defaultGroups, customGroup] : defaultGroups;
   }, [customCategories]);
 
   const filteredCategories = useMemo(() => {
@@ -43,7 +50,7 @@ export function CategorySelector({
     
     return allCategories.map(group => {
       const filteredOptions = group.options.filter(option => 
-        option.toLowerCase().includes(searchTerm.toLowerCase())
+        option.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       if (filteredOptions.length > 0) {
         return { ...group, options: filteredOptions };
@@ -70,29 +77,33 @@ export function CategorySelector({
           {favoriteCategories.length > 0 ? (
             <ScrollArea className="h-[280px]">
               <div className="pr-2 space-y-1">
-                {favoriteCategories.map(option => (
-                  <div key={option} className="flex items-center">
-                    <Button
-                      variant={selectedValue === option ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => onSelect(option)}
-                    >
-                      {option}
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="ml-2"
-                      onClick={() => onFavoriteToggle(option, true)}
-                    >
-                      <Heart className="h-4 w-4 text-red-500" fill="currentColor" />
-                    </Button>
-                  </div>
-                ))}
+                {favoriteCategories.map(option => {
+                    const Icon = getIconForCategory(option);
+                    return (
+                        <div key={option} className="flex items-center">
+                            <Button
+                            variant={selectedValue === option ? 'default' : 'ghost'}
+                            className="w-full justify-start gap-2"
+                            onClick={() => onSelect(option)}
+                            >
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                {option}
+                            </Button>
+                            <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="ml-2"
+                            onClick={() => onFavoriteToggle(option, true)}
+                            >
+                            <Heart className="h-4 w-4 text-red-500" fill="currentColor" />
+                            </Button>
+                        </div>
+                    )
+                })}
               </div>
             </ScrollArea>
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground">
               <p className="text-center">Você ainda não tem categorias favoritas.<br/>Clique no coração ao lado de uma categoria para adicioná-la.</p>
             </div>
           )}
@@ -145,24 +156,42 @@ export function CategorySelector({
                         <>
                             <h3 className="font-semibold mb-2 p-2">{activeGroup.label}</h3>
                             {activeGroup.options.map(option => {
-                                const isFavorite = favoriteCategories.includes(option);
+                                const isFavorite = favoriteCategories.includes(option.name);
+                                const isCustom = activeGroup.label === 'Personalizadas';
+                                const Icon = getIconForCategory(option.name);
                                 return (
-                                    <div key={option} className="flex items-center">
+                                    <div key={option.id} className="flex items-center group/item">
                                         <Button
-                                            variant={selectedValue === option ? 'default' : 'ghost'}
-                                            className="w-full justify-start"
-                                            onClick={() => onSelect(option)}
+                                            variant={selectedValue === option.name ? 'default' : 'ghost'}
+                                            className="w-full justify-start gap-2"
+                                            onClick={() => onSelect(option.name)}
                                         >
-                                            {option}
+                                            <Icon className="h-4 w-4 text-muted-foreground" />
+                                            {option.name}
                                         </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="ml-2"
-                                            onClick={() => onFavoriteToggle(option, isFavorite)}
-                                        >
-                                            <Heart className={cn("h-4 w-4", isFavorite && "text-red-500 fill-current")} />
-                                        </Button>
+                                        
+                                        {isCustom ? (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="ml-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onRemoveCategory(option.id)
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        ) : (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="ml-2"
+                                                onClick={() => onFavoriteToggle(option.name, isFavorite)}
+                                            >
+                                                <Heart className={cn("h-4 w-4", isFavorite && "text-red-500 fill-current")} />
+                                            </Button>
+                                        )}
                                     </div>
                                 )
                             })}

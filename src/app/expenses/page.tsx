@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +33,7 @@ const formSchema = z.object({
 });
 
 function ExpensesPageContent() {
-  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite } = useFinancials();
+  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals } = useFinancials();
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -75,6 +75,21 @@ function ExpensesPageContent() {
       });
     }
   };
+
+  const handleRemoveCategory = async (categoryId: string) => {
+      try {
+          await removeCategory(categoryId);
+          toast({
+              description: "Categoria personalizada removida."
+          });
+      } catch (error) {
+           toast({
+                variant: 'destructive',
+                title: 'Erro',
+                description: 'Não foi possível remover a categoria.',
+            });
+      }
+  }
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -113,6 +128,7 @@ function ExpensesPageContent() {
                             favoriteCategories={favoriteCategories}
                             onSelect={(category) => form.setValue('category', category, { shouldValidate: true })}
                             onFavoriteToggle={handleFavoriteToggle}
+                            onRemoveCategory={handleRemoveCategory}
                             selectedValue={field.value}
                         />
                      </FormControl>
@@ -179,6 +195,12 @@ function ExpensesPageContent() {
                   </TableRow>
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                    <TableCell colSpan={1} className="font-bold">Total</TableCell>
+                    <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalExpenses)}</TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
         </CardContent>
