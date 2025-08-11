@@ -4,8 +4,8 @@ import {
     Landmark, Dog, Tag, Car, Train, Bus, Fuel, ParkingCircle, Wrench,
     Shield, Phone, Wifi, Tv, Droplets, Flame, Lightbulb, Dumbbell, Book,
     User, Banknote, Receipt, Gift, HandHeart, Ticket, Plane, Briefcase,
-    Stethoscope, Pill, Mic, GitFork, Sprout, Cat, Bone, PawPrint,
-    Speaker, Drama, TreePalm, Pizza, Soup, Beer, Coffee, ShoppingBasket,
+    Stethoscope, Pill, Mic, GitMerge, MoreHorizontal, Cat, Bone, PawPrint,
+    Speaker, Smile, UtensilsCrossed, Pizza, Beer, Coffee, ShoppingBasket,
     Building2, PersonStanding, Clapperboard, Music, BaggageClaim, CircleDollarSign,
     Brush, Pencil, Percent, Package, Scissors, SprayCan, Trash2, Pickaxe
 } from 'lucide-react';
@@ -137,7 +137,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
     // Despesas Domésticas
     'Utensílios': Utensils,
     'Eletrodomésticos': Speaker,
-    'Móveis/Decoração': Building2, // Changed from Sofa
+    'Móveis/Decoração': Building2,
     'Produtos de Limpeza': SprayCan,
 
     // Animais de Estimação
