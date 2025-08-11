@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -18,203 +17,198 @@ interface ReportsDownloaderProps {
 
 type ReportType = 'income' | 'expenses' | 'monthlyPlanItems' | 'goals' | 'advices' | 'investments' | 'debts';
 
-export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, advices, investments, debts }: ReportsDownloaderProps) {
+const getReportTitle = (type: ReportType): string => {
+  const titles = {
+      income: 'Relatório de Ganhos',
+      expenses: 'Relatório de Gastos',
+      monthlyPlanItems: 'Relatório de Planejamento Mensal',
+      goals: 'Relatório de Sonhos',
+      advices: 'Relatório de Conselhos do FinMentor',
+      investments: 'Relatório de Investimentos',
+      debts: 'Relatório de Compromissos',
+  };
+  return titles[type];
+}
 
-  const dataMap = { income, expenses, monthlyPlanItems, goals, advices, investments, debts };
+const getHeaders = (data: any[], type: ReportType): string[] => {
+  if (!data || data.length === 0) return [];
 
-  const getReportTitle = (type: ReportType): string => {
-    const titles = {
-        income: 'Relatório de Ganhos',
-        expenses: 'Relatório de Gastos',
-        monthlyPlanItems: 'Relatório de Planejamento Mensal',
-        goals: 'Relatório de Sonhos',
-        advices: 'Relatório de Conselhos do FinMentor',
-        investments: 'Relatório de Investimentos',
-        debts: 'Relatório de Compromissos',
-    };
-    return titles[type];
+  const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
+  
+  const headerTranslations: Record<string, string> = {
+      name: 'Nome',
+      monthlyPaymentGoal: 'Parcela Mensal',
+      originalAmount: 'Valor Original',
+      remainingAmount: 'Valor Restante',
+      interestRate: 'Taxa de Juros (% a.m.)',
+      status: 'Status',
+      startDate: 'Data de Início',
+      dueDate: 'Vencimento',
+      totalInstallments: 'Total de Parcelas',
+      remainingInstallments: 'Parcelas Restantes',
+      source: 'Fonte',
+      amount: 'Valor',
+      category: 'Categoria',
+      institution: 'Instituição',
+      yieldRate: 'Taxa Rendimento (% CDI)',
+      type: 'Tipo',
+      priority: 'Prioridade',
+      goalName: 'Nome da Meta',
+      adviceText: 'Conselho',
+      targetAmount: 'Valor Alvo',
+      currentAmount: 'Valor Atual',
+  };
+
+  const debtHeaderOrder = [
+      'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
+  ];
+
+  const headers = Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
+  
+  let orderedHeaders;
+  if (type === 'debts') {
+      orderedHeaders = debtHeaderOrder.filter(key => headers.includes(key));
+  } else {
+      orderedHeaders = headers;
   }
+  
+  return orderedHeaders.map(key => headerTranslations[key] || key);
+};
 
-  const getHeaders = (type: ReportType): string[] => {
-    const data = dataMap[type];
+const getBodyRows = (data: any[], type: ReportType): string[][] => {
     if (!data || data.length === 0) return [];
-
+    
     const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
     
-    // Mapeamento de nomes de campos para cabeçalhos em português
-    const headerTranslations: Record<string, string> = {
-        name: 'Nome',
-        monthlyPaymentGoal: 'Parcela Mensal',
-        originalAmount: 'Valor Original',
-        remainingAmount: 'Valor Restante',
-        interestRate: 'Taxa de Juros (% a.m.)',
-        status: 'Status',
-        startDate: 'Data de Início',
-        dueDate: 'Vencimento',
-        totalInstallments: 'Total de Parcelas',
-        remainingInstallments: 'Parcelas Restantes',
-        source: 'Fonte',
-        amount: 'Valor',
-        category: 'Categoria',
-        institution: 'Instituição',
-        yieldRate: 'Taxa Rendimento (% CDI)',
-        type: 'Tipo',
-        priority: 'Prioridade',
-        goalName: 'Nome da Meta',
-        adviceText: 'Conselho',
-        targetAmount: 'Valor Alvo',
-        currentAmount: 'Valor Atual',
-    };
-
     const debtHeaderOrder = [
-        'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
+      'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
     ];
-
-    const headers = Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
     
-    let orderedHeaders;
-    if (type === 'debts') {
-        orderedHeaders = debtHeaderOrder.filter(key => headers.includes(key));
-    } else {
-        orderedHeaders = headers;
-    }
-    
-    return orderedHeaders.map(key => headerTranslations[key] || key);
-  };
-  
-  const getBodyRows = (type: ReportType): string[][] => {
-      const data = dataMap[type];
-      if (!data || data.length === 0) return [];
-      
-      const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
-      
-      const debtHeaderOrder = [
-        'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
-      ];
-      
-      const headers = Object.keys(data[0]).filter(h => !ignoredFields.includes(h));
+    const headers = Object.keys(data[0]).filter(h => !ignoredFields.includes(h));
 
-      const orderedHeaders = type === 'debts' ? debtHeaderOrder.filter(key => headers.includes(key)) : headers;
+    const orderedHeaders = type === 'debts' ? debtHeaderOrder.filter(key => headers.includes(key)) : headers;
 
-      return data.map(item =>
-          orderedHeaders.map(header => {
-              const value = (item as any)[header];
-              if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount', 'yieldRate', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount'].includes(header)) {
-                  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-              }
-              if (['date', 'dueDate', 'lastPaymentDate', 'startDate'].includes(header) && value) {
-                  try {
-                      return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                  } catch (e) {
-                      return String(value);
-                  }
-              }
-               if (header === 'adviceText') {
-                // First, replace all newline characters with <br> for HTML display.
-                // Then, remove any remaining markdown-like asterisks.
-                const htmlText = String(value).replace(/\n/g, '<br/>');
-                return htmlText.replace(/\*\*/g, '');
-              }
-              return String(value ?? '-');
-          })
-      );
-  };
+    return data.map(item =>
+        orderedHeaders.map(header => {
+            const value = (item as any)[header];
+            if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount', 'yieldRate', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount'].includes(header)) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            }
+            if (['date', 'dueDate', 'lastPaymentDate', 'startDate'].includes(header) && value) {
+                try {
+                    return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                } catch (e) {
+                    return String(value);
+                }
+            }
+             if (header === 'adviceText') {
+                const cleanedText = String(value).replace(/\*\*/g, '');
+                return cleanedText.replace(/\n/g, '<br/>');
+            }
+            return String(value ?? '-');
+        })
+    );
+};
 
-  const generateReportHtml = (type: ReportType) => {
-    const title = getReportTitle(type);
-    const headers = getHeaders(type);
-    const rows = getBodyRows(type);
+export const generateReportHtml = (type: ReportType, data: any[]) => {
+  const title = getReportTitle(type);
+  const headers = getHeaders(data, type);
+  const rows = getBodyRows(data, type);
 
-    const styles = `
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            background-color: #f8f9fa; 
-            margin: 0;
-            padding: 20px; 
-        }
-        .container { 
-            max-width: 90%; 
-            margin: auto; 
-            background: #fff; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-            padding: 2rem; 
-            overflow-x: auto;
-        }
-        h1 { 
-            font-size: 1.75rem;
-            color: #212529; 
-            border-bottom: 2px solid #dee2e6; 
-            padding-bottom: 0.5rem; 
-            margin-bottom: 1.5rem; 
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-        }
-        th, td { 
-            border: 1px solid #dee2e6; 
-            padding: 12px 15px; 
-            text-align: left; 
-            vertical-align: top;
-            word-wrap: break-word;
-        }
-        th { 
-            background-color: #f1f3f5; 
-            font-weight: 600; 
-            text-transform: capitalize; 
-        }
-        tr:nth-child(even) { 
-            background-color: #f8f9fa; 
-        }
-        tr:hover { 
-            background-color: #e9ecef; 
-        }
-        .no-data { 
-            text-align: center; 
-            padding: 20px; 
-            color: #6c757d; 
-            font-style: italic;
-        }
-    `;
+  const styles = `
+      body { 
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+          line-height: 1.6; 
+          color: #333; 
+          background-color: #f8f9fa; 
+          margin: 0;
+          padding: 20px; 
+      }
+      .container { 
+          max-width: 90%; 
+          margin: auto; 
+          background: #fff; 
+          border-radius: 8px; 
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+          padding: 2rem; 
+          overflow-x: auto;
+      }
+      h1 { 
+          font-size: 1.75rem;
+          color: #212529; 
+          border-bottom: 2px solid #dee2e6; 
+          padding-bottom: 0.5rem; 
+          margin-bottom: 1.5rem; 
+      }
+      table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-top: 20px; 
+      }
+      th, td { 
+          border: 1px solid #dee2e6; 
+          padding: 12px 15px; 
+          text-align: left; 
+          vertical-align: top;
+          word-break: break-word;
+      }
+      th { 
+          background-color: #f1f3f5; 
+          font-weight: 600; 
+          text-transform: capitalize; 
+      }
+      tr:nth-child(even) { 
+          background-color: #f8f9fa; 
+      }
+      tr:hover { 
+          background-color: #e9ecef; 
+      }
+      .no-data { 
+          text-align: center; 
+          padding: 20px; 
+          color: #6c757d; 
+          font-style: italic;
+      }
+  `;
 
-    const tableHtml = rows.length > 0 ? `
-        <table>
-            <thead>
-                <tr>
-                    ${headers.map(h => `<th>${h}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody>
-                ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
-            </tbody>
-        </table>
-    ` : `<p class="no-data">Nenhum dado disponível para este relatório.</p>`;
+  const tableHtml = rows.length > 0 ? `
+      <table>
+          <thead>
+              <tr>
+                  ${headers.map(h => `<th>${h}</th>`).join('')}
+              </tr>
+          </thead>
+          <tbody>
+              ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+      </table>
+  ` : `<p class="no-data">Nenhum dado disponível para este relatório.</p>`;
 
-    return `
-        <!DOCTYPE html>
-        <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${title}</title>
-            <style>${styles}</style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>${title}</h1>
-                ${tableHtml}
-            </div>
-        </body>
-        </html>
-    `;
-  };
+  return `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title}</title>
+          <style>${styles}</style>
+      </head>
+      <body>
+          <div class="container">
+              <h1>${title}</h1>
+              ${tableHtml}
+          </div>
+      </body>
+      </html>
+  `;
+};
+
+export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, advices, investments, debts }: ReportsDownloaderProps) {
+  const dataMap = { income, expenses, monthlyPlanItems, goals, advices, investments, debts };
 
   const handleViewReport = (type: ReportType) => {
-    const htmlContent = generateReportHtml(type);
+    const data = dataMap[type];
+    const htmlContent = generateReportHtml(type, data);
     const reportWindow = window.open("", "_blank");
     if (reportWindow) {
         reportWindow.document.write(htmlContent);

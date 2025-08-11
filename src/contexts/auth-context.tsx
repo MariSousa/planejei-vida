@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -10,12 +9,12 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   updatePassword,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
+  deleteUser,
   type User 
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 interface UserProfile {
     displayName?: string;
@@ -31,6 +30,7 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   updateUserPassword: (password: string) => Promise<void>;
+  deleteUserAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -112,6 +112,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const deleteUserAccount = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        throw new Error("Nenhum usuário para deletar.");
+    }
+    
+    try {
+        const functions = getFunctions();
+        const deleteAllUserData = httpsCallable(functions, 'deleteAllUserData');
+        await deleteAllUserData(); // Call the cloud function to delete firestore data
+
+        await deleteUser(currentUser); // Delete the user from Auth
+        
+        router.push('/account-deleted');
+    } catch (error: any) {
+        console.error("Erro ao deletar conta:", error);
+        if (error.code === 'auth/requires-recent-login') {
+            throw new Error('Esta é uma operação sensível. Por favor, faça login novamente antes de deletar sua conta.');
+        }
+        throw new Error('Não foi possível deletar a conta. Tente novamente mais tarde.');
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -121,6 +144,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     sendPasswordReset,
     updateUserProfile,
     updateUserPassword,
+    deleteUserAccount,
   };
 
   return (

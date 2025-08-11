@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -16,13 +15,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import { AvatarSelector } from '@/components/profile/avatar-selector';
 import { UserAvatar } from '@/components/user-avatar';
+import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog';
+import { useFinancials } from '@/hooks/use-financials';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
@@ -38,6 +39,7 @@ const passwordFormSchema = z.object({
 
 function ProfilePageContent() {
   const { user, updateUserProfile, updateUserPassword } = useAuth();
+  const financials = useFinancials();
   const { toast } = useToast();
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
@@ -210,6 +212,25 @@ function ProfilePageContent() {
                 </CardContent>
             </Card>
         </div>
+        <Card className="border-destructive">
+            <CardHeader>
+                <div className="flex items-center gap-4">
+                     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <ShieldAlert className="w-6 h-6 text-destructive" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
+                        <CardDescription>
+                            Ações nesta área são permanentes e não podem ser desfeitas.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardFooter className="bg-destructive/5 border-t border-destructive/20 p-4 flex justify-between items-center">
+                <p className="text-sm text-destructive/80">Excluir sua conta e todos os dados associados.</p>
+                <DeleteAccountDialog financials={financials} />
+            </CardFooter>
+        </Card>
     </div>
   );
 }
