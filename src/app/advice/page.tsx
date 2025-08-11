@@ -89,8 +89,8 @@ function AdvicePageContent() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
-  
+  }
+
   if (!isClient) {
     return (
         <div className="flex flex-col gap-8 max-w-4xl mx-auto">
