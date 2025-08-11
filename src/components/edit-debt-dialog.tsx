@@ -35,9 +35,6 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
   remainingAmount: z.coerce.number().min(0, { message: 'O saldo devedor deve ser 0 ou mais.' }),
-  startDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
-    message: 'Formato de data inválido. Use DD/MM/AAAA.',
-  }),
   dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
@@ -64,7 +61,6 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         name: debt.name,
         originalAmount: debt.originalAmount,
         remainingAmount: debt.remainingAmount,
-        startDate: format(new Date(debt.startDate), 'dd/MM/yyyy'),
         dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
         monthlyPaymentGoal: debt.monthlyPaymentGoal,
         interestRate: debt.interestRate ?? 0,
@@ -79,7 +75,6 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
             name: debt.name,
             originalAmount: debt.originalAmount,
             remainingAmount: debt.remainingAmount,
-            startDate: format(new Date(debt.startDate), 'dd/MM/yyyy'),
             dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
             monthlyPaymentGoal: debt.monthlyPaymentGoal,
             interestRate: debt.interestRate ?? 0,
@@ -93,11 +88,9 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        const parsedStartDate = parse(values.startDate, 'dd/MM/yyyy', new Date());
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
         const updatedData = {
             ...values,
-            startDate: parsedStartDate.toISOString(),
             dueDate: parsedDueDate.toISOString(),
         };
         await updateDebt(debt.id, updatedData);
@@ -118,7 +111,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
     }
   }
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'dueDate' | 'startDate') => {
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 8) value = value.slice(0, 8);
     if (value.length > 4) {
@@ -126,7 +119,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
     } else if (value.length > 2) {
       value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
-    form.setValue(fieldName, value);
+    form.setValue('dueDate', value);
   };
 
 
@@ -186,19 +179,6 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 </FormItem>
                 )}
             />
-             <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Data de Início</FormLabel>
-                        <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} onChange={(e) => handleDateChange(e, 'startDate')} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-                />
             <FormField
                 control={form.control}
                 name="dueDate"
@@ -206,7 +186,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                      <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
                         <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} onChange={(e) => handleDateChange(e, 'dueDate')} />
+                           <Input placeholder="DD/MM/AAAA" {...field} onChange={handleDateChange} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

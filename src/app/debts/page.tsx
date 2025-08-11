@@ -44,14 +44,13 @@ function DebtsPageContent() {
   };
 
   const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
-    let baseDate = new Date(); // Fallback to current date
+    let baseDate: Date;
     const lastPayment = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : null;
-    const debtStartDate = debt.startDate ? new Date(debt.startDate) : null;
 
     if (lastPayment && isValid(lastPayment)) {
         baseDate = lastPayment;
-    } else if (debtStartDate && isValid(debtStartDate)) {
-        baseDate = debtStartDate;
+    } else {
+        baseDate = new Date(); // Fallback to current date
     }
     
     const installmentDate = addMonths(baseDate, installmentIndex + 1);

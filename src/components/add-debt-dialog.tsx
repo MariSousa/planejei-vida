@@ -34,15 +34,12 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
   paidAmount: z.coerce.number().min(0, { message: 'O valor pago não pode ser negativo.' }),
-  startDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
-    message: 'Data de início é obrigatória. Use DD/MM/AAAA.',
-  }),
   dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  totalInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser pelo menos 1.' }),
+  totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
   remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
 });
 
@@ -58,7 +55,6 @@ export function AddDebtDialog() {
       name: '',
       originalAmount: undefined,
       paidAmount: 0,
-      startDate: undefined,
       dueDate: undefined,
       monthlyPaymentGoal: undefined,
       interestRate: 0,
@@ -76,20 +72,12 @@ export function AddDebtDialog() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        const parsedStartDate = parse(values.startDate, 'dd/MM/yyyy', new Date());
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
-
-        if (isNaN(parsedStartDate.getTime())) {
-            form.setError('startDate', { type: 'manual', message: 'Data de início inválida.' });
-            setIsLoading(false);
-            return;
-        }
 
         const newDebt = {
             name: values.name,
             originalAmount: values.originalAmount,
             remainingAmount: values.originalAmount - values.paidAmount,
-            startDate: parsedStartDate.toISOString(),
             dueDate: parsedDueDate.toISOString(),
             monthlyPaymentGoal: values.monthlyPaymentGoal,
             interestRate: values.interestRate,
@@ -117,7 +105,7 @@ export function AddDebtDialog() {
     }
   }
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'dueDate' | 'startDate') => {
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, '');
     if (value.length > 8) value = value.slice(0, 8);
     if (value.length > 4) {
@@ -125,7 +113,7 @@ export function AddDebtDialog() {
     } else if (value.length > 2) {
       value = `${value.slice(0, 2)}/${value.slice(2)}`;
     }
-    form.setValue(fieldName, value);
+    form.setValue('dueDate', value);
   };
 
   return (
@@ -186,25 +174,12 @@ export function AddDebtDialog() {
             />
             <FormField
                 control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Data de Início</FormLabel>
-                        <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} onChange={(e) => handleDateChange(e, 'startDate')} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}
-                />
-            <FormField
-                control={form.control}
                 name="dueDate"
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
                         <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} onChange={(e) => handleDateChange(e, 'dueDate')} />
+                           <Input placeholder="DD/MM/AAAA" {...field} onChange={handleDateChange} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
