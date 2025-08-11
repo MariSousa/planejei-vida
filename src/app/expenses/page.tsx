@@ -25,6 +25,7 @@ import { PrivateRoute } from '@/components/private-route';
 import { expenseCategoryGroups } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreateCategoryDialog } from '@/components/create-category-dialog';
 
 
 const formSchema = z.object({
@@ -33,7 +34,7 @@ const formSchema = z.object({
 });
 
 function ExpensesPageContent() {
-  const { expenses, addExpense, removeExpense, isClient } = useFinancials();
+  const { expenses, addExpense, removeExpense, isClient, customCategories } = useFinancials();
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -81,13 +82,19 @@ function ExpensesPageContent() {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Categoria</FormLabel>
+                      <CreateCategoryDialog />
+                    </div>
                      <FormControl>
                         <Tabs defaultValue={expenseCategoryGroups[0].label} className="w-full">
                            <TabsList className="h-auto flex-wrap justify-start">
                                 {expenseCategoryGroups.map((group) => (
                                      <TabsTrigger key={group.label} value={group.label} className="text-xs">{group.label}</TabsTrigger>
                                 ))}
+                                {customCategories.length > 0 && (
+                                  <TabsTrigger value="custom" className="text-xs">Personalizadas</TabsTrigger>
+                                )}
                            </TabsList>
                            {expenseCategoryGroups.map((group) => (
                                 <TabsContent key={group.label} value={group.label}>
@@ -106,6 +113,23 @@ function ExpensesPageContent() {
                                     </div>
                                 </TabsContent>
                            ))}
+                           {customCategories.length > 0 && (
+                              <TabsContent value="custom">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                                  {customCategories.map(cat => (
+                                    <Button
+                                      key={cat.id}
+                                      type="button"
+                                      variant={field.value === cat.name ? 'default' : 'outline'}
+                                      onClick={() => form.setValue('category', cat.name)}
+                                      className="text-xs h-9"
+                                    >
+                                      {cat.name}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </TabsContent>
+                           )}
                         </Tabs>
                      </FormControl>
                     <FormMessage />

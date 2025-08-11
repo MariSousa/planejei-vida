@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { type Income, type Expense, type Debt, type Goal, type Advice, type Contribution } from '@/types';
+import { type Income, type Expense, type Debt, type Goal, type Advice, type Contribution, type CustomCategory } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where } from 'firebase/firestore';
@@ -37,6 +37,7 @@ export const useFinancials = () => {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [advices, setAdvices] = useState<Advice[]>([]);
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [isClient, setIsClient] = useState(false);
 
   const getMonthlyQuery = (col: string) => {
@@ -92,6 +93,12 @@ export const useFinancials = () => {
           const adviceData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Advice));
           setAdvices(adviceData);
       }) : () => {};
+      
+      const categoriesQuery = query(collection(db, `users/${user.uid}/categories`), orderBy('name', 'asc'));
+      const unsubscribeCategories = onSnapshot(categoriesQuery, (querySnapshot) => {
+        const categoriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CustomCategory));
+        setCustomCategories(categoriesData);
+      });
       setIsClient(true);
 
       return () => {
@@ -100,6 +107,7 @@ export const useFinancials = () => {
         unsubscribeDebts();
         unsubscribeGoals();
         unsubscribeAdvices();
+        unsubscribeCategories();
       };
     } else {
         setIncome([]);
@@ -107,6 +115,7 @@ export const useFinancials = () => {
         setDebts([]);
         setGoals([]);
         setAdvices([]);
+        setCustomCategories([]);
     }
   }, [user]);
 
@@ -128,6 +137,8 @@ export const useFinancials = () => {
   const addDebt = useCallback((newDebt: Omit<Debt, 'id' | 'date'>) => addDocWithDate('debts', newDebt), [user]);
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocWithDate('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocWithDate('advices', newAdvice), [user]);
+  const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocWithDate('categories', newCategory), [user]);
+
 
   const removeIncome = useCallback((id: string) => deleteDocById('income', id), [user]);
   const removeExpense = useCallback((id: string) => deleteDocById('expenses', id), [user]);
@@ -177,7 +188,7 @@ export const useFinancials = () => {
       .reduce((acc, e) => acc + e.amount, 0);
 
     const totalWants = expenses
-      .filter(e => wantCategories.includes(e.category))
+      .filter(e => wantCategories.includes(e.category) || customCategories.some(c => c.name === e.category))
       .reduce((acc, e) => acc + e.amount, 0);
 
     return { 
@@ -190,7 +201,7 @@ export const useFinancials = () => {
         totalNecessities,
         totalWants
     };
-  }, [income, expenses, debts, goals]);
+  }, [income, expenses, debts, goals, customCategories]);
 
   const expensesByCategory = useMemo(() => {
     return expenses.reduce((acc, expense) => {
@@ -218,11 +229,13 @@ export const useFinancials = () => {
     debts,
     goals,
     advices,
+    customCategories,
     addIncome,
     addExpense,
     addDebt,
     addGoal,
     addAdvice,
+    addCategory,
     removeIncome,
     removeExpense,
     removeDebt,

@@ -43,3 +43,10 @@ export interface Contribution {
     type: 'add' | 'withdraw';
     date: string;
 }
+
+export interface CustomCategory {
+    id: string;
+    name: string;
+    date: string;
+    // We can add isFavorite and parentId later
+}
