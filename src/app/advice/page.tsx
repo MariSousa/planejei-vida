@@ -186,7 +186,7 @@ function AdvicePageContent() {
                 const goal = goals.find(g => g.id === advice.goalId);
 
                 return (
-                    <Card key={advice.id} className={`bg-accent/20 border-accent ${progress >= 100 ? 'border-green-500' : ''}`}>
+                    <Card key={advice.id} className={\`bg-accent/20 border-accent \${progress >= 100 ? 'border-green-500' : ''}\`}>
                         <CardHeader>
                              <div className="flex justify-between items-start">
                                 <div>

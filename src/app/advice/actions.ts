@@ -2,9 +2,6 @@
 'use server';
 
 import { generateSavingsAdvice, type SavingsAdviceInput, type SavingsAdviceOutput } from '@/ai/flows/personalized-savings-advice';
-import { db } from '@/lib/firebase';
-import { addDoc, collection } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 
 // This type is slightly different from the hook one, as it includes the goal object
 // and is designed to be called from the server action.
