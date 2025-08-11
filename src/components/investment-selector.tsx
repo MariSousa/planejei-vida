@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -36,6 +35,7 @@ const investmentGroups = [
         options: ['Crowdfunding Imobiliário', 'Peer-to-peer lending', 'Arte e Colecionáveis']
     }
 ];
+
 
 interface InvestmentSelectorProps {
   onSelect: (investmentType: string) => void;
