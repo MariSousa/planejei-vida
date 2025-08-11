@@ -25,6 +25,7 @@ import { PrivateRoute } from '@/components/private-route';
 import { CreateCategoryDialog } from '@/components/create-category-dialog';
 import { CategorySelector } from '@/components/category-selector';
 import { getIconForCategory } from '@/lib/categories';
+import { PlannedItemSuggestion } from '@/components/planned-item-suggestion';
 
 
 const formSchema = z.object({
@@ -33,7 +34,7 @@ const formSchema = z.object({
 });
 
 function ExpensesPageContent() {
-  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals } = useFinancials();
+  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals, pendingPlannedExpenses } = useFinancials();
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   
@@ -97,6 +98,18 @@ function ExpensesPageContent() {
       setSelectedCategory(category);
       form.setValue('category', category, { shouldValidate: true });
   }
+
+  const handleAddPlannedExpense = async (name: string, amount: number) => {
+      // For expenses, we need to find a suitable category.
+      // For simplicity, we'll use the name as a custom category if it doesn't match.
+      // A more complex implementation could ask the user.
+      addExpense({ category: name, amount });
+       toast({
+            title: 'Gasto Planejado Adicionado!',
+            description: `Gasto de ${name} adicionado com sucesso.`,
+            className: 'border-accent'
+        });
+  }
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -112,102 +125,120 @@ function ExpensesPageContent() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Adicionar Nova Despesa</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="space-y-4">
-                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Categoria</label>
-                      <CreateCategoryDialog />
-                    </div>
-                    <CategorySelector
-                        customCategories={customCategories}
-                        favoriteCategories={favoriteCategories}
-                        onSelect={handleCategorySelect}
-                        onFavoriteToggle={handleFavoriteToggle}
-                        onRemoveCategory={handleRemoveCategory}
-                        selectedValue={selectedCategory}
-                    />
-                    {/* Display validation message for category manually */}
-                    {form.formState.errors.category && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.category.message}</p>}
-                </div>
-
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        <FormField
-                            control={form.control}
-                            name="amount"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Valor</FormLabel>
-                                <FormControl>
-                                <Input type="number" step="0.01" placeholder="150.00" {...field} value={field.value ?? ''} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
+    <div className="flex flex-col gap-6">
+        {pendingPlannedExpenses.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Lançamentos Planejados</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    {pendingPlannedExpenses.map(item => (
+                        <PlannedItemSuggestion
+                            key={item.id}
+                            item={item}
+                            onAdd={() => handleAddPlannedExpense(item.name, item.amount)}
                         />
-                        <Button type="submit">Adicionar Despesa</Button>
-                    </form>
-                </Form>
+                    ))}
+                </CardContent>
+            </Card>
+        )}
+        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+        <Card>
+            <CardHeader>
+            <CardTitle>Adicionar Nova Despesa</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-4">
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Categoria</label>
+                        <CreateCategoryDialog />
+                        </div>
+                        <CategorySelector
+                            customCategories={customCategories}
+                            favoriteCategories={favoriteCategories}
+                            onSelect={handleCategorySelect}
+                            onFavoriteToggle={handleFavoriteToggle}
+                            onRemoveCategory={handleRemoveCategory}
+                            selectedValue={selectedCategory}
+                        />
+                        {/* Display validation message for category manually */}
+                        {form.formState.errors.category && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.category.message}</p>}
+                    </div>
+
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <FormField
+                                control={form.control}
+                                name="amount"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Valor</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" step="0.01" placeholder="150.00" {...field} value={field.value ?? ''} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <Button type="submit">Adicionar Despesa</Button>
+                        </form>
+                    </Form>
+                </div>
+            </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+            <CardTitle>Histórico de Despesas</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="border rounded-md">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {expenses.length > 0 ? (
+                    expenses.map((item) => {
+                        const Icon = getIconForCategory(item.category);
+                        return (
+                        <TableRow key={item.id}>
+                            <TableCell className="font-medium flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            {item.category}
+                            </TableCell>
+                            <TableCell>{formatCurrency(item.amount)}</TableCell>
+                            <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Remover</span>
+                            </Button>
+                            </TableCell>
+                        </TableRow>
+                        )
+                    })
+                    ) : (
+                    <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">Nenhuma despesa registrada.</TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={1} className="font-bold">Total</TableCell>
+                        <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalExpenses)}</TableCell>
+                    </TableRow>
+                </TableFooter>
+                </Table>
             </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Despesas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {expenses.length > 0 ? (
-                  expenses.map((item) => {
-                    const Icon = getIconForCategory(item.category);
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium flex items-center gap-2">
-                           <Icon className="h-4 w-4 text-muted-foreground" />
-                           {item.category}
-                        </TableCell>
-                        <TableCell>{formatCurrency(item.amount)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remover</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">Nenhuma despesa registrada.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={1} className="font-bold">Total</TableCell>
-                    <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalExpenses)}</TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+        </div>
     </div>
   );
 }

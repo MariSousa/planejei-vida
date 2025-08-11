@@ -35,12 +35,13 @@ export const useFinancials = () => {
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [monthlyPlanItems, setMonthlyPlanItems] = useState<MonthlyPlanItem[]>([]);
+  const [currentMonthPlanItems, setCurrentMonthPlanItems] = useState<MonthlyPlanItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isClient, setIsClient] = useState(false);
-  const [currentPlanningMonth, setCurrentPlanningMonth] = useState(addMonths(new Date(), 1));
+  const [currentMonth, setCurrentMonth] = useState(addMonths(new Date(), 1));
 
 
   useEffect(() => {
@@ -80,17 +81,28 @@ export const useFinancials = () => {
         setExpenses(items);
       });
 
+      // Listener for the current month's plan to generate suggestions
+      const currentPlanMonthStr = format(new Date(), 'yyyy-MM');
+      const currentPlanItemsRef = collection(db, `users/${user.uid}/monthlyPlan/${currentPlanMonthStr}/items`);
+      const currentPlanQuery = query(currentPlanItemsRef, orderBy('dueDate', 'asc'));
+      const unsubCurrentPlan = onSnapshot(currentPlanQuery, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
+        setCurrentMonthPlanItems(items);
+      });
+
       setIsClient(true);
 
       return () => {
         unsubscribes.forEach(unsub => unsub());
         unsubIncome();
         unsubExpenses();
+        unsubCurrentPlan();
       };
     } else {
         setIncome([]);
         setExpenses([]);
         setMonthlyPlanItems([]);
+        setCurrentMonthPlanItems([]);
         setGoals([]);
         setAdvices([]);
         setCustomCategories([]);
@@ -98,10 +110,10 @@ export const useFinancials = () => {
     }
   }, [user]);
 
-  // Specific listener for monthly plan items based on currentPlanningMonth
+  // Specific listener for monthly plan items based on currentMonth for the planning page
   useEffect(() => {
     if (user) {
-      const monthStr = format(currentPlanningMonth, 'yyyy-MM');
+      const monthStr = format(currentMonth, 'yyyy-MM');
       const itemsCollectionRef = collection(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`);
       const q = query(itemsCollectionRef, orderBy('dueDate', 'asc'));
       
@@ -112,7 +124,7 @@ export const useFinancials = () => {
       
       return () => unsubscribe();
     }
-  }, [user, currentPlanningMonth]);
+  }, [user, currentMonth]);
 
   const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any) => {
       if (!user) return;
@@ -155,7 +167,7 @@ export const useFinancials = () => {
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'status'>) => {
     if (!user) return;
-    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
+    const monthStr = format(currentMonth, 'yyyy-MM');
     const monthDocRef = doc(db, `users/${user.uid}/monthlyPlan`, monthStr);
     await setDoc(monthDocRef, { month: monthStr }, { merge: true }); 
 
@@ -164,21 +176,21 @@ export const useFinancials = () => {
         ...item,
         status: 'Previsto' as Status
     });
-  }, [user, currentPlanningMonth]);
+  }, [user, currentMonth]);
 
   const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
     if (!user) return;
-    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
+    const monthStr = format(currentMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     await updateDoc(itemRef, { status });
-  }, [user, currentPlanningMonth]);
+  }, [user, currentMonth]);
 
   const removePlanItem = useCallback((id: string) => {
     if (!user) return;
-    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
+    const monthStr = format(currentMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     return deleteDoc(itemRef);
-  }, [user, currentPlanningMonth]);
+  }, [user, currentMonth]);
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocToCollection('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
@@ -277,12 +289,12 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
-    return monthlyPlanItems.filter(item => {
+    return currentMonthPlanItems.filter(item => {
         if (item.type !== 'gasto' || item.status !== 'Previsto') return false;
         const dueDate = new Date(item.dueDate);
         return isAfter(dueDate, today) && isBefore(dueDate, next7Days);
     });
-  }, [monthlyPlanItems]);
+  }, [currentMonthPlanItems]);
 
   const planningTotals = useMemo(() => {
     const plannedIncome = monthlyPlanItems
@@ -302,6 +314,18 @@ export const useFinancials = () => {
     }
   }, [monthlyPlanItems]);
 
+  const pendingPlannedIncome = useMemo(() => {
+    const planned = currentMonthPlanItems.filter(p => p.type === 'ganho');
+    const actualSources = income.map(i => i.source);
+    return planned.filter(p => !actualSources.includes(p.name));
+  }, [currentMonthPlanItems, income]);
+
+  const pendingPlannedExpenses = useMemo(() => {
+      const planned = currentMonthPlanItems.filter(p => p.type === 'gasto');
+      const actualCategories = expenses.map(e => e.category);
+      return planned.filter(p => !actualCategories.includes(p.name));
+  }, [currentMonthPlanItems, expenses]);
+
   return {
     income,
     expenses,
@@ -310,6 +334,8 @@ export const useFinancials = () => {
     advices,
     customCategories,
     favoriteCategories,
+    pendingPlannedIncome,
+    pendingPlannedExpenses,
     addIncome,
     addExpense,
     addPlanItem,
@@ -331,7 +357,7 @@ export const useFinancials = () => {
     upcomingPayments,
     planningTotals,
     isClient,
-    currentMonth: currentPlanningMonth,
-    setCurrentMonth: setCurrentPlanningMonth
+    currentMonth,
+    setCurrentMonth
   };
 };

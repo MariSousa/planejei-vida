@@ -21,6 +21,7 @@ import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
+import { PlannedItemSuggestion } from '@/components/planned-item-suggestion';
 
 const formSchema = z.object({
   source: z.string().min(2, { message: 'A fonte deve ter pelo menos 2 caracteres.' }),
@@ -28,7 +29,7 @@ const formSchema = z.object({
 });
 
 function IncomePageContent() {
-  const { income, addIncome, removeIncome, isClient, totals } = useFinancials();
+  const { income, addIncome, removeIncome, isClient, totals, pendingPlannedIncome } = useFinancials();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -48,6 +49,15 @@ function IncomePageContent() {
     });
     form.reset({source: '', amount: undefined});
   }
+
+  const handleAddPlannedIncome = async (source: string, amount: number) => {
+    await addIncome({ source, amount });
+    toast({
+        title: 'Ganho Planejado Adicionado!',
+        description: `Ganho de ${source} adicionado com sucesso.`,
+        className: 'border-accent'
+    });
+  }
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -63,90 +73,108 @@ function IncomePageContent() {
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Adicionar Nova Renda</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="source"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fonte da Renda</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Salário" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Adicionar Renda</Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Rendas do Mês</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fonte</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="text-right">Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {income.length > 0 ? (
-                  income.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.source}</TableCell>
-                      <TableCell>{formatCurrency(item.amount)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => removeIncome(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remover</span>
-                        </Button>
-                      </TableCell>
+    <div className="flex flex-col gap-6">
+        {pendingPlannedIncome.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Lançamentos Planejados</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    {pendingPlannedIncome.map(item => (
+                        <PlannedItemSuggestion
+                            key={item.id}
+                            item={item}
+                            onAdd={() => handleAddPlannedIncome(item.name, item.amount)}
+                        />
+                    ))}
+                </CardContent>
+            </Card>
+        )}
+        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+        <Card>
+            <CardHeader>
+            <CardTitle>Adicionar Nova Renda</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                    control={form.control}
+                    name="source"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Fonte da Renda</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Ex: Salário" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Valor</FormLabel>
+                        <FormControl>
+                        <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit">Adicionar Renda</Button>
+                </form>
+            </Form>
+            </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+            <CardTitle>Histórico de Rendas do Mês</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <div className="border rounded-md">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Fonte</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Ação</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">Nenhuma renda registrada este mês.</TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={1} className="font-bold">Total</TableCell>
-                  <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalIncome)}</TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                    {income.length > 0 ? (
+                    income.map((item) => (
+                        <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.source}</TableCell>
+                        <TableCell>{formatCurrency(item.amount)}</TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => removeIncome(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remover</span>
+                            </Button>
+                        </TableCell>
+                        </TableRow>
+                    ))
+                    ) : (
+                    <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">Nenhuma renda registrada este mês.</TableCell>
+                    </TableRow>
+                    )}
+                </TableBody>
+                <TableFooter>
+                    <TableRow>
+                    <TableCell colSpan={1} className="font-bold">Total</TableCell>
+                    <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalIncome)}</TableCell>
+                    </TableRow>
+                </TableFooter>
+                </Table>
+            </div>
+            </CardContent>
+        </Card>
+        </div>
     </div>
   );
 }
