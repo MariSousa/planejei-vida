@@ -47,14 +47,6 @@ export const useFinancials = () => {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
     
-    // Debts are ordered by due date, not creation date
-    if (col === 'debts') {
-        return query(
-            collection(db, `users/${user.uid}/${col}`),
-            orderBy('dueDate', 'asc')
-        );
-    }
-    
     return query(
         collection(db, `users/${user.uid}/${col}`),
         where('date', '>=', startOfMonth),
@@ -110,6 +102,11 @@ export const useFinancials = () => {
     }
   }, [user]);
 
+  const addDocWithoutDate = async (collectionName: string, data: any) => {
+      if (!user) return;
+      await addDoc(collection(db, `users/${user.uid}/${collectionName}`), data);
+  }
+
   const addDocWithDate = async (collectionName: string, data: any) => {
       if (!user) return;
       await addDoc(collection(db, `users/${user.uid}/${collectionName}`), {
@@ -125,7 +122,7 @@ export const useFinancials = () => {
 
   const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addDocWithDate('income', newIncome), [user]);
   const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addDocWithDate('expenses', newExpense), [user]);
-  const addDebt = useCallback((newDebt: Omit<Debt, 'id' | 'date'>) => addDocWithDate('debts', newDebt), [user]);
+  const addDebt = useCallback((newDebt: Omit<Debt, 'id'>) => addDocWithoutDate('debts', newDebt), [user]);
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocWithDate('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocWithDate('advices', newAdvice), [user]);
   const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocWithDate('categories', newCategory), [user]);

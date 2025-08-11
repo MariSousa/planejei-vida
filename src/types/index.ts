@@ -17,7 +17,6 @@ export interface Debt {
   id: string;
   name: string;
   amount: number;
-  date: string;
   dueDate: string;
 }
 
