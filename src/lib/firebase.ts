@@ -11,11 +11,11 @@ const firebaseConfig = {
   "projectId": "planejei-4oo42",
   "appId": "1:120489705522:web:660ffb2c96e9c53e60fc2b",
   "databaseURL": "https://planejei-4oo42-default-rtdb.firebaseio.com",
-  "storageBucket": "planejei-4oo42.firebasestorage.app",
+  "storageBucket": "planejei-4oo42.appspot.com",
   "apiKey": "AIzaSyBx4kriOPiZBPacBVy-kSxcvRBnQuw0euM",
   "authDomain": "planejei-4oo42.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "120489705522"
+  "messagingSenderId": "120489705522",
+  "measurementId": "G-DR2P9P32B6"
 };
 
 
