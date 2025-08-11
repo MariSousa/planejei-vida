@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileText, FileSpreadsheet } from 'lucide-react';
 import type { Income, Expense, Debt, Goal, Advice } from '@/types';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 
 interface ReportsDownloaderProps {
   income: Income[];
@@ -20,23 +23,65 @@ export function ReportsDownloader({ income, expenses, debts, goals, advices }: R
 
   const dataMap = { income, expenses, debts, goals, advices };
 
-  const convertToCSV = (type: ReportType) => {
+  const getHeaders = (type: ReportType): string[] => {
     const data = dataMap[type];
-    if (!data || data.length === 0) return '';
+    if (!data || data.length === 0) return [];
+    // Remove 'id' from headers
+    return Object.keys(data[0]).filter(header => header !== 'id');
+  };
+
+  const getBody = (type: ReportType): string[][] => {
+    const data = dataMap[type];
+    const headers = getHeaders(type);
+    if (!data || data.length === 0) return [];
     
-    const headers = Object.keys(data[0]);
-    const rows = data.map(item => 
-        headers.map(header => JSON.stringify((item as any)[header])).join(',')
+    return data.map(item =>
+        headers.map(header => {
+            const value = (item as any)[header];
+            if (typeof value === 'number') {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            }
+            if (header.toLowerCase().includes('date')) {
+                return new Date(value).toLocaleDateString('pt-BR');
+            }
+            return String(value);
+        })
+    );
+  };
+  
+  const convertToCSV = (type: ReportType) => {
+    const headers = getHeaders(type);
+    const body = getBody(type);
+    if (body.length === 0) return '';
+    
+    const rows = body.map(row => 
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
     );
 
     return [headers.join(','), ...rows].join('\n');
   };
 
   const handleExport = (type: ReportType, format: 'csv' | 'pdf') => {
+    const data = dataMap[type];
+    if (data.length === 0) return;
+
+    const fileName = `planejei_${type}_${new Date().toLocaleDateString('pt-BR')}`;
+
     if (format === 'pdf') {
-      // PDF export logic will go here
-      console.log(`Exporting ${type} to PDF...`);
-      return;
+        const doc = new jsPDF();
+        const headers = getHeaders(type);
+        const body = getBody(type);
+
+        autoTable(doc, {
+            head: [headers],
+            body: body,
+            didDrawPage: (data) => {
+                // We can add header/footer here later if needed
+            },
+        });
+        
+        doc.save(`${fileName}.pdf`);
+        return;
     }
 
     const csvContent = convertToCSV(type);
@@ -44,12 +89,9 @@ export function ReportsDownloader({ income, expenses, debts, goals, advices }: R
     
     const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
-    }
     const url = URL.createObjectURL(blob);
     link.href = url;
-    link.setAttribute('download', `planejei_${type}_${new Date().toLocaleDateString('pt-BR')}.csv`);
+    link.setAttribute('download', `${fileName}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -77,7 +119,7 @@ export function ReportsDownloader({ income, expenses, debts, goals, advices }: R
                             <FileSpreadsheet className="mr-2 h-4 w-4" />
                             Exportar para CSV
                         </Button>
-                        <Button variant="outline" disabled>
+                        <Button variant="outline" onClick={() => handleExport(option.type, 'pdf')} disabled={dataMap[option.type].length === 0}>
                              <FileText className="mr-2 h-4 w-4" />
                             Exportar para PDF
                         </Button>
