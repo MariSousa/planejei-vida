@@ -32,16 +32,29 @@ const wantCategories = [
 
 export const useFinancials = () => {
   const { user } = useAuth();
+  
+  // States for main dashboard data (always current month)
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [monthlyPlanItems, setMonthlyPlanItems] = useState<MonthlyPlanItem[]>([]);
-  const [currentMonthPlanItems, setCurrentMonthPlanItems] = useState<MonthlyPlanItem[]>([]);
+  const [currentMonthPlanItemsForSuggestions, setCurrentMonthPlanItemsForSuggestions] = useState<MonthlyPlanItem[]>([]);
+
+  // States for planning page
+  const [planningMonth, setPlanningMonth] = useState(addMonths(new Date(), 1));
+  const [planningMonthItems, setPlanningMonthItems] = useState<MonthlyPlanItem[]>([]);
+
+  // States for reports page
+  const [reportMonth, setReportMonth] = useState(new Date());
+  const [reportIncome, setReportIncome] = useState<Income[]>([]);
+  const [reportExpenses, setReportExpenses] = useState<Expense[]>([]);
+  const [reportMonthlyPlanItems, setReportMonthlyPlanItems] = useState<MonthlyPlanItem[]>([]);
+
+  // States for non-monthly data
   const [goals, setGoals] = useState<Goal[]>([]);
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
+
   const [isClient, setIsClient] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(addMonths(new Date(), 1));
 
 
   useEffect(() => {
@@ -63,18 +76,17 @@ export const useFinancials = () => {
         });
       });
 
-      // Listener for current month's income
-      const incomeMonthStr = format(new Date(), 'yyyy-MM');
-      const incomeItemsCollectionRef = collection(db, `users/${user.uid}/income/${incomeMonthStr}/items`);
+      // Listener for current month's income (for dashboard)
+      const currentMonthStr = format(new Date(), 'yyyy-MM');
+      const incomeItemsCollectionRef = collection(db, `users/${user.uid}/income/${currentMonthStr}/items`);
       const incomeQuery = query(incomeItemsCollectionRef, orderBy('date', 'desc'));
       const unsubIncome = onSnapshot(incomeQuery, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
         setIncome(items);
       });
 
-       // Listener for current month's expenses
-      const expensesMonthStr = format(new Date(), 'yyyy-MM');
-      const expensesItemsCollectionRef = collection(db, `users/${user.uid}/expenses/${expensesMonthStr}/items`);
+       // Listener for current month's expenses (for dashboard)
+      const expensesItemsCollectionRef = collection(db, `users/${user.uid}/expenses/${currentMonthStr}/items`);
       const expensesQuery = query(expensesItemsCollectionRef, orderBy('date', 'desc'));
       const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
@@ -87,7 +99,7 @@ export const useFinancials = () => {
       const currentPlanQuery = query(currentPlanItemsRef, orderBy('dueDate', 'asc'));
       const unsubCurrentPlan = onSnapshot(currentPlanQuery, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
-        setCurrentMonthPlanItems(items);
+        setCurrentMonthPlanItemsForSuggestions(items);
       });
 
       setIsClient(true);
@@ -101,8 +113,8 @@ export const useFinancials = () => {
     } else {
         setIncome([]);
         setExpenses([]);
-        setMonthlyPlanItems([]);
-        setCurrentMonthPlanItems([]);
+        setPlanningMonthItems([]);
+        setCurrentMonthPlanItemsForSuggestions([]);
         setGoals([]);
         setAdvices([]);
         setCustomCategories([]);
@@ -110,21 +122,53 @@ export const useFinancials = () => {
     }
   }, [user]);
 
-  // Specific listener for monthly plan items based on currentMonth for the planning page
+  // Listener for planning month items
   useEffect(() => {
     if (user) {
-      const monthStr = format(currentMonth, 'yyyy-MM');
+      const monthStr = format(planningMonth, 'yyyy-MM');
       const itemsCollectionRef = collection(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`);
       const q = query(itemsCollectionRef, orderBy('dueDate', 'asc'));
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
-        setMonthlyPlanItems(items);
+        setPlanningMonthItems(items);
       });
       
       return () => unsubscribe();
     }
-  }, [user, currentMonth]);
+  }, [user, planningMonth]);
+
+  // Listener for report month data
+  useEffect(() => {
+    if (user) {
+        const monthStr = format(reportMonth, 'yyyy-MM');
+        
+        // Fetch Income for report
+        const reportIncomeRef = collection(db, `users/${user.uid}/income/${monthStr}/items`);
+        const unsubReportIncome = onSnapshot(query(reportIncomeRef, orderBy('date', 'desc')), (snapshot) => {
+            setReportIncome(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income)));
+        });
+
+        // Fetch Expenses for report
+        const reportExpensesRef = collection(db, `users/${user.uid}/expenses/${monthStr}/items`);
+        const unsubReportExpenses = onSnapshot(query(reportExpensesRef, orderBy('date', 'desc')), (snapshot) => {
+            setReportExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
+        });
+
+        // Fetch Plan Items for report
+        const reportPlanItemsRef = collection(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`);
+        const unsubReportPlanItems = onSnapshot(query(reportPlanItemsRef, orderBy('dueDate', 'asc')), (snapshot) => {
+            setReportMonthlyPlanItems(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem)));
+        });
+
+        return () => {
+            unsubReportIncome();
+            unsubReportExpenses();
+            unsubReportPlanItems();
+        };
+    }
+  }, [user, reportMonth]);
+
 
   const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any) => {
       if (!user) return;
@@ -167,7 +211,7 @@ export const useFinancials = () => {
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'status'>) => {
     if (!user) return;
-    const monthStr = format(currentMonth, 'yyyy-MM');
+    const monthStr = format(planningMonth, 'yyyy-MM');
     const monthDocRef = doc(db, `users/${user.uid}/monthlyPlan`, monthStr);
     await setDoc(monthDocRef, { month: monthStr }, { merge: true }); 
 
@@ -176,21 +220,21 @@ export const useFinancials = () => {
         ...item,
         status: 'Previsto' as Status
     });
-  }, [user, currentMonth]);
+  }, [user, planningMonth]);
 
   const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
     if (!user) return;
-    const monthStr = format(currentMonth, 'yyyy-MM');
+    const monthStr = format(planningMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     await updateDoc(itemRef, { status });
-  }, [user, currentMonth]);
+  }, [user, planningMonth]);
 
   const removePlanItem = useCallback((id: string) => {
     if (!user) return;
-    const monthStr = format(currentMonth, 'yyyy-MM');
+    const monthStr = format(planningMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     return deleteDoc(itemRef);
-  }, [user, currentMonth]);
+  }, [user, planningMonth]);
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocToCollection('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
@@ -289,19 +333,19 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
-    return currentMonthPlanItems.filter(item => {
+    return currentMonthPlanItemsForSuggestions.filter(item => {
         if (item.type !== 'gasto' || item.status !== 'Previsto') return false;
         const dueDate = new Date(item.dueDate);
         return isAfter(dueDate, today) && isBefore(dueDate, next7Days);
     });
-  }, [currentMonthPlanItems]);
+  }, [currentMonthPlanItemsForSuggestions]);
 
   const planningTotals = useMemo(() => {
-    const plannedIncome = monthlyPlanItems
+    const plannedIncome = planningMonthItems
         .filter(item => item.type === 'ganho')
         .reduce((acc, item) => acc + item.amount, 0);
     
-    const plannedExpenses = monthlyPlanItems
+    const plannedExpenses = planningMonthItems
         .filter(item => item.type === 'gasto')
         .reduce((acc, item) => acc + item.amount, 0);
         
@@ -312,32 +356,35 @@ export const useFinancials = () => {
         plannedIncome,
         expectedSurplus
     }
-  }, [monthlyPlanItems]);
+  }, [planningMonthItems]);
 
   const pendingPlannedIncome = useMemo(() => {
     const normalize = (str: string) => str.trim().toLowerCase();
-    const planned = currentMonthPlanItems.filter(p => p.type === 'ganho' && p.status === 'Previsto');
+    const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'ganho' && p.status === 'Previsto');
     const actualSources = income.map(i => normalize(i.source));
     return planned.filter(p => !actualSources.includes(normalize(p.name)));
-  }, [currentMonthPlanItems, income]);
+  }, [currentMonthPlanItemsForSuggestions, income]);
 
   const pendingPlannedExpenses = useMemo(() => {
       const normalize = (str: string) => str.trim().toLowerCase();
-      const planned = currentMonthPlanItems.filter(p => p.type === 'gasto' && p.status === 'Previsto');
+      const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'gasto' && p.status === 'Previsto');
       const actualCategories = expenses.map(e => normalize(e.category));
       return planned.filter(p => !actualCategories.includes(normalize(p.name)));
-  }, [currentMonthPlanItems, expenses]);
+  }, [currentMonthPlanItemsForSuggestions, expenses]);
 
   return {
     income,
     expenses,
-    monthlyPlanItems,
+    planningMonthItems,
     goals,
     advices,
     customCategories,
     favoriteCategories,
     pendingPlannedIncome,
     pendingPlannedExpenses,
+    reportIncome,
+    reportExpenses,
+    reportMonthlyPlanItems,
     addIncome,
     addExpense,
     addPlanItem,
@@ -359,7 +406,9 @@ export const useFinancials = () => {
     upcomingPayments,
     planningTotals,
     isClient,
-    currentMonth,
-    setCurrentMonth
+    planningMonth,
+    setPlanningMonth,
+    reportMonth,
+    setReportMonth,
   };
 };
