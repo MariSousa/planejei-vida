@@ -252,6 +252,12 @@ export const useFinancials = () => {
     await updateDoc(investmentRef, data);
   }, [user]);
 
+  const updateDebtStatus = useCallback(async (id: string, status: 'Pendente' | 'Pago') => {
+    if (!user) return;
+    const debtRef = doc(db, `users/${user.uid}/debts`, id);
+    await updateDoc(debtRef, { status });
+  }, [user]);
+
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
   const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
 
@@ -413,6 +419,7 @@ export const useFinancials = () => {
     addInvestment,
     addDebt,
     updateInvestment,
+    updateDebtStatus,
     addAdvice,
     addCategory,
     addFavorite,

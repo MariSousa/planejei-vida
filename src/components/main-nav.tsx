@@ -27,6 +27,7 @@ const menuItems = [
   { href: '/income', label: 'Meus Ganhos', icon: Wallet },
   { href: '/expenses', label: 'Meus Gastos', icon: Receipt },
   { href: '/planning', label: 'Planejamento Mensal', icon: CalendarCheck2 },
+  { href: '/debts', label: 'Meus Compromissos', icon: Landmark },
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
   { href: '/investments', label: 'Meus Investimentos', icon: PiggyBank },
   { href: '/investment-types', label: 'Tipos de Investimento', icon: BookOpen },
