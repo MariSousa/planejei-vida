@@ -26,13 +26,14 @@ import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 import { InvestmentSelector } from '@/components/investment-selector';
 import { InstitutionSelector } from '@/components/institution-selector';
 import { PortfolioProjection } from '@/components/portfolio-projection';
+import { CurrencyInput } from '@/components/currency-input';
 
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string({ required_error: 'Por favor, selecione a instituição.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
 });
 
@@ -54,7 +55,10 @@ function InvestmentsPageContent() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addInvestment(values);
+    addInvestment({
+        ...values,
+        amount: values.amount / 100,
+    });
     toast({
       title: 'Investimento Adicionado!',
       description: `Seu investimento em ${values.type} foi adicionado.`,
@@ -130,7 +134,11 @@ function InvestmentsPageContent() {
                             <FormItem>
                             <FormLabel>Valor Investido (R$)</FormLabel>
                             <FormControl>
-                                <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                                <CurrencyInput
+                                    placeholder="R$ 1.000,00"
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                />
                             </FormControl>
                             <FormMessage />
                             </FormItem>

@@ -30,13 +30,14 @@ import type { Investment } from '@/types';
 import { Loader2, Pencil } from 'lucide-react';
 import { InvestmentSelector } from './investment-selector';
 import { InstitutionSelector } from './institution-selector';
+import { CurrencyInput } from './currency-input';
 
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string({ required_error: 'Por favor, selecione a instituição.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
 });
 
@@ -52,13 +53,15 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const [selectedType, setSelectedType] = useState<string | undefined>(investment.type);
   const [selectedInstitution, setSelectedInstitution] = useState<string | undefined>(investment.institution);
 
+  const toCents = (value: number) => Math.round(value * 100);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: investment.type,
       name: investment.name,
       institution: investment.institution,
-      amount: investment.amount,
+      amount: toCents(investment.amount),
       yieldRate: investment.yieldRate,
     },
   });
@@ -69,7 +72,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
             type: investment.type,
             name: investment.name,
             institution: investment.institution,
-            amount: investment.amount,
+            amount: toCents(investment.amount),
             yieldRate: investment.yieldRate,
         });
         setSelectedType(investment.type);
@@ -81,7 +84,10 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        await updateInvestment(investment.id, values);
+        await updateInvestment(investment.id, {
+            ...values,
+            amount: values.amount / 100,
+        });
         toast({
             title: 'Investimento Atualizado!',
             description: `Seu investimento em ${values.type} foi atualizado com sucesso.`,
@@ -148,7 +154,11 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                         <FormItem>
                         <FormLabel>Valor Investido (R$)</FormLabel>
                         <FormControl>
-                            <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                             <CurrencyInput
+                                placeholder="R$ 1.000,00"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                            />
                         </FormControl>
                         <FormMessage />
                         </FormItem>

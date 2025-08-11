@@ -32,18 +32,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/summary-card';
 import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { CurrencyInput } from '@/components/currency-input';
 
 
 const expenseSchema = z.object({
   name: z.string().min(2, { message: 'A descrição deve ter pelo menos 2 caracteres.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
   priority: z.enum(['Alta', 'Média', 'Baixa'], { required_error: 'A prioridade é obrigatória.'}),
 });
 
 const incomeSchema = z.object({
   name: z.string().min(2, { message: 'A descrição deve ter pelo menos 2 caracteres.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
 });
 
 
@@ -82,6 +83,7 @@ function PlanningPageContent() {
     try {
         await addPlanItem({
             ...values,
+            amount: values.amount / 100,
             type: 'gasto',
             dueDate: values.dueDate.toISOString(),
         });
@@ -109,7 +111,7 @@ function PlanningPageContent() {
     try {
         await addPlanItem({
             name: values.name,
-            amount: values.amount,
+            amount: values.amount / 100,
             type: 'ganho',
             priority: 'Baixa', // Default value, not used for income
             dueDate: new Date().toISOString() // Default value, not used for income
@@ -242,7 +244,11 @@ function PlanningPageContent() {
                             <FormItem>
                                 <FormLabel>Valor Previsto</FormLabel>
                                 <FormControl>
-                                <Input type="number" step="0.01" placeholder="5000,00" {...field} value={field.value ?? ''} />
+                                    <CurrencyInput
+                                        placeholder="R$ 5.000,00"
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -281,7 +287,11 @@ function PlanningPageContent() {
                             <FormItem>
                                 <FormLabel>Valor Previsto</FormLabel>
                                 <FormControl>
-                                <Input type="number" step="0.01" placeholder="850,00" {...field} value={field.value ?? ''} />
+                                    <CurrencyInput
+                                        placeholder="R$ 850,00"
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

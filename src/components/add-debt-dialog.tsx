@@ -29,18 +29,19 @@ import { Input } from '@/components/ui/input';
 import { parse } from 'date-fns';
 import { Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { CurrencyInput } from '@/components/currency-input';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
-  originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
-  paidAmount: z.coerce.number().min(0, { message: 'O valor pago não pode ser negativo.' }),
+  originalAmount: z.coerce.number().int().positive({ message: 'O valor original deve ser positivo.' }),
+  paidAmount: z.coerce.number().int().min(0, { message: 'O valor pago não pode ser negativo.' }),
   startDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
   dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
-  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
+  monthlyPaymentGoal: z.coerce.number().int().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
   totalInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser 1 ou mais.' }),
   remainingInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser 1 ou mais.' }),
@@ -79,13 +80,16 @@ export function AddDebtDialog() {
         const parsedStartDate = parse(values.startDate, 'dd/MM/yyyy', new Date());
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
 
+        const originalAmount = values.originalAmount / 100;
+        const paidAmount = (values.paidAmount || 0) / 100;
+
         const newDebt = {
             name: values.name,
-            originalAmount: values.originalAmount,
-            remainingAmount: values.originalAmount - values.paidAmount,
+            originalAmount: originalAmount,
+            remainingAmount: originalAmount - paidAmount,
             startDate: parsedStartDate.toISOString(),
             dueDate: parsedDueDate.toISOString(),
-            monthlyPaymentGoal: values.monthlyPaymentGoal,
+            monthlyPaymentGoal: values.monthlyPaymentGoal / 100,
             interestRate: values.interestRate,
             totalInstallments: values.totalInstallments,
             remainingInstallments: values.remainingInstallments,
@@ -159,7 +163,11 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Valor Original (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="5000.00" {...field} value={field.value ?? ''} />
+                        <CurrencyInput
+                            placeholder="R$ 5.000,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -172,7 +180,11 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Quanto você já pagou? (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="1500.00" {...field} value={field.value ?? ''} />
+                        <CurrencyInput
+                            placeholder="R$ 1.500,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -211,7 +223,11 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Valor da Parcela Mensal (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
+                         <CurrencyInput
+                            placeholder="R$ 200,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

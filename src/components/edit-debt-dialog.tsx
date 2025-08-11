@@ -30,18 +30,19 @@ import { parse, format } from 'date-fns';
 import { Loader2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Debt } from '@/types';
+import { CurrencyInput } from '@/components/currency-input';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
-  originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
-  remainingAmount: z.coerce.number().min(0, { message: 'O saldo devedor deve ser 0 ou mais.' }),
+  originalAmount: z.coerce.number().int().positive({ message: 'O valor original deve ser positivo.' }),
+  remainingAmount: z.coerce.number().int().min(0, { message: 'O saldo devedor deve ser 0 ou mais.' }),
   startDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
   dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
   }),
-  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
+  monthlyPaymentGoal: z.coerce.number().int().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
   totalInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser pelo menos 1.' }),
   remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
@@ -58,15 +59,17 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const toCents = (value: number) => Math.round(value * 100);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
         name: debt.name,
-        originalAmount: debt.originalAmount,
-        remainingAmount: debt.remainingAmount,
+        originalAmount: toCents(debt.originalAmount),
+        remainingAmount: toCents(debt.remainingAmount),
         startDate: format(new Date(debt.startDate), 'dd/MM/yyyy'),
         dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
-        monthlyPaymentGoal: debt.monthlyPaymentGoal,
+        monthlyPaymentGoal: toCents(debt.monthlyPaymentGoal),
         interestRate: debt.interestRate ?? 0,
         totalInstallments: debt.totalInstallments,
         remainingInstallments: debt.remainingInstallments,
@@ -77,11 +80,11 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
       if (open) {
           form.reset({
             name: debt.name,
-            originalAmount: debt.originalAmount,
-            remainingAmount: debt.remainingAmount,
+            originalAmount: toCents(debt.originalAmount),
+            remainingAmount: toCents(debt.remainingAmount),
             startDate: format(new Date(debt.startDate), 'dd/MM/yyyy'),
             dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
-            monthlyPaymentGoal: debt.monthlyPaymentGoal,
+            monthlyPaymentGoal: toCents(debt.monthlyPaymentGoal),
             interestRate: debt.interestRate ?? 0,
             totalInstallments: debt.totalInstallments,
             remainingInstallments: debt.remainingInstallments,
@@ -97,6 +100,9 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
         const updatedData = {
             ...values,
+            originalAmount: values.originalAmount / 100,
+            remainingAmount: values.remainingAmount / 100,
+            monthlyPaymentGoal: values.monthlyPaymentGoal / 100,
             startDate: parsedStartDate.toISOString(),
             dueDate: parsedDueDate.toISOString(),
         };
@@ -167,7 +173,11 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Valor Original (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="5000.00" {...field} value={field.value ?? ''} />
+                        <CurrencyInput
+                            placeholder="R$ 5.000,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -180,7 +190,11 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Saldo Devedor Atual (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="3500.00" {...field} value={field.value ?? ''} />
+                       <CurrencyInput
+                            placeholder="R$ 3.500,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -219,7 +233,11 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Valor da Parcela Mensal (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
+                        <CurrencyInput
+                            placeholder="R$ 200,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

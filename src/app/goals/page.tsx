@@ -22,11 +22,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { Progress } from '@/components/ui/progress';
 import { GoalContributionDialog } from '@/components/goal-contribution-dialog';
+import { CurrencyInput } from '@/components/currency-input';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'O nome da meta deve ter pelo menos 3 caracteres.' }),
-  targetAmount: z.coerce.number().positive({ message: 'O valor alvo deve ser positivo.' }),
-  currentAmount: z.coerce.number().min(0, { message: 'O valor atual não pode ser negativo.' }).optional().default(0),
+  targetAmount: z.coerce.number().int().positive({ message: 'O valor alvo deve ser positivo.' }),
+  currentAmount: z.coerce.number().int().min(0, { message: 'O valor atual não pode ser negativo.' }).optional().default(0),
 });
 
 function GoalsPageContent() {
@@ -43,7 +44,11 @@ function GoalsPageContent() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addGoal(values);
+    addGoal({
+        name: values.name,
+        targetAmount: values.targetAmount / 100,
+        currentAmount: (values.currentAmount || 0) / 100,
+    });
     toast({
       title: 'Meta Adicionada!',
       description: `Sua meta "${values.name}" foi criada.`,
@@ -98,7 +103,11 @@ function GoalsPageContent() {
                     <FormItem>
                         <FormLabel>Valor Alvo (R$)</FormLabel>
                         <FormControl>
-                        <Input type="number" step="0.01" placeholder="15000.00" {...field} value={field.value ?? ''} />
+                            <CurrencyInput
+                                placeholder="R$ 15.000,00"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                            />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -111,7 +120,11 @@ function GoalsPageContent() {
                     <FormItem>
                         <FormLabel>Valor Atual (R$)</FormLabel>
                         <FormControl>
-                        <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                           <CurrencyInput
+                                placeholder="R$ 1.000,00"
+                                value={field.value}
+                                onValueChange={field.onChange}
+                            />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

@@ -22,10 +22,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { PlannedItemSuggestion } from '@/components/planned-item-suggestion';
+import { CurrencyInput } from '@/components/currency-input';
 
 const formSchema = z.object({
   source: z.string().min(2, { message: 'A fonte deve ter pelo menos 2 caracteres.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
 });
 
 function IncomePageContent() {
@@ -41,7 +42,10 @@ function IncomePageContent() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addIncome(values);
+    addIncome({
+        source: values.source,
+        amount: values.amount / 100,
+    });
     toast({
       title: 'Renda Adicionada!',
       description: `Renda de ${values.source} adicionada com sucesso.`,
@@ -118,7 +122,11 @@ function IncomePageContent() {
                     <FormItem>
                         <FormLabel>Valor</FormLabel>
                         <FormControl>
-                        <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                         <CurrencyInput
+                            placeholder="R$ 1.000,00"
+                            value={field.value}
+                            onValueChange={field.onChange}
+                        />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

@@ -24,15 +24,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import type { Goal } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { CurrencyInput } from '@/components/currency-input';
 
 const formSchema = z.object({
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
   type: z.enum(['add', 'withdraw'], { required_error: 'Selecione o tipo de transação.' }),
 });
 
@@ -57,7 +57,10 @@ export function GoalContributionDialog({ goal }: GoalContributionDialogProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    if (values.type === 'withdraw' && values.amount > goal.currentAmount) {
+    const amountInCents = values.amount;
+    const amountAsFloat = amountInCents / 100;
+
+    if (values.type === 'withdraw' && amountAsFloat > goal.currentAmount) {
         form.setError('amount', {
             type: 'manual',
             message: 'Você não pode retirar mais do que o valor atual.',
@@ -67,7 +70,7 @@ export function GoalContributionDialog({ goal }: GoalContributionDialogProps) {
     }
 
     try {
-        await updateGoalContribution(goal.id, values.amount, values.type);
+        await updateGoalContribution(goal.id, amountAsFloat, values.type);
         toast({
             title: 'Sucesso!',
             description: `Sua contribuição para "${goal.name}" foi registrada.`,
@@ -110,7 +113,11 @@ export function GoalContributionDialog({ goal }: GoalContributionDialogProps) {
                 <FormItem>
                   <FormLabel>Valor (R$)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="50.00" {...field} />
+                    <CurrencyInput
+                        placeholder="R$ 50,00"
+                        value={field.value}
+                        onValueChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

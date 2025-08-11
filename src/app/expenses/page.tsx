@@ -15,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Trash2 } from 'lucide-react';
@@ -26,11 +25,12 @@ import { CreateCategoryDialog } from '@/components/create-category-dialog';
 import { CategorySelector } from '@/components/category-selector';
 import { getIconForCategory } from '@/lib/categories';
 import { PlannedItemSuggestion } from '@/components/planned-item-suggestion';
+import { CurrencyInput } from '@/components/currency-input';
 
 
 const formSchema = z.object({
   category: z.string({ required_error: 'Por favor, selecione uma categoria.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  amount: z.coerce.number().int().positive({ message: 'O valor deve ser positivo.' }),
 });
 
 function ExpensesPageContent() {
@@ -47,7 +47,7 @@ function ExpensesPageContent() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addExpense(values);
+    addExpense({ category: values.category, amount: values.amount / 100 });
     toast({
       title: 'Despesa Adicionada!',
       description: `Despesa de ${values.category} adicionada com sucesso.`,
@@ -205,7 +205,11 @@ function ExpensesPageContent() {
                                 <FormItem>
                                     <FormLabel>Valor</FormLabel>
                                     <FormControl>
-                                    <Input type="number" step="0.01" placeholder="150.00" {...field} value={field.value ?? ''} />
+                                    <CurrencyInput
+                                        placeholder="R$ 150,00"
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
