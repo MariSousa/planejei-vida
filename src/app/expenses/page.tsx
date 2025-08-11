@@ -18,14 +18,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, ChevronsUpDown, Check } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { expenseCategoryGroups } from '@/lib/categories';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const formSchema = z.object({
@@ -36,8 +35,7 @@ const formSchema = z.object({
 function ExpensesPageContent() {
   const { expenses, addExpense, removeExpense, isClient } = useFinancials();
   const { toast } = useToast();
-  const [openCategorySelector, setOpenCategorySelector] = useState(false);
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,17 +60,15 @@ function ExpensesPageContent() {
   
   if (!isClient) {
     return (
-        <div class="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-2">
             <Skeleton className="h-[380px]" />
             <Skeleton className="h-[400px]" />
         </div>
     );
   }
 
-  const allCategories = expenseCategoryGroups.flatMap(group => group.options);
-
   return (
-    <div class="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+    <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Adicionar Nova Despesa</CardTitle>
@@ -84,63 +80,34 @@ function ExpensesPageContent() {
                 control={form.control}
                 name="category"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <Popover open={openCategorySelector} onOpenChange={setOpenCategorySelector}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? allCategories.find(
-                                  (cat) => cat === field.value
-                                )
-                              : "Selecione uma categoria"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Buscar categoria..." />
-                          <CommandList>
-                            <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
-                            {expenseCategoryGroups.map((group) => (
-                              <CommandGroup key={group.label} heading={group.label}>
-                                {group.options.map((option) => {
-                                   return (
-                                    <CommandItem
-                                      value={option}
-                                      key={option}
-                                      onSelect={() => {
-                                        form.setValue("category", option);
-                                        setOpenCategorySelector(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          option === field.value
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                      {option}
-                                    </CommandItem>
-                                  )
-                                })}
-                              </CommandGroup>
-                            ))}
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                     <FormControl>
+                        <Tabs defaultValue={expenseCategoryGroups[0].label} className="w-full">
+                           <TabsList className="grid w-full grid-cols-3">
+                                {expenseCategoryGroups.slice(0,3).map((group) => (
+                                     <TabsTrigger key={group.label} value={group.label}>{group.label}</TabsTrigger>
+                                ))}
+                           </TabsList>
+                           {expenseCategoryGroups.slice(0,3).map((group) => (
+                                <TabsContent key={group.label} value={group.label}>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+                                        {group.options.map(option => (
+                                            <Button
+                                                key={option}
+                                                type="button"
+                                                variant={field.value === option ? 'default' : 'outline'}
+                                                onClick={() => form.setValue('category', option)}
+                                                className="text-xs h-9"
+                                            >
+                                                {option}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </TabsContent>
+                           ))}
+                        </Tabs>
+                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -169,7 +136,7 @@ function ExpensesPageContent() {
           <CardTitle>Histórico de Despesas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="border rounded-md">
+          <div className="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -190,7 +157,7 @@ function ExpensesPageContent() {
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
                             <Trash2 className="h-4 w-4" />
-                            <span class="sr-only">Remover</span>
+                            <span className="sr-only">Remover</span>
                           </Button>
                         </TableCell>
                       </TableRow>
