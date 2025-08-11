@@ -7,13 +7,13 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD6vY4_rKyYRNMJEEFXs12QpP61yCLw9Fk",
-  authDomain: "vida-financeira-planner.firebaseapp.com",
-  projectId: "vida-financeira-planner",
-  storageBucket: "vida-financeira-planner.appspot.com",
-  messagingSenderId: "84532001329",
-  appId: "1:84532001329:web:a672d3eb98dcf99ff4b310",
-  measurementId: "G-XY94WQRR7Z"
+  "projectId": "planejei-4oo42",
+  "appId": "1:120489705522:web:660ffb2c96e9c53e60fc2b",
+  "storageBucket": "planejei-4oo42.firebasestorage.app",
+  "apiKey": "AIzaSyBx4kriOPiZBPacBVy-kSxcvRBnQuw0euM",
+  "authDomain": "planejei-4oo42.firebaseapp.com",
+  "measurementId": "",
+  "messagingSenderId": "120489705522"
 };
 
 
@@ -42,3 +42,4 @@ if (typeof window !== 'undefined') {
 
 
 export { app, auth, db };
+
