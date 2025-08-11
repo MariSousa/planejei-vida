@@ -3,11 +3,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import type { Income, Expense, MonthlyPlanItem, Goal, Advice } from '@/types';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 
 interface ReportsDownloaderProps {
   income: Income[];
@@ -23,84 +20,115 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
 
   const dataMap = { income, expenses, monthlyPlanItems, goals, advices };
 
+  const getReportTitle = (type: ReportType): string => {
+    const titles = {
+        income: 'Relatório de Ganhos',
+        expenses: 'Relatório de Gastos',
+        monthlyPlanItems: 'Relatório de Planejamento Mensal',
+        goals: 'Relatório de Sonhos',
+        advices: 'Relatório de Conselhos do FinMentor',
+    };
+    return titles[type];
+  }
+
   const getHeaders = (type: ReportType): string[] => {
     const data = dataMap[type];
     if (!data || data.length === 0) return [];
-    // Remove 'id' from headers
-    return Object.keys(data[0]).filter(header => header !== 'id');
-  };
-
-  const getBody = (type: ReportType): string[][] => {
-    const data = dataMap[type];
-    const headers = getHeaders(type);
-    if (!data || data.length === 0) return [];
-    
-    return data.map(item =>
-        headers.map(header => {
-            const value = (item as any)[header];
-            if (typeof value === 'number') {
-                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-            }
-            if (header.toLowerCase().includes('date')) {
-                return new Date(value).toLocaleDateString('pt-BR');
-            }
-            return String(value);
-        })
-    );
+    // Remove 'id' e outros campos irrelevantes do cabeçalho
+    const ignoredFields = ['id', 'goalId'];
+    return Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
   };
   
-  const convertToCSV = (type: ReportType) => {
-    const headers = getHeaders(type);
-    const body = getBody(type);
-    if (body.length === 0) return '';
-    
-    const rows = body.map(row => 
-        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
-    );
-
-    return [headers.join(','), ...rows].join('\n');
+  const getBodyRows = (type: ReportType): string[][] => {
+      const data = dataMap[type];
+      const headers = getHeaders(type);
+      if (!data || data.length === 0) return [];
+      
+      return data.map(item =>
+          headers.map(header => {
+              const value = (item as any)[header];
+              if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount'].includes(header)) {
+                  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+              }
+              if (header.toLowerCase().includes('date')) {
+                  try {
+                      return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                  } catch (e) {
+                      return String(value);
+                  }
+              }
+              if (header === 'adviceText') {
+                return String(value).replace(/\n/g, '<br/>');
+              }
+              return String(value);
+          })
+      );
   };
 
-  const handleExport = (type: ReportType, format: 'csv' | 'pdf') => {
-    const data = dataMap[type];
-    if (data.length === 0) return;
+  const generateReportHtml = (type: ReportType) => {
+    const title = getReportTitle(type);
+    const headers = getHeaders(type);
+    const rows = getBodyRows(type);
 
-    const fileName = `planejei_${type}_${new Date().toLocaleDateString('pt-BR')}`;
+    const styles = `
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 2rem; }
+        h1 { color: #212529; border-bottom: 2px solid #dee2e6; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background-color: #f1f3f5; font-weight: 600; text-transform: capitalize; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e9ecef; }
+        .no-data { text-align: center; padding: 20px; color: #6c757d; }
+    `;
 
-    if (format === 'pdf') {
-        const doc = new jsPDF();
-        const headers = getHeaders(type);
-        const body = getBody(type);
+    const tableHtml = rows.length > 0 ? `
+        <table>
+            <thead>
+                <tr>
+                    ${headers.map(h => `<th>${h}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+        </table>
+    ` : `<p class="no-data">Nenhum dado disponível para este relatório.</p>`;
 
-        autoTable(doc, {
-            head: [headers],
-            body: body,
-            didDrawPage: (data) => {
-                // We can add header/footer here later if needed
-            },
-        });
-        
-        doc.save(`${fileName}.pdf`);
-        return;
+    return `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${title}</title>
+            <style>${styles}</style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>${title}</h1>
+                ${tableHtml}
+            </div>
+        </body>
+        </html>
+    `;
+  };
+
+  const handleViewReport = (type: ReportType) => {
+    const htmlContent = generateReportHtml(type);
+    const reportWindow = window.open("", "_blank");
+    if (reportWindow) {
+        reportWindow.document.write(htmlContent);
+        reportWindow.document.close();
+    } else {
+        alert("Por favor, habilite pop-ups para visualizar o relatório.");
     }
-
-    const csvContent = convertToCSV(type);
-    if (!csvContent) return;
-    
-    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.setAttribute('download', `${fileName}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
   
   const reportOptions = [
       { type: 'income' as ReportType, title: 'Relatório de Ganhos', description: 'Todas as suas fontes de renda registradas.' },
       { type: 'expenses' as ReportType, title: 'Relatório de Gastos', description: 'Todos os seus gastos, detalhados por categoria.' },
-      { type: 'monthlyPlanItems' as ReportType, title: 'Relatório de Planejamento Mensal', description: 'Seus itens de planejamento, incluindo ganhos e gastos previstos.' },
+      { type: 'monthlyPlanItems' as ReportType, title: 'Relatório de Planejamento', description: 'Seus itens de planejamento para o mês selecionado.' },
       { type: 'goals' as ReportType, title: 'Relatório de Sonhos', description: 'O progresso de todas as suas metas financeiras.' },
       { type: 'advices' as ReportType, title: 'Relatório de Conselhos', description: 'Todos os conselhos gerados pelo FinMentor.' },
   ];
@@ -115,13 +143,9 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <Button onClick={() => handleExport(option.type, 'csv')} disabled={dataMap[option.type].length === 0}>
-                            <FileSpreadsheet className="mr-2 h-4 w-4" />
-                            Exportar para CSV
-                        </Button>
-                        <Button variant="outline" onClick={() => handleExport(option.type, 'pdf')} disabled={dataMap[option.type].length === 0}>
-                             <FileText className="mr-2 h-4 w-4" />
-                            Exportar para PDF
+                        <Button onClick={() => handleViewReport(option.type)} disabled={dataMap[option.type].length === 0}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Visualizar Relatório
                         </Button>
                     </div>
                 </CardContent>
