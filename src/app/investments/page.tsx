@@ -98,6 +98,7 @@ function InvestmentsPageContent() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
                           <SelectItem value="CDB">CDB</SelectItem>
                           <SelectItem value="LCI">LCI</SelectItem>
                           <SelectItem value="LCA">LCA</SelectItem>
@@ -219,5 +220,7 @@ export default function InvestmentsPage() {
         </PrivateRoute>
     )
 }
+
+    
 
     
