@@ -257,10 +257,29 @@ export const useFinancials = () => {
     await updateDoc(debtRef, data);
   }, [user]);
 
-  const updateDebtStatus = useCallback(async (id: string, status: 'Pendente' | 'Pago') => {
-    if (!user) return;
-    const debtRef = doc(db, `users/${user.uid}/debts`, id);
-    await updateDoc(debtRef, { status });
+  const payInstallment = useCallback(async (debtId: string, paymentAmount: number) => {
+      if (!user) return;
+      const debtRef = doc(db, `users/${user.uid}/debts`, debtId);
+      
+      await runTransaction(db, async (transaction) => {
+          const debtDoc = await transaction.get(debtRef);
+          if (!debtDoc.exists()) {
+              throw new Error("Compromisso não encontrado.");
+          }
+
+          const currentRemainingAmount = debtDoc.data().remainingAmount;
+          const currentRemainingInstallments = debtDoc.data().remainingInstallments ?? 1;
+
+          const newRemainingAmount = Math.max(0, currentRemainingAmount - paymentAmount);
+          const newRemainingInstallments = Math.max(0, currentRemainingInstallments - 1);
+
+          transaction.update(debtRef, { 
+              remainingAmount: newRemainingAmount,
+              remainingInstallments: newRemainingInstallments,
+              lastPaymentDate: new Date().toISOString(),
+              status: newRemainingAmount <= 0 ? 'Pago' : 'Pendente',
+          });
+      });
   }, [user]);
 
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
@@ -469,7 +488,7 @@ export const useFinancials = () => {
     addDebt,
     updateInvestment,
     updateDebt,
-    updateDebtStatus,
+    payInstallment,
     addAdvice,
     addCategory,
     addFavorite,
