@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // In dev mode, we can simulate a user to bypass login for easier development.
     // Set this to true to enable the mock user.
-    const useMockUser = false;
+    const useMockUser = true;
 
     if (process.env.NODE_ENV === 'development' && useMockUser) {
         setUser({

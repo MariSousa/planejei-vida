@@ -39,10 +39,6 @@ export const useFinancials = () => {
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const getMonthlyQuery = (col: string) => {
     if (!user) return null;
     const now = new Date();
@@ -96,6 +92,7 @@ export const useFinancials = () => {
           const adviceData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Advice));
           setAdvices(adviceData);
       }) : () => {};
+      setIsClient(true);
 
       return () => {
         unsubscribeIncome();
