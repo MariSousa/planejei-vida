@@ -1,6 +1,11 @@
 {
-  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */
   "rules": {
+    "supportTickets": {
+      "$uid": {
+        ".write": "auth !== null",
+        ".read": false
+      }
+    },
     ".read": false,
     ".write": false
   }
