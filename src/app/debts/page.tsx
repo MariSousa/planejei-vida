@@ -44,10 +44,9 @@ function DebtsPageContent() {
   };
 
   const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
-    // Start from the last payment date, or the creation date if never paid.
-    // This ensures installments are always sequential from the present.
-    const lastPayment = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : new Date(debt.date);
-    const installmentDate = addMonths(lastPayment, installmentIndex + 1);
+    // Start from the last payment date, or the start date if never paid.
+    const baseDate = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : new Date(debt.startDate);
+    const installmentDate = addMonths(baseDate, installmentIndex + 1);
     
     return format(installmentDate, "MMMM, yyyy", { locale: ptBR });
   };
