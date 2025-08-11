@@ -22,9 +22,9 @@ import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
-import { expenseCategoryGroups } from '@/lib/categories';
 import { CreateCategoryDialog } from '@/components/create-category-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CategorySelector } from '@/components/category-selector';
+import { getIconForCategory } from '@/lib/categories';
 
 
 const formSchema = z.object({
@@ -86,47 +86,11 @@ function ExpensesPageContent() {
                       <CreateCategoryDialog />
                     </div>
                      <FormControl>
-                        <Tabs defaultValue={expenseCategoryGroups[0].label} className="w-full">
-                           <TabsList className="grid w-full grid-cols-3">
-                                {expenseCategoryGroups.slice(0, 3).map((group) => (
-                                    <TabsTrigger key={group.label} value={group.label}>{group.label}</TabsTrigger>
-                                ))}
-                           </TabsList>
-                            {expenseCategoryGroups.map((group) => (
-                                <TabsContent key={group.label} value={group.label}>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-4">
-                                        {group.options.map(option => (
-                                            <Button
-                                                key={option}
-                                                type="button"
-                                                variant={field.value === option ? 'default' : 'outline'}
-                                                onClick={() => form.setValue('category', option)}
-                                                className="text-xs h-9"
-                                            >
-                                                {option}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </TabsContent>
-                            ))}
-                             {customCategories.length > 0 && (
-                                <TabsContent value="custom">
-                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-4">
-                                      {customCategories.map(cat => (
-                                        <Button
-                                          key={cat.id}
-                                          type="button"
-                                          variant={field.value === cat.name ? 'default' : 'outline'}
-                                          onClick={() => form.setValue('category', cat.name)}
-                                          className="text-xs h-9"
-                                        >
-                                          {cat.name}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                </TabsContent>
-                             )}
-                        </Tabs>
+                        <CategorySelector
+                            customCategories={customCategories}
+                            onSelect={(category) => form.setValue('category', category, { shouldValidate: true })}
+                            selectedValue={field.value}
+                        />
                      </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,9 +132,11 @@ function ExpensesPageContent() {
               <TableBody>
                 {expenses.length > 0 ? (
                   expenses.map((item) => {
+                    const Icon = getIconForCategory(item.category);
                     return (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium flex items-center gap-2">
+                           <Icon className="h-4 w-4 text-muted-foreground" />
                            {item.category}
                         </TableCell>
                         <TableCell>{formatCurrency(item.amount)}</TableCell>

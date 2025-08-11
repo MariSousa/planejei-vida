@@ -8,15 +8,24 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
+import {
+  LayoutDashboard,
+  Wallet,
+  Receipt,
+  Landmark,
+  Target,
+  BrainCircuit,
+  User,
+} from 'lucide-react';
 
 const menuItems = [
-  { href: '/', label: 'Visão Geral' },
-  { href: '/income', label: 'Meus Ganhos' },
-  { href: '/expenses', label: 'Meus Gastos' },
-  { href: '/debts', label: 'Compromissos' },
-  { href: '/goals', label: 'Meus Sonhos' },
-  { href: '/advice', label: 'Meu Mentor IA' },
-  { href: '/profile', label: 'Meu Perfil' },
+  { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
+  { href: '/income', label: 'Meus Ganhos', icon: Wallet },
+  { href: '/expenses', label: 'Meus Gastos', icon: Receipt },
+  { href: '/debts', label: 'Compromissos', icon: Landmark },
+  { href: '/goals', label: 'Meus Sonhos', icon: Target },
+  { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
+  { href: '/profile', label: 'Meu Perfil', icon: User },
 ];
 
 export function MainNav() {
@@ -24,19 +33,23 @@ export function MainNav() {
 
   return (
     <SidebarMenu>
-      {menuItems.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            asChild
-            isActive={pathname === item.href}
-            tooltip={{children: item.label}}
-          >
-            <Link href={item.href}>
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {menuItems.map((item) => {
+        const Icon = item.icon;
+        return (
+            <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={{children: item.label}}
+            >
+                <Link href={item.href}>
+                    <Icon />
+                    <span>{item.label}</span>
+                </Link>
+            </SidebarMenuButton>
+            </SidebarMenuItem>
+        )
+      })}
     </SidebarMenu>
   );
 }
