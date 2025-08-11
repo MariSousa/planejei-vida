@@ -82,6 +82,7 @@ export function CategorySelector({
                     return (
                         <div key={option} className="flex items-center">
                             <Button
+                            type="button"
                             variant={selectedValue === option ? 'default' : 'ghost'}
                             className="w-full justify-start gap-2"
                             onClick={() => onSelect(option)}
@@ -90,6 +91,7 @@ export function CategorySelector({
                                 {option}
                             </Button>
                             <Button 
+                            type="button"
                             variant="ghost" 
                             size="icon" 
                             className="ml-2 shrink-0"
@@ -162,6 +164,7 @@ export function CategorySelector({
                                 return (
                                     <div key={option.id} className="flex items-center group/item">
                                         <Button
+                                            type="button"
                                             variant={selectedValue === option.name ? 'default' : 'ghost'}
                                             className="w-full justify-start gap-2"
                                             onClick={() => onSelect(option.name)}
@@ -172,6 +175,7 @@ export function CategorySelector({
                                         
                                         <div className="flex items-center shrink-0">
                                             <Button 
+                                                type="button"
                                                 variant="ghost" 
                                                 size="icon"
                                                 className="ml-auto"
@@ -182,6 +186,7 @@ export function CategorySelector({
                                             
                                             {isCustom && (
                                                 <Button 
+                                                    type="button"
                                                     variant="ghost" 
                                                     size="icon" 
                                                     onClick={(e) => {
