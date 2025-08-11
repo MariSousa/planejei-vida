@@ -38,7 +38,7 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
-  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }).optional(),
+  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
 });
 
 export function AddDebtDialog() {
@@ -171,7 +171,7 @@ export function AddDebtDialog() {
                 name="monthlyPaymentGoal"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Valor mensal para quitar (R$) <span className="text-muted-foreground">(Opcional)</span></FormLabel>
+                    <FormLabel>Valor mensal para quitar (R$)</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
                     </FormControl>
