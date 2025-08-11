@@ -40,7 +40,7 @@ const formSchema = z.object({
   }),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
+  totalInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser pelo menos 1.' }),
   remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
 });
 
@@ -63,7 +63,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         remainingAmount: debt.remainingAmount,
         dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
         monthlyPaymentGoal: debt.monthlyPaymentGoal,
-        interestRate: debt.interestRate,
+        interestRate: debt.interestRate ?? 0,
         totalInstallments: debt.totalInstallments,
         remainingInstallments: debt.remainingInstallments,
     },
@@ -77,7 +77,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
             remainingAmount: debt.remainingAmount,
             dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
             monthlyPaymentGoal: debt.monthlyPaymentGoal,
-            interestRate: debt.interestRate,
+            interestRate: debt.interestRate ?? 0,
             totalInstallments: debt.totalInstallments,
             remainingInstallments: debt.remainingInstallments,
           });
@@ -110,6 +110,18 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         setIsLoading(false);
     }
   }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) value = value.slice(0, 8);
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    form.setValue('dueDate', value);
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -174,7 +186,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                      <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
                         <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} />
+                           <Input placeholder="DD/MM/AAAA" {...field} onChange={handleDateChange} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -200,7 +212,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Taxa de Juros (% a.m.) (Opcional)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="8.5" {...field} value={field.value ?? ''} />
+                    <Input type="number" step="0.01" placeholder="0" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -213,7 +225,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Nº Total de Parcelas</FormLabel>
                     <FormControl>
-                    <Input type="number" placeholder="24" {...field} value={field.value ?? ''} />
+                    <Input type="number" placeholder="1" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -226,7 +238,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 <FormItem>
                     <FormLabel>Nº de Parcelas Restantes</FormLabel>
                     <FormControl>
-                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
+                    <Input type="number" placeholder="1" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

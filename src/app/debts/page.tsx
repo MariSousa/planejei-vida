@@ -44,17 +44,10 @@ function DebtsPageContent() {
   };
 
   const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
-    if (!debt.dueDate) return '';
-    const finalDate = new Date(debt.dueDate);
-    const totalInstallments = debt.totalInstallments || 1;
-    const remainingInstallments = debt.remainingInstallments || 0;
-    
-    const paidInstallments = totalInstallments - remainingInstallments;
-    const currentInstallmentNumber = paidInstallments + installmentIndex + 1;
-
-    // This logic calculates the date of a future installment by going back from the final due date
-    const monthsToGoBack = totalInstallments - currentInstallmentNumber;
-    const installmentDate = addMonths(finalDate, -monthsToGoBack);
+    // Start from the last payment date, or the creation date if never paid.
+    // This ensures installments are always sequential from the present.
+    const lastPayment = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : new Date(debt.date);
+    const installmentDate = addMonths(lastPayment, installmentIndex + 1);
     
     return format(installmentDate, "MMMM, yyyy", { locale: ptBR });
   };

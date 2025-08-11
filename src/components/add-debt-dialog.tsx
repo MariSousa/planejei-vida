@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { parse, format } from 'date-fns';
+import { parse } from 'date-fns';
 import { Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,7 +39,7 @@ const formSchema = z.object({
   }),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
+  totalInstallments: z.coerce.number().int().min(1, { message: 'O valor deve ser pelo menos 1.' }),
   remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
 });
 
@@ -57,11 +57,17 @@ export function AddDebtDialog() {
       paidAmount: 0,
       dueDate: undefined,
       monthlyPaymentGoal: undefined,
-      interestRate: undefined,
-      totalInstallments: 0,
-      remainingInstallments: 0,
+      interestRate: 0,
+      totalInstallments: 1,
+      remainingInstallments: 1,
     },
   });
+
+  const watchTotalInstallments = form.watch('totalInstallments');
+    React.useEffect(() => {
+        form.setValue('remainingInstallments', watchTotalInstallments);
+    }, [watchTotalInstallments, form]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -97,6 +103,17 @@ export function AddDebtDialog() {
         setIsLoading(false);
     }
   }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 8) value = value.slice(0, 8);
+    if (value.length > 4) {
+      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
+    } else if (value.length > 2) {
+      value = `${value.slice(0, 2)}/${value.slice(2)}`;
+    }
+    form.setValue('dueDate', value);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -161,7 +178,7 @@ export function AddDebtDialog() {
                     <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
                         <FormControl>
-                           <Input placeholder="DD/MM/AAAA" {...field} />
+                           <Input placeholder="DD/MM/AAAA" {...field} onChange={handleDateChange} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -187,7 +204,7 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Taxa de Juros (% a.m.) (Opcional)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="8.5" {...field} value={field.value ?? ''} />
+                    <Input type="number" step="0.01" placeholder="0" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -200,7 +217,7 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Nº Total de Parcelas</FormLabel>
                     <FormControl>
-                    <Input type="number" placeholder="24" {...field} value={field.value ?? ''} />
+                    <Input type="number" placeholder="1" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -213,7 +230,7 @@ export function AddDebtDialog() {
                 <FormItem>
                     <FormLabel>Nº de Parcelas Restantes</FormLabel>
                     <FormControl>
-                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
+                    <Input type="number" placeholder="1" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
