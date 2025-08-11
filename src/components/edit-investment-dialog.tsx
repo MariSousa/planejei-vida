@@ -126,65 +126,61 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-1">
+             <div className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Nome do Investimento</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <div className="grid grid-cols-2 gap-4">
                     <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Nome do Investimento</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    <div className="space-y-2">
-                            <FormLabel>Instituição Financeira</FormLabel>
-                        <InstitutionSelector onSelect={handleInstitutionSelect} selectedValue={selectedInstitution} />
-                            {form.formState.errors.institution && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.institution.message}</p>}
-                        </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                        control={form.control}
-                        name="amount"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Valor Investido (R$)</FormLabel>
-                            <FormControl>
-                                <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="yieldRate"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Rendimento (% CDI)</FormLabel>
-                            <FormControl>
-                                <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                    </div>
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Valor Investido (R$)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="yieldRate"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Rendimento (% CDI)</FormLabel>
+                        <FormControl>
+                            <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
                 </div>
-                <div>
-                        <div className="space-y-2">
-                            <FormLabel>Tipo de Investimento</FormLabel>
-                        <InvestmentSelector onSelect={handleTypeSelect} selectedValue={selectedType} />
-                            {form.formState.errors.type && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.type.message}</p>}
-                        </div>
+                <div className="space-y-2">
+                    <FormLabel>Instituição Financeira</FormLabel>
+                    <InstitutionSelector onSelect={handleInstitutionSelect} selectedValue={selectedInstitution} />
+                    {form.formState.errors.institution && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.institution.message}</p>}
+                </div>
+                <div className="space-y-2">
+                    <FormLabel>Tipo de Investimento</FormLabel>
+                    <InvestmentSelector onSelect={handleTypeSelect} selectedValue={selectedType} />
+                    {form.formState.errors.type && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.type.message}</p>}
                 </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
                 <DialogClose asChild>
                     <Button type="button" variant="ghost">Cancelar</Button>
                 </DialogClose>
