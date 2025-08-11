@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,60 +16,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronsUpDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
-
-const expenseCategoryGroups = [
-    {
-        label: 'Moradia',
-        options: ['Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 'Internet', 'Telefone', 'Streaming TV', 'Seguro Residencial', 'Manutenção', 'Limpeza']
-    },
-    {
-        label: 'Alimentação',
-        options: ['Supermercado', 'Padaria', 'Açougue/Peixaria', 'Restaurante', 'Lanchonete', 'Delivery', 'Café', 'Bebidas']
-    },
-    {
-        label: 'Transporte',
-        options: ['Combustível', 'Transporte Público', 'App de Transporte', 'Estacionamento', 'Pedágio', 'Manutenção Veículo', 'Seguro Veículo', 'IPVA/Licenciamento', 'Lavagem Veículo']
-    },
-    {
-        label: 'Saúde',
-        options: ['Plano de Saúde', 'Farmácia', 'Consultas', 'Exames', 'Dentista', 'Óculos/Lentes', 'Academia', 'Terapias']
-    },
-    {
-        label: 'Educação',
-        options: ['Mensalidade', 'Material Escolar', 'Transporte Escolar', 'Cursos', 'Livros']
-    },
-    {
-        label: 'Lazer & Cultura',
-        options: ['Cinema/Teatro', 'Shows/Eventos', 'Viagens', 'Streaming', 'Assinaturas', 'Hobbies']
-    },
-    {
-        label: 'Roupas & Cuidados Pessoais',
-        options: ['Roupas/Calçados', 'Lavanderia', 'Salão/Barbearia', 'Cosméticos', 'Higiene Pessoal']
-    },
-    {
-        label: 'Obrigações Financeiras',
-        options: ['Impostos', 'Empréstimos', 'Fatura Cartão', 'Previdência Privada', 'Pensão']
-    },
-    {
-        label: 'Despesas Domésticas',
-        options: ['Utensílios', 'Eletrodomésticos', 'Móveis/Decoração', 'Produtos de Limpeza']
-    },
-    {
-        label: 'Animais de Estimação',
-        options: ['Ração', 'Higiene Pet', 'Veterinário', 'Pet Shop']
-    },
-    {
-        label: 'Diversos',
-        options: ['Presentes', 'Doações', 'Taxas Bancárias', 'Multas', 'Eventos Especiais', 'Outros']
-    }
-];
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { expenseCategoryGroups, getIconForCategory } from '@/lib/categories';
+import { cn } from '@/lib/utils';
 
 
 const formSchema = z.object({
@@ -79,6 +36,7 @@ const formSchema = z.object({
 function ExpensesPageContent() {
   const { expenses, addExpense, removeExpense, isClient } = useFinancials();
   const { toast } = useToast();
+  const [openCategorySelector, setOpenCategorySelector] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -111,6 +69,8 @@ function ExpensesPageContent() {
     );
   }
 
+  const allCategories = expenseCategoryGroups.flatMap(group => group.options);
+
   return (
     <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
       <Card>
@@ -124,25 +84,65 @@ function ExpensesPageContent() {
                 control={form.control}
                 name="category"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel>Categoria</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Popover open={openCategorySelector} onOpenChange={setOpenCategorySelector}>
+                      <PopoverTrigger asChild>
                         <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma categoria" />
-                            </SelectTrigger>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className={cn(
+                              "w-full justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? allCategories.find(
+                                  (cat) => cat === field.value
+                                )
+                              : "Selecione uma categoria"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
                         </FormControl>
-                        <SelectContent>
-                           {expenseCategoryGroups.map(group => (
-                            <SelectGroup key={group.label}>
-                                <SelectLabel>{group.label}</SelectLabel>
-                                {group.options.map(option => (
-                                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                                ))}
-                            </SelectGroup>
-                           ))}
-                        </SelectContent>
-                    </Select>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <Command>
+                          <CommandInput placeholder="Buscar categoria..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhuma categoria encontrada.</CommandEmpty>
+                            {expenseCategoryGroups.map((group) => (
+                              <CommandGroup key={group.label} heading={group.label}>
+                                {group.options.map((option) => {
+                                   const Icon = getIconForCategory(option);
+                                   return (
+                                    <CommandItem
+                                      value={option}
+                                      key={option}
+                                      onSelect={() => {
+                                        form.setValue("category", option);
+                                        setOpenCategorySelector(false);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          option === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                      <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                      {option}
+                                    </CommandItem>
+                                  )
+                                })}
+                              </CommandGroup>
+                            ))}
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -182,18 +182,24 @@ function ExpensesPageContent() {
               </TableHeader>
               <TableBody>
                 {expenses.length > 0 ? (
-                  expenses.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.category}</TableCell>
-                      <TableCell>{formatCurrency(item.amount)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remover</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  expenses.map((item) => {
+                    const Icon = getIconForCategory(item.category);
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                           <Icon className="h-4 w-4 text-muted-foreground" />
+                           {item.category}
+                        </TableCell>
+                        <TableCell>{formatCurrency(item.amount)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remover</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="h-24 text-center">Nenhuma despesa registrada.</TableCell>
