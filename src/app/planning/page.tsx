@@ -27,8 +27,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { type Priority, type Status } from '@/types';
+import { type Priority, type Status, type PlanItemType } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/summary-card';
 import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
@@ -39,6 +40,7 @@ const formSchema = z.object({
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.' }),
   priority: z.enum(['Alta', 'Média', 'Baixa'], { required_error: 'A prioridade é obrigatória.' }),
+  type: z.enum(['ganho', 'gasto'], { required_error: 'Selecione o tipo.' }),
 });
 
 function PlanningPageContent() {
@@ -61,6 +63,7 @@ function PlanningPageContent() {
       amount: undefined,
       dueDate: undefined,
       priority: 'Média',
+      type: 'gasto',
     },
   });
 
@@ -70,13 +73,14 @@ function PlanningPageContent() {
             ...values,
             dueDate: values.dueDate.toISOString(),
             priority: values.priority as Priority,
+            type: values.type as PlanItemType,
         });
         toast({
             title: 'Item Adicionado ao Plano!',
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
             className: 'border-accent'
         });
-        form.reset({ name: '', amount: undefined, dueDate: undefined, priority: 'Média' });
+        form.reset({ name: '', amount: undefined, dueDate: undefined, priority: 'Média', type: 'gasto' });
     } catch (error) {
          toast({
             title: 'Erro',
@@ -175,6 +179,36 @@ function PlanningPageContent() {
             <CardContent>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                        <FormItem className="space-y-3">
+                            <FormLabel>Tipo</FormLabel>
+                            <FormControl>
+                                <RadioGroup
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                className="flex space-x-4"
+                                >
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="gasto" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Gasto</FormLabel>
+                                </FormItem>
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                    <FormControl>
+                                    <RadioGroupItem value="ganho" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">Ganho</FormLabel>
+                                </FormItem>
+                                </RadioGroup>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
                 <FormField
                     control={form.control}
                     name="name"
@@ -303,7 +337,11 @@ function PlanningPageContent() {
                             </Badge>
                         </TableCell>
                         <TableCell>{formatDate(item.dueDate)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                        <TableCell className={cn(
+                            "text-right",
+                            item.type === 'ganho' && 'text-green-600',
+                            item.type === 'gasto' && 'text-red-600'
+                        )}>{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                             <Button variant="ghost" size="icon" onClick={() => removePlanItem(item.id)}>
                             <Trash2 className="h-4 w-4" />

@@ -15,6 +15,7 @@ export interface Expense {
 
 export type Priority = 'Alta' | 'Média' | 'Baixa';
 export type Status = 'Previsto' | 'Pago';
+export type PlanItemType = 'ganho' | 'gasto';
 
 export interface MonthlyPlanItem {
   id: string;
@@ -23,6 +24,7 @@ export interface MonthlyPlanItem {
   dueDate: string;
   priority: Priority;
   status: Status;
+  type: PlanItemType;
   month: string; // YYYY-MM format
 }
 

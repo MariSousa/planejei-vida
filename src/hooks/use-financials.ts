@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status } from '@/types';
+import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
@@ -142,8 +142,7 @@ export const useFinancials = () => {
     await addDoc(collection(db, `users/${user.uid}/monthlyPlan`), {
         ...item,
         month,
-        status: 'Previsto' as Status,
-        dueDate: item.dueDate // already an ISO string
+        status: 'Previsto' as Status
     });
   }, [user]);
 
@@ -218,7 +217,6 @@ export const useFinancials = () => {
   const totals = useMemo(() => {
     const totalIncome = income.reduce((acc, i) => acc + i.amount, 0);
     const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
-    const totalDebts = monthlyPlanItems.reduce((acc, d) => acc + d.amount, 0);
     const totalGoals = goals.reduce((acc, g) => acc + g.targetAmount, 0);
     const totalSavedForGoals = goals.reduce((acc, g) => acc + g.currentAmount, 0);
     const savings = totalIncome - totalExpenses;
@@ -234,14 +232,13 @@ export const useFinancials = () => {
     return { 
         totalIncome, 
         totalExpenses, 
-        totalDebts, 
         savings, 
         totalGoals, 
         totalSavedForGoals,
         totalNecessities,
         totalWants
     };
-  }, [income, expenses, monthlyPlanItems, goals, customCategories]);
+  }, [income, expenses, goals, customCategories]);
 
   const expensesByCategory = useMemo(() => {
     return expenses.reduce((acc, expense) => {
@@ -264,10 +261,16 @@ export const useFinancials = () => {
   }, [monthlyPlanItems]);
 
   const planningTotals = useMemo(() => {
-    // This will be expanded with planned income
-    const plannedExpenses = monthlyPlanItems.reduce((acc, item) => acc + item.amount, 0);
-    const plannedIncome = 0; // Placeholder
+    const plannedIncome = monthlyPlanItems
+        .filter(item => item.type === 'ganho')
+        .reduce((acc, item) => acc + item.amount, 0);
+    
+    const plannedExpenses = monthlyPlanItems
+        .filter(item => item.type === 'gasto')
+        .reduce((acc, item) => acc + item.amount, 0);
+        
     const expectedSurplus = plannedIncome - plannedExpenses;
+
     return {
         plannedExpenses,
         plannedIncome,
