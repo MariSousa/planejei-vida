@@ -84,12 +84,12 @@ function ExpensesPageContent() {
                     <FormLabel>Categoria</FormLabel>
                      <FormControl>
                         <Tabs defaultValue={expenseCategoryGroups[0].label} className="w-full">
-                           <TabsList className="grid w-full grid-cols-3">
-                                {expenseCategoryGroups.slice(0,3).map((group) => (
-                                     <TabsTrigger key={group.label} value={group.label}>{group.label}</TabsTrigger>
+                           <TabsList className="h-auto flex-wrap justify-start">
+                                {expenseCategoryGroups.map((group) => (
+                                     <TabsTrigger key={group.label} value={group.label} className="text-xs">{group.label}</TabsTrigger>
                                 ))}
                            </TabsList>
-                           {expenseCategoryGroups.slice(0,3).map((group) => (
+                           {expenseCategoryGroups.map((group) => (
                                 <TabsContent key={group.label} value={group.label}>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                                         {group.options.map(option => (
