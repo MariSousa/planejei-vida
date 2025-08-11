@@ -250,6 +250,12 @@ export const useFinancials = () => {
     const investmentRef = doc(db, `users/${user.uid}/investments`, id);
     await updateDoc(investmentRef, data);
   }, [user]);
+  
+  const updateDebt = useCallback(async (id: string, data: Partial<Omit<Debt, 'id' | 'date'>>) => {
+    if (!user) return;
+    const debtRef = doc(db, `users/${user.uid}/debts`, id);
+    await updateDoc(debtRef, data);
+  }, [user]);
 
   const updateDebtStatus = useCallback(async (id: string, status: 'Pendente' | 'Pago') => {
     if (!user) return;
@@ -458,6 +464,7 @@ export const useFinancials = () => {
     addInvestment,
     addDebt,
     updateInvestment,
+    updateDebt,
     updateDebtStatus,
     addAdvice,
     addCategory,

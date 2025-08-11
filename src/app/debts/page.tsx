@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import type { Debt } from '@/types';
 import { AddDebtDialog } from '@/components/add-debt-dialog';
 import { Progress } from '@/components/ui/progress';
+import { EditDebtDialog } from '@/components/edit-debt-dialog';
 
 function DebtsPageContent() {
   const { debts, addDebt, removeDebt, updateDebtStatus, isClient } = useFinancials();
@@ -75,32 +76,40 @@ function DebtsPageContent() {
       
       <div className="flex flex-col gap-4">
         {debts.length > 0 ? (
-            debts.map((item) => (
-            <Card key={item.id} className={cn('transition-all', item.status === 'Pago' && 'bg-muted/50')}>
-                <CardHeader className="flex-row items-start justify-between pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className={cn("text-lg", item.status === 'Pago' && 'line-through')}>{item.name}</CardTitle>
-                        <CardDescription>Vence em: {formatDate(item.dueDate)}</CardDescription>
-                    </div>
-                     <div className="text-right">
-                        <p className={cn("font-bold text-lg", item.status === 'Pago' && 'line-through')}>{formatCurrency(item.remainingAmount)}</p>
-                        {item.monthlyPaymentGoal && (
-                           <p className="text-xs text-muted-foreground">Meta: {formatCurrency(item.monthlyPaymentGoal)}/mês</p>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardFooter className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleStatusChange(item)}>
-                        {item.status === 'Pago' ? <CheckCircle className="h-4 w-4 text-green-500 mr-2" /> : <Circle className="h-4 w-4 mr-2" />}
-                        {item.status === 'Pago' ? 'Pago' : 'Marcar como pago'}
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => removeDebt(item.id)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remover</span>
-                    </Button>
-                </CardFooter>
-            </Card>
-            ))
+            debts.map((item) => {
+                const itemProgress = item.originalAmount > 0 ? ((item.originalAmount - item.remainingAmount) / item.originalAmount) * 100 : 0;
+                return (
+                    <Card key={item.id} className={cn('transition-all', item.status === 'Pago' && 'bg-muted/50')}>
+                        <CardHeader className="flex-row items-start justify-between pb-4">
+                            <div className="space-y-1">
+                                <CardTitle className={cn("text-lg", item.status === 'Pago' && 'line-through')}>{item.name}</CardTitle>
+                                <CardDescription>Vence em: {formatDate(item.dueDate)}</CardDescription>
+                            </div>
+                            <div className="text-right">
+                                <p className={cn("font-bold text-lg", item.status === 'Pago' && 'line-through')}>{formatCurrency(item.remainingAmount)}</p>
+                                {item.monthlyPaymentGoal && (
+                                <p className="text-xs text-muted-foreground">Meta: {formatCurrency(item.monthlyPaymentGoal)}/mês</p>
+                                )}
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <Progress value={itemProgress} className="h-2" />
+                            <p className="text-xs text-muted-foreground mt-1">{itemProgress.toFixed(0)}% quitado</p>
+                        </CardContent>
+                        <CardFooter className="flex justify-end gap-2">
+                             <EditDebtDialog debt={item} />
+                            <Button variant="ghost" size="sm" onClick={() => handleStatusChange(item)}>
+                                {item.status === 'Pago' ? <CheckCircle className="h-4 w-4 text-green-500 mr-2" /> : <Circle className="h-4 w-4 mr-2" />}
+                                {item.status === 'Pago' ? 'Pago' : 'Marcar como pago'}
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => removeDebt(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Remover</span>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )
+            })
         ) : (
             <div className="flex h-[150px] w-full items-center justify-center rounded-lg border-2 border-dashed">
                 <p className="text-center text-muted-foreground">Nenhum compromisso registrado.</p>
