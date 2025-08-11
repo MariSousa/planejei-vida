@@ -20,6 +20,7 @@ import { LogoutButton } from '@/components/logout-button';
 import { NotificationsPopover } from '@/components/notifications-popover';
 import { useFinancials } from '@/hooks/use-financials';
 import { UserAvatar } from './user-avatar';
+import Link from 'next/link';
 
 // AppLayout is a Client Component because it uses hooks like usePathname and useAuth.
 export function AppLayout({
@@ -66,11 +67,13 @@ export function AppLayout({
             <span className="sr-only">Buscar</span>
           </Button>
           <NotificationsPopover upcomingPayments={upcomingPayments} />
-          <UserAvatar 
-            userName={user.displayName || user.email}
-            photoURL={user.photoURL}
-            className="w-8 h-8"
-          />
+          <Link href="/profile">
+            <UserAvatar 
+              userName={user.displayName || user.email}
+              photoURL={user.photoURL}
+              className="w-8 h-8"
+            />
+          </Link>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">{children}</main>
       </SidebarInset>
