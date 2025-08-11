@@ -17,59 +17,65 @@ function InvestmentTypesPageContent() {
 
       <Card>
         <CardHeader>
-            <CardTitle>Introdução: O Primeiro Passo no Mundo dos Investimentos</CardTitle>
+            <CardTitle>O Primeiro Passo no Mundo dos Investimentos</CardTitle>
             <CardDescription>
-              A jornada para a independência financeira e a construção de um patrimônio sólido começa com a educação e o planejamento. Para o investidor iniciante no Brasil, a vasta gama de opções e a complexidade de termos como CDI, Selic e Imposto de Renda podem parecer intimidantes. Este guia foi elaborado para desmistificar o universo dos investimentos de baixo risco, fornecendo uma base sólida para a tomada de decisões conscientes e seguras.
+              A jornada para a independência financeira começa com a educação. Para o investidor iniciante, a vasta gama de opções pode parecer intimidante. Este guia foi elaborado para desmistificar o universo dos investimentos de baixo risco.
             </CardDescription>
         </CardHeader>
         <CardContent>
             <p className="text-sm text-foreground">
-                Antes de adentrar nas modalidades de investimento, é crucial estabelecer uma premissa fundamental: a organização financeira precede o investimento. Um alicerce financeiro instável é o principal obstáculo para o sucesso na jornada do investidor. O controle de gastos, a elaboração de um orçamento pessoal e a quitação de dívidas com juros altos são etapas indispensáveis.
+                Antes de começar, um alicerce financeiro instável é o principal obstáculo. O controle de gastos, um orçamento pessoal e a quitação de dívidas com juros altos são etapas indispensáveis. O objetivo é identificar para onde seu dinheiro está indo, cortar despesas desnecessárias e usar essa economia para, primeiro, quitar dívidas e, em segundo lugar, construir sua reserva de emergência.
             </p>
         </CardContent>
       </Card>
 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger className="text-xl font-semibold">Investimentos de Curto Prazo</AccordionTrigger>
-          <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-            <p className="mb-4">
-              São considerados investimentos de curto prazo aqueles cujo resgate ocorrerá em até dois anos. Por conta do prazo, é sempre indicado que o investidor escolha investimentos mais conservadores para compor sua carteira.
-            </p>
-            <p className="mb-4">
-              Um planejamento adequado, alinhando os objetivos com os investimentos, permitirá ao investidor escolher as melhores opções que ofereçam bons rendimentos e a liquidez necessária sem comprometer sua organização financeira.
-            </p>
+          <AccordionTrigger className="text-xl font-semibold">Investimentos de Curto Prazo (até 2 anos)</AccordionTrigger>
+          <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
-              Exemplos incluem a poupança, CDBs com liquidez diária e Fundos de Renda Fixa atrelados ao CDI. A poupança, por exemplo, permite depósitos e resgates a qualquer momento e oferece baixo risco, ideal para quem busca segurança.
+              Para objetivos em até dois anos, o ideal é escolher investimentos conservadores e com alta liquidez (facilidade de resgate). Exemplos incluem a Poupança e CDBs com liquidez diária.
             </p>
+            <div>
+                <h4 className="font-semibold text-foreground mb-2">Caderneta de Poupança</h4>
+                <p>É a aplicação mais tradicional. Segura e simples, permite depósitos e resgates a qualquer momento. Seu rendimento é atrelado à taxa SELIC e é importante notar que, para pessoas físicas, o rendimento é isento de Imposto de Renda.</p>
+            </div>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">CDB com Liquidez Diária</h4>
+                <p>O Certificado de Depósito Bancário funciona como um empréstimo ao banco. A modalidade com liquidez diária é excelente para reservas de emergência, pois permite o resgate a qualquer momento. O rendimento geralmente é um percentual do CDI e há incidência de Imposto de Renda regressivo (quanto mais tempo investido, menor o imposto).</p>
+            </div>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
-          <AccordionTrigger className="text-xl font-semibold">Investimentos de Médio Prazo</AccordionTrigger>
-          <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-            <p className="mb-4">
-              Podemos considerar investimentos de médio prazo aqueles cujo resgate ocorrerá, em média, entre 2 e 5 anos. São a opção ideal para quem quer mais segurança e menos risco.
-            </p>
-            <p className="mb-4">
-              Há diversas opções, como Certificados de Depósito Bancário (CDB), Letras de Crédito Imobiliário (LCI) e Letras de Crédito do Agronegócio (LCA).
-            </p>
+          <AccordionTrigger className="text-xl font-semibold">Investimentos de Médio Prazo (2 a 5 anos)</AccordionTrigger>
+          <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
-              Os CDBs são um dos principais exemplos, com prazos que variam de 2 a 1800 dias. É um investimento ideal para pessoas que não gostam de correr riscos e preferem ter mais segurança.
+              Para objetivos de médio prazo, como a compra de um carro ou uma viagem, você pode buscar opções um pouco mais rentáveis, mesmo que com menor liquidez.
             </p>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">LCI e LCA</h4>
+                <p>As Letras de Crédito (Imobiliário e do Agronegócio) são similares aos CDBs, mas o dinheiro captado é direcionado a setores específicos. Seu grande atrativo é a isenção de Imposto de Renda para pessoas físicas, mas geralmente exigem que o dinheiro fique aplicado por um prazo mínimo.</p>
+            </div>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">CDBs de Médio Prazo</h4>
+                <p>Bancos oferecem CDBs com prazos maiores e, em troca, oferecem uma rentabilidade melhor (um percentual do CDI mais alto). O resgate só pode ser feito no vencimento, então é crucial alinhar o prazo do investimento com o do seu objetivo.</p>
+            </div>
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger className="text-xl font-semibold">Investimentos de Longo Prazo</AccordionTrigger>
-          <AccordionContent className="text-base text-muted-foreground leading-relaxed">
-            <p className="mb-4">
-              Os investimentos de longo prazo são aqueles em que se pretende resgatar o valor aplicado após cinco anos. Um exemplo dessa opção são os fundos de investimento.
-            </p>
-            <p className="mb-4">
-              O mercado financeiro oferece diversas modalidades de fundos, como Fundos de Renda Fixa, Fundos Multimercado, Fundos Cambiais e Fundos de Ações.
-            </p>
+          <AccordionTrigger className="text-xl font-semibold">Investimentos de Longo Prazo (acima de 5 anos)</AccordionTrigger>
+          <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
-              Para escolher um fundo, é importante ter em mente suas necessidades e objetivos de longo prazo e observar três atributos básicos: rentabilidade, liquidez e segurança. Antes de contratar, conheça o perfil da instituição, as taxas, as condições de resgate e verifique se os riscos são compatíveis com seu perfil.
+              Para objetivos como aposentadoria ou independência financeira, o longo prazo permite assumir um pouco mais de risco em busca de maiores rentabilidades.
             </p>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">Tesouro Direto</h4>
+                <p>Além do Tesouro Selic (ideal para curto prazo), o Tesouro Direto oferece títulos como o Tesouro IPCA+, que protege seu dinheiro da inflação e paga uma taxa de juros real. É uma excelente opção para o longo prazo.</p>
+            </div>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">Fundos de Investimento</h4>
+                <p>São "condomínios" de investidores que juntam seus recursos para que um gestor profissional invista em uma carteira diversificada de ativos (renda fixa, ações, etc.). Existem fundos para todos os perfis de risco. É importante ler o regulamento e verificar as taxas de administração.</p>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
