@@ -15,15 +15,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PiggyBank, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
-  type: z.string().min(2, { message: 'O tipo deve ter pelo menos 2 caracteres.' }),
+  type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
@@ -36,7 +37,7 @@ function InvestmentsPageContent() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: '',
+      type: undefined,
       institution: '',
       amount: undefined,
       yieldRate: undefined,
@@ -50,7 +51,12 @@ function InvestmentsPageContent() {
       description: `Seu investimento em ${values.type} foi adicionado.`,
       className: 'border-accent'
     });
-    form.reset();
+    form.reset({
+      type: undefined,
+      institution: '',
+      amount: undefined,
+      yieldRate: undefined,
+    });
   }
   
   const formatCurrency = (value: number) => {
@@ -61,16 +67,16 @@ function InvestmentsPageContent() {
 
   if (!isClient) {
     return (
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="flex flex-col gap-8">
         <Skeleton className="h-[480px]" />
-        <Skeleton className="h-[500px]" />
+        <Skeleton className="h-[250px]" />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-1">
         <Card>
           <CardHeader>
             <CardTitle>Adicionar Novo Investimento</CardTitle>
@@ -78,16 +84,26 @@ function InvestmentsPageContent() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Investimento</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: CDB, Tesouro Selic" {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="CDB">CDB</SelectItem>
+                          <SelectItem value="LCI">LCI</SelectItem>
+                          <SelectItem value="LCA">LCA</SelectItem>
+                          <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -99,7 +115,7 @@ function InvestmentsPageContent() {
                     <FormItem>
                       <FormLabel>Instituição Financeira</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Meu Banco, Corretora X" {...field} />
+                        <Input placeholder="Ex: Meu Banco" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -131,7 +147,7 @@ function InvestmentsPageContent() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Adicionar Investimento</Button>
+                <Button type="submit" className="lg:col-span-4">Adicionar Investimento</Button>
               </form>
             </Form>
           </CardContent>
@@ -139,8 +155,8 @@ function InvestmentsPageContent() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Meus Investimentos</CardTitle>
-            <CardDescription>Sua carteira de investimentos cadastrada.</CardDescription>
+            <CardTitle>Minha Carteira de Investimentos</CardTitle>
+            <CardDescription>Resumo dos seus ativos cadastrados.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-md">
@@ -151,7 +167,7 @@ function InvestmentsPageContent() {
                     <TableHead>Instituição</TableHead>
                     <TableHead>Rendimento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="text-right">Ação</TableHead>
+                    <TableHead className="w-[50px] text-right">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -161,7 +177,7 @@ function InvestmentsPageContent() {
                         <TableCell className="font-medium">{item.type}</TableCell>
                         <TableCell>{item.institution}</TableCell>
                         <TableCell>{item.yieldRate}% CDI</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                        <TableCell className="text-right font-semibold">{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => removeInvestment(item.id)}>
                             <Trash2 className="h-4 w-4" />
@@ -179,12 +195,14 @@ function InvestmentsPageContent() {
                     </TableRow>
                   )}
                 </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TableCell colSpan={3} className="font-bold">Total Investido</TableCell>
-                        <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totalInvested)}</TableCell>
-                    </TableRow>
-                </TableFooter>
+                 {investments.length > 0 && (
+                    <TableFooter>
+                        <TableRow>
+                            <TableCell colSpan={3} className="font-bold text-lg">Total Investido</TableCell>
+                            <TableCell colSpan={2} className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
+                        </TableRow>
+                    </TableFooter>
+                 )}
               </Table>
             </div>
           </CardContent>
@@ -201,3 +219,5 @@ export default function InvestmentsPage() {
         </PrivateRoute>
     )
 }
+
+    
