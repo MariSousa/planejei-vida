@@ -33,6 +33,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/summary-card';
 import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 
 const formSchema = z.object({
@@ -78,7 +79,7 @@ function PlanningPageContent() {
     defaultValues: {
       name: '',
       amount: undefined,
-      dueDate: undefined,
+      dueDate: new Date(),
       priority: 'Média',
       type: 'gasto',
     },
@@ -107,9 +108,7 @@ function PlanningPageContent() {
             name: values.name,
             amount: values.amount,
             type: values.type,
-            // Use current date for dueDate if it's a 'ganho'
             dueDate: (values.dueDate || new Date()).toISOString(),
-            // Use 'Baixa' as default for priority if it's a 'ganho'
             priority: values.priority || 'Baixa',
         };
 
@@ -119,7 +118,7 @@ function PlanningPageContent() {
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
             className: 'border-accent'
         });
-        form.reset({ name: '', amount: undefined, dueDate: undefined, priority: 'Média', type: 'gasto' });
+        form.reset({ name: '', amount: undefined, dueDate: new Date(), priority: 'Média', type: 'gasto' });
     } catch (error) {
          toast({
             title: 'Erro',
@@ -159,6 +158,9 @@ function PlanningPageContent() {
     'Média': 'secondary',
     'Baixa': 'default',
   };
+
+  const plannedIncomes = useMemo(() => monthlyPlanItems.filter(item => item.type === 'ganho'), [monthlyPlanItems]);
+  const plannedExpenses = useMemo(() => monthlyPlanItems.filter(item => item.type === 'gasto'), [monthlyPlanItems]);
   
   if (!isClient) {
     return (
@@ -175,7 +177,7 @@ function PlanningPageContent() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
         <div className="flex justify-center items-center gap-4">
             <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                 <ArrowLeft className="h-4 w-4" />
@@ -403,6 +405,48 @@ function PlanningPageContent() {
             </div>
             </CardContent>
         </Card>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4 text-center">Resumo do Planejamento</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg text-green-600">Ganhos Previstos</CardTitle>
+              <CardDescription>{formatCurrency(planningTotals.plannedIncome)}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                {plannedIncomes.map(item => (
+                  <li key={item.id} className="flex justify-between">
+                    <span>{item.name}</span>
+                    <span className="font-medium">{formatCurrency(item.amount)}</span>
+                  </li>
+                ))}
+                {plannedIncomes.length === 0 && <p className="text-muted-foreground">Nenhum ganho previsto.</p>}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg text-red-600">Gastos Previstos</CardTitle>
+              <CardDescription>{formatCurrency(planningTotals.plannedExpenses)}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                {plannedExpenses.map(item => (
+                  <li key={item.id} className="flex justify-between">
+                    <span>{item.name}</span>
+                    <span className="font-medium">{formatCurrency(item.amount)}</span>
+                  </li>
+                ))}
+                 {plannedExpenses.length === 0 && <p className="text-muted-foreground">Nenhum gasto previsto.</p>}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
