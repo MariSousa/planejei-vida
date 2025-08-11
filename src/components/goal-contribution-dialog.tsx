@@ -29,7 +29,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import type { Goal } from '@/types';
-import { Edit, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
@@ -91,7 +91,6 @@ export function GoalContributionDialog({ goal }: GoalContributionDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full">
-          <Edit className="mr-2" />
           Adicionar/Retirar
         </Button>
       </DialogTrigger>

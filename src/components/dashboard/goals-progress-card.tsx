@@ -6,7 +6,6 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import type { Goal } from "@/types";
 import Link from "next/link";
-import { Target } from "lucide-react";
 
 interface GoalsProgressCardProps {
     goals: Goal[];
@@ -55,7 +54,6 @@ export function GoalsProgressCard({ goals }: GoalsProgressCardProps) {
                     </div>
                 ) : (
                     <div className="flex flex-col h-[150px] w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
-                        <Target className="w-8 h-8 text-muted-foreground mb-2" />
                         <p className="text-center text-sm text-muted-foreground">Nenhum sonho por aqui ainda.</p>
                         <Button variant="link" asChild>
                             <Link href="/goals">Crie sua primeira meta</Link>

@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { expenseCategoryGroups, getIconForCategory } from '@/lib/categories';
+import { expenseCategoryGroups } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 
 
@@ -62,7 +62,7 @@ function ExpensesPageContent() {
   
   if (!isClient) {
     return (
-        <div className="grid gap-8 md:grid-cols-2">
+        <div class="grid gap-8 md:grid-cols-2">
             <Skeleton className="h-[380px]" />
             <Skeleton className="h-[400px]" />
         </div>
@@ -72,7 +72,7 @@ function ExpensesPageContent() {
   const allCategories = expenseCategoryGroups.flatMap(group => group.options);
 
   return (
-    <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+    <div class="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Adicionar Nova Despesa</CardTitle>
@@ -114,7 +114,6 @@ function ExpensesPageContent() {
                             {expenseCategoryGroups.map((group) => (
                               <CommandGroup key={group.label} heading={group.label}>
                                 {group.options.map((option) => {
-                                   const Icon = getIconForCategory(option);
                                    return (
                                     <CommandItem
                                       value={option}
@@ -132,7 +131,6 @@ function ExpensesPageContent() {
                                             : "opacity-0"
                                         )}
                                       />
-                                      <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
                                       {option}
                                     </CommandItem>
                                   )
@@ -171,7 +169,7 @@ function ExpensesPageContent() {
           <CardTitle>Histórico de Despesas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-md">
+          <div class="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -183,18 +181,16 @@ function ExpensesPageContent() {
               <TableBody>
                 {expenses.length > 0 ? (
                   expenses.map((item) => {
-                    const Icon = getIconForCategory(item.category);
                     return (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium flex items-center gap-2">
-                           <Icon className="h-4 w-4 text-muted-foreground" />
                            {item.category}
                         </TableCell>
                         <TableCell>{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => removeExpense(item.id)}>
                             <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remover</span>
+                            <span class="sr-only">Remover</span>
                           </Button>
                         </TableCell>
                       </TableRow>

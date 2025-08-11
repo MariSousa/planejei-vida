@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Trash2, PlusCircle, Target } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
@@ -118,7 +118,6 @@ function GoalsPageContent() {
                     )}
                 />
                 <Button type="submit" className="md:col-span-3">
-                    <PlusCircle className="mr-2"/>
                     Adicionar Meta
                 </Button>
                 </form>
@@ -136,10 +135,7 @@ function GoalsPageContent() {
                         <Card key={goal.id} className="flex flex-col">
                             <CardHeader>
                                 <div className="flex justify-between items-start">
-                                    <div className="flex items-center gap-2">
-                                        <Target className="w-5 h-5 text-primary" />
-                                        <CardTitle className="text-xl">{goal.name}</CardTitle>
-                                    </div>
+                                    <CardTitle className="text-xl">{goal.name}</CardTitle>
                                     <Button variant="ghost" size="icon" onClick={() => removeGoal(goal.id)}>
                                         <Trash2 className="h-4 w-4" />
                                         <span className="sr-only">Remover</span>

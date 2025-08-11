@@ -3,7 +3,7 @@
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Bell, CalendarClock } from "lucide-react";
+import { Bell } from "lucide-react";
 import { type Debt } from "@/types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -50,7 +50,6 @@ export function NotificationsPopover({ upcomingPayments }: NotificationsPopoverP
                                      <div className="space-y-1">
                                         <p className="text-sm font-medium leading-none">{payment.name}</p>
                                         <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <CalendarClock className="w-3 h-3" />
                                             Vence em: {formatDate(payment.dueDate)}
                                         </p>
                                      </div>

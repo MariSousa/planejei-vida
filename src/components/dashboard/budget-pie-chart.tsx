@@ -3,7 +3,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
-import { Banknote, Gem, Target } from 'lucide-react';
 
 interface BudgetPieChartProps {
     totalIncome: number;
@@ -19,9 +18,9 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
     const savings = Math.max(0, totalIncome - (totalNecessities + totalWants));
 
     const data = [
-        { name: 'Necessidades', value: totalNecessities, icon: Target },
-        { name: 'Desejos', value: totalWants, icon: Gem },
-        { name: 'Poupança', value: savings, icon: Banknote },
+        { name: 'Necessidades', value: totalNecessities },
+        { name: 'Desejos', value: totalWants },
+        { name: 'Poupança', value: savings },
     ];
 
     const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
@@ -56,12 +55,10 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
                     const { color, value: name } = entry;
                     const item = data.find(d => d.name === name);
                     if (!item) return null;
-                    const Icon = item.icon;
                     return (
                         <li key={`item-${index}`} className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: color, borderRadius: '50%' }}></span>
-                                <Icon className="w-4 h-4 text-muted-foreground" />
                                 <span>{name}</span>
                             </div>
                             <span className="font-medium">{formatCurrency(item.value)}</span>

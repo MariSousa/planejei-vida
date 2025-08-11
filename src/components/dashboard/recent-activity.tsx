@@ -4,7 +4,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Income, Expense } from "@/types";
-import { ArrowDown, ArrowUp, Wallet } from "lucide-react";
 import Link from "next/link";
 
 type Transaction = (Income & { type: 'income' }) | (Expense & { type: 'expense' });
@@ -38,7 +37,7 @@ export function RecentActivity({ transactions }: RecentActivityProps) {
                         {allTransactions.map(item => (
                             <div key={item.id} className="flex items-center">
                                 <div className={`flex h-10 w-10 items-center justify-center rounded-full ${item.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                    {item.type === 'income' ? <ArrowUp className="h-5 w-5" /> : <ArrowDown className="h-5 w-5" />}
+                                    <span>{item.type === 'income' ? 'R' : 'D'}</span>
                                 </div>
                                 <div className="ml-4 flex-1">
                                     <p className="text-sm font-medium leading-none">{item.type === 'income' ? item.source : item.category}</p>
@@ -52,7 +51,6 @@ export function RecentActivity({ transactions }: RecentActivityProps) {
                     </div>
                 ) : (
                     <div className="flex flex-col h-[150px] w-full items-center justify-center rounded-lg border-2 border-dashed p-4">
-                        <Wallet className="w-8 h-8 text-muted-foreground mb-2" />
                         <p className="text-center text-sm text-muted-foreground">Nenhuma atividade recente.</p>
                          <Button variant="link" asChild>
                             <Link href="/expenses">Adicione seu primeiro gasto</Link>
