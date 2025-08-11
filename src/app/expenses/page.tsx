@@ -24,13 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { expenseCategoryGroups } from '@/lib/categories';
 import { CreateCategoryDialog } from '@/components/create-category-dialog';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 const formSchema = z.object({
@@ -92,33 +86,32 @@ function ExpensesPageContent() {
                       <CreateCategoryDialog />
                     </div>
                      <FormControl>
-                       <Carousel className="w-full max-w-xs mx-auto">
-                          <CarouselContent>
-                             {expenseCategoryGroups.map((group) => (
-                              <CarouselItem key={group.label}>
-                                <div className="p-1 text-center">
-                                  <p className="font-semibold mb-4">{group.label}</p>
-                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                      {group.options.map(option => (
-                                          <Button
-                                              key={option}
-                                              type="button"
-                                              variant={field.value === option ? 'default' : 'outline'}
-                                              onClick={() => form.setValue('category', option)}
-                                              className="text-xs h-9"
-                                          >
-                                              {option}
-                                          </Button>
-                                      ))}
-                                  </div>
-                                </div>
-                              </CarouselItem>
-                             ))}
+                        <Tabs defaultValue={expenseCategoryGroups[0].label} className="w-full">
+                           <TabsList className="grid w-full grid-cols-3">
+                                {expenseCategoryGroups.slice(0, 3).map((group) => (
+                                    <TabsTrigger key={group.label} value={group.label}>{group.label}</TabsTrigger>
+                                ))}
+                           </TabsList>
+                            {expenseCategoryGroups.map((group) => (
+                                <TabsContent key={group.label} value={group.label}>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-4">
+                                        {group.options.map(option => (
+                                            <Button
+                                                key={option}
+                                                type="button"
+                                                variant={field.value === option ? 'default' : 'outline'}
+                                                onClick={() => form.setValue('category', option)}
+                                                className="text-xs h-9"
+                                            >
+                                                {option}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </TabsContent>
+                            ))}
                              {customCategories.length > 0 && (
-                               <CarouselItem>
-                                 <div className="p-1 text-center">
-                                    <p className="font-semibold mb-4">Personalizadas</p>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                <TabsContent value="custom">
+                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-4">
                                       {customCategories.map(cat => (
                                         <Button
                                           key={cat.id}
@@ -131,13 +124,9 @@ function ExpensesPageContent() {
                                         </Button>
                                       ))}
                                     </div>
-                                  </div>
-                               </CarouselItem>
+                                </TabsContent>
                              )}
-                          </CarouselContent>
-                          <CarouselPrevious />
-                          <CarouselNext />
-                        </Carousel>
+                        </Tabs>
                      </FormControl>
                     <FormMessage />
                   </FormItem>
