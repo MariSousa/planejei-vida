@@ -19,7 +19,8 @@ export async function sendSupportTicket(input: TicketInput): Promise<{ error?: s
     }
 
     try {
-        await addDoc(collection(db, `users/${input.userId}/supportTickets`), {
+        // Save tickets to a top-level collection for simplicity and security
+        await addDoc(collection(db, `supportTickets`), {
             subject: input.subject,
             message: input.message,
             userEmail: input.userEmail,
