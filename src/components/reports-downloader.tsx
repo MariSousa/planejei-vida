@@ -34,23 +34,43 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
   const getHeaders = (type: ReportType): string[] => {
     const data = dataMap[type];
     if (!data || data.length === 0) return [];
-    // Remove 'id' e outros campos irrelevantes do cabeçalho
-    const ignoredFields = ['id', 'goalId'];
-    return Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
+    
+    const ignoredFields = ['id', 'goalId', 'date']; 
+    // Mapeamento de nomes de campos para cabeçalhos em português
+    const headerTranslations: Record<string, string> = {
+        source: 'Fonte',
+        amount: 'Valor',
+        category: 'Categoria',
+        name: 'Nome',
+        institution: 'Instituição',
+        yieldRate: 'Taxa de Rendimento',
+        type: 'Tipo',
+        dueDate: 'Data de Vencimento',
+        priority: 'Prioridade',
+        status: 'Status',
+        goalName: 'Nome da Meta',
+        adviceText: 'Conselho',
+        targetAmount: 'Valor Alvo',
+        currentAmount: 'Valor Atual',
+    };
+
+    return Object.keys(data[0])
+        .filter(header => !ignoredFields.includes(header))
+        .map(header => headerTranslations[header] || header);
   };
   
   const getBodyRows = (type: ReportType): string[][] => {
       const data = dataMap[type];
-      const headers = getHeaders(type);
+      const headers = Object.keys(data.length > 0 ? data[0] : {}).filter(h => !['id', 'goalId', 'date'].includes(h));
       if (!data || data.length === 0) return [];
       
       return data.map(item =>
           headers.map(header => {
               const value = (item as any)[header];
-              if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount'].includes(header)) {
+              if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount', 'yieldRate', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount'].includes(header)) {
                   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
               }
-              if (header.toLowerCase().includes('date')) {
+              if (['date', 'dueDate', 'lastPaymentDate', 'startDate'].includes(header) && value) {
                   try {
                       return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                   } catch (e) {
@@ -60,7 +80,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
               if (header === 'adviceText') {
                 return String(value).replace(/\n/g, '<br/>');
               }
-              return String(value);
+              return String(value ?? '-');
           })
       );
   };
@@ -71,15 +91,57 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
     const rows = getBodyRows(type);
 
     const styles = `
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 2rem; }
-        h1 { color: #212529; border-bottom: 2px solid #dee2e6; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
-        th { background-color: #f1f3f5; font-weight: 600; text-transform: capitalize; }
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        tr:hover { background-color: #e9ecef; }
-        .no-data { text-align: center; padding: 20px; color: #6c757d; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background-color: #f8f9fa; 
+            margin: 0;
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            padding: 2rem; 
+        }
+        h1 { 
+            font-size: 1.75rem;
+            color: #212529; 
+            border-bottom: 2px solid #dee2e6; 
+            padding-bottom: 0.5rem; 
+            margin-bottom: 1.5rem; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 12px 15px; 
+            text-align: left; 
+            vertical-align: top;
+        }
+        th { 
+            background-color: #f1f3f5; 
+            font-weight: 600; 
+            text-transform: capitalize; 
+        }
+        tr:nth-child(even) { 
+            background-color: #f8f9fa; 
+        }
+        tr:hover { 
+            background-color: #e9ecef; 
+        }
+        .no-data { 
+            text-align: center; 
+            padding: 20px; 
+            color: #6c757d; 
+            font-style: italic;
+        }
     `;
 
     const tableHtml = rows.length > 0 ? `
