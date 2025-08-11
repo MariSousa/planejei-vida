@@ -107,7 +107,8 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
                   }
               }
               if (header === 'adviceText') {
-                return String(value).replace(/\n/g, '<br/>');
+                const cleanedText = String(value).replace(/\*\*/g, ''); // Remove asterisks
+                return cleanedText.replace(/\n/g, '<br/>');
               }
               return String(value ?? '-');
           })
