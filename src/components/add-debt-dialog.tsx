@@ -41,7 +41,8 @@ const formSchema = z.object({
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  totalInstallments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
+  totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
+  remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
 });
 
 export function AddDebtDialog() {
@@ -60,6 +61,7 @@ export function AddDebtDialog() {
       monthlyPaymentGoal: undefined,
       interestRate: undefined,
       totalInstallments: undefined,
+      remainingInstallments: undefined,
     },
   });
 
@@ -71,7 +73,6 @@ export function AddDebtDialog() {
             dueDate: values.dueDate.toISOString(),
             status: 'Pendente' as const,
             lastPaymentDate: null,
-            remainingInstallments: values.totalInstallments, // Initially, remaining is total
         };
         await addDebt(newDebt);
         toast({
@@ -108,7 +109,7 @@ export function AddDebtDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <FormField
                 control={form.control}
                 name="name"
@@ -153,7 +154,7 @@ export function AddDebtDialog() {
                 name="dueDate"
                 render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>Data de Vencimento</FormLabel>
+                        <FormLabel>Data de Vencimento Final</FormLabel>
                         <Popover>
                             <PopoverTrigger asChild>
                             <FormControl>
@@ -192,7 +193,7 @@ export function AddDebtDialog() {
                 name="monthlyPaymentGoal"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Meta de Pagamento Mensal (R$)</FormLabel>
+                    <FormLabel>Valor da Parcela Mensal (R$)</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
                     </FormControl>
@@ -205,7 +206,7 @@ export function AddDebtDialog() {
                 name="interestRate"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Taxa de Juros (% a.m.)</FormLabel>
+                    <FormLabel>Taxa de Juros (% a.m.) (Opcional)</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.01" placeholder="8.5" {...field} value={field.value ?? ''} />
                     </FormControl>
@@ -221,6 +222,19 @@ export function AddDebtDialog() {
                     <FormLabel>Nº Total de Parcelas</FormLabel>
                     <FormControl>
                     <Input type="number" placeholder="24" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="remainingInstallments"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Nº de Parcelas Restantes</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

@@ -83,8 +83,8 @@ export interface Debt {
     status: 'Pendente' | 'Pago';
     monthlyPaymentGoal: number;
     interestRate?: number;
-    remainingInstallments?: number;
-    totalInstallments?: number;
+    remainingInstallments: number;
+    totalInstallments: number;
     date: string; 
     lastPaymentDate: string | null;
 }
