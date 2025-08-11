@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +15,17 @@ import { useAuth } from '@/contexts/auth-context';
 function DashboardContent() {
   const { user } = useAuth();
   const { totals, goals, income, expenses, isClient } = useFinancials();
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const getGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Bom dia';
+      if (hour < 18) return 'Boa tarde';
+      return 'Boa noite';
+    }
+    setGreeting(getGreeting());
+  }, []);
 
   if (!isClient) {
     return (
@@ -31,17 +43,10 @@ function DashboardContent() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bom dia';
-    if (hour < 18) return 'Boa tarde';
-    return 'Boa noite';
-  }
-
   return (
     <div className="flex flex-col gap-6">
         <BalanceCard
-            greeting={getGreeting()}
+            greeting={greeting}
             userName={user?.displayName || user?.email?.split('@')[0] || 'Usuário'}
             balance={totals.savings}
         />
