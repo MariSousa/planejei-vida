@@ -35,7 +35,7 @@ const formSchema = z.object({
   originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
   paidAmount: z.coerce.number().min(0, { message: 'O valor pago não pode ser negativo.' }),
   startDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
-    message: 'Formato de data inválido. Use DD/MM/AAAA.',
+    message: 'Data de início é obrigatória. Use DD/MM/AAAA.',
   }),
   dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
     message: 'Formato de data inválido. Use DD/MM/AAAA.',
@@ -78,6 +78,12 @@ export function AddDebtDialog() {
     try {
         const parsedStartDate = parse(values.startDate, 'dd/MM/yyyy', new Date());
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
+
+        if (isNaN(parsedStartDate.getTime())) {
+            form.setError('startDate', { type: 'manual', message: 'Data de início inválida.' });
+            setIsLoading(false);
+            return;
+        }
 
         const newDebt = {
             name: values.name,

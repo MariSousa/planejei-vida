@@ -86,7 +86,7 @@ function DebtsPageContent() {
       <div className="flex flex-col gap-4">
         {debts.length > 0 ? (
             debts.map((item) => {
-                const remaining = item.remainingInstallments ?? 0;
+                const remaining = item.remainingInstallments;
                 const installmentsToShow = Array.from({ length: Math.min(remaining, 3) });
                 const hasMoreInstallments = remaining > 3;
 
@@ -103,7 +103,7 @@ function DebtsPageContent() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                           {item.status === 'Pendente' && installmentsToShow.length > 0 && (
+                           {item.status === 'Pendente' && item.totalInstallments > 1 && installmentsToShow.length > 0 && (
                                 <div className="space-y-3 p-3 border rounded-md bg-background/50">
                                     <h4 className="text-sm font-semibold">Próximos Pagamentos:</h4>
                                     {installmentsToShow.map((_, index) => {
