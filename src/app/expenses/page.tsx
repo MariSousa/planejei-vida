@@ -121,7 +121,7 @@ function ExpensesPageContent() {
             <div className="space-y-4">
                  <div>
                     <div className="flex justify-between items-center mb-2">
-                      <FormLabel>Categoria</FormLabel>
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Categoria</label>
                       <CreateCategoryDialog />
                     </div>
                     <CategorySelector
