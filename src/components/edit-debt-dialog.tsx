@@ -26,25 +26,24 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, Pencil } from 'lucide-react';
+import { parse, format } from 'date-fns';
+import { Loader2, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import type { Debt } from '@/types';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
   remainingAmount: z.coerce.number().min(0, { message: 'O saldo devedor deve ser 0 ou mais.' }),
-  dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
+  dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
+    message: 'Formato de data inválido. Use DD/MM/AAAA.',
+  }),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
   totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
   remainingInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
 });
+
 
 interface EditDebtDialogProps {
   debt: Debt;
@@ -62,7 +61,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         name: debt.name,
         originalAmount: debt.originalAmount,
         remainingAmount: debt.remainingAmount,
-        dueDate: new Date(debt.dueDate),
+        dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
         monthlyPaymentGoal: debt.monthlyPaymentGoal,
         interestRate: debt.interestRate,
         totalInstallments: debt.totalInstallments,
@@ -76,7 +75,7 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
             name: debt.name,
             originalAmount: debt.originalAmount,
             remainingAmount: debt.remainingAmount,
-            dueDate: new Date(debt.dueDate),
+            dueDate: format(new Date(debt.dueDate), 'dd/MM/yyyy'),
             monthlyPaymentGoal: debt.monthlyPaymentGoal,
             interestRate: debt.interestRate,
             totalInstallments: debt.totalInstallments,
@@ -89,9 +88,10 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+        const parsedDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
         const updatedData = {
             ...values,
-            dueDate: values.dueDate.toISOString(),
+            dueDate: parsedDate.toISOString(),
         };
         await updateDebt(debt.id, updatedData);
         toast({
@@ -171,37 +171,11 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
                 control={form.control}
                 name="dueDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                     <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                )}
-                                >
-                                {field.value ? (
-                                    format(field.value, 'PPP', { locale: ptBR })
-                                ) : (
-                                    <span>Selecione uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                                locale={ptBR}
-                            />
-                            </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                           <Input placeholder="DD/MM/AAAA" {...field} />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}

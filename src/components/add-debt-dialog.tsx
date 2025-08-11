@@ -26,19 +26,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, Plus } from 'lucide-react';
+import { parse, format } from 'date-fns';
+import { Loader2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
-  remainingAmount: z.coerce.number().positive({ message: 'O saldo devedor deve ser positivo.' }),
-  dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
+  paidAmount: z.coerce.number().min(0, { message: 'O valor pago não pode ser negativo.' }),
+  dueDate: z.string().refine((val) => /^\d{2}\/\d{2}\/\d{4}$/.test(val), {
+    message: 'Formato de data inválido. Use DD/MM/AAAA.',
+  }),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
   totalInstallments: z.coerce.number().int().min(0, { message: 'O valor deve ser 0 ou mais.' }),
@@ -56,21 +54,28 @@ export function AddDebtDialog() {
     defaultValues: {
       name: '',
       originalAmount: undefined,
-      remainingAmount: undefined,
+      paidAmount: 0,
       dueDate: undefined,
       monthlyPaymentGoal: undefined,
       interestRate: undefined,
-      totalInstallments: undefined,
-      remainingInstallments: undefined,
+      totalInstallments: 0,
+      remainingInstallments: 0,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+        const parsedDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
         const newDebt = {
-            ...values,
-            dueDate: values.dueDate.toISOString(),
+            name: values.name,
+            originalAmount: values.originalAmount,
+            remainingAmount: values.originalAmount - values.paidAmount,
+            dueDate: parsedDate.toISOString(),
+            monthlyPaymentGoal: values.monthlyPaymentGoal,
+            interestRate: values.interestRate,
+            totalInstallments: values.totalInstallments,
+            remainingInstallments: values.remainingInstallments,
             status: 'Pendente' as const,
             lastPaymentDate: null,
         };
@@ -138,12 +143,12 @@ export function AddDebtDialog() {
             />
             <FormField
                 control={form.control}
-                name="remainingAmount"
+                name="paidAmount"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Saldo Devedor Atual (R$)</FormLabel>
+                    <FormLabel>Quanto você já pagou? (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="3500.00" {...field} value={field.value ?? ''} />
+                    <Input type="number" step="0.01" placeholder="1500.00" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -153,37 +158,11 @@ export function AddDebtDialog() {
                 control={form.control}
                 name="dueDate"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                         <FormLabel>Data de Vencimento Final</FormLabel>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <FormControl>
-                                <Button
-                                variant={"outline"}
-                                className={cn(
-                                    "pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                )}
-                                >
-                                {field.value ? (
-                                    format(field.value, 'PPP', { locale: ptBR })
-                                ) : (
-                                    <span>Selecione uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                            </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                                locale={ptBR}
-                            />
-                            </PopoverContent>
-                        </Popover>
+                        <FormControl>
+                           <Input placeholder="DD/MM/AAAA" {...field} />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                 )}
