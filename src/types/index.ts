@@ -50,3 +50,9 @@ export interface CustomCategory {
     date: string;
     // We can add isFavorite and parentId later
 }
+
+export interface Favorite {
+    id: string;
+    name: string;
+    date: string;
+}

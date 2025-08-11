@@ -33,7 +33,7 @@ const formSchema = z.object({
 });
 
 function ExpensesPageContent() {
-  const { expenses, addExpense, removeExpense, isClient, customCategories } = useFinancials();
+  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite } = useFinancials();
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,6 +53,28 @@ function ExpensesPageContent() {
     });
     form.reset({amount: undefined, category: undefined});
   }
+
+  const handleFavoriteToggle = async (category: string, isCurrentlyFavorite: boolean) => {
+    try {
+      if (isCurrentlyFavorite) {
+        await removeFavorite(category);
+        toast({
+          description: `"${category}" removido dos favoritos.`,
+        });
+      } else {
+        await addFavorite(category);
+        toast({
+          description: `"${category}" adicionado aos favoritos.`,
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível atualizar os favoritos.',
+      });
+    }
+  };
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -88,7 +110,9 @@ function ExpensesPageContent() {
                      <FormControl>
                         <CategorySelector
                             customCategories={customCategories}
+                            favoriteCategories={favoriteCategories}
                             onSelect={(category) => form.setValue('category', category, { shouldValidate: true })}
+                            onFavoriteToggle={handleFavoriteToggle}
                             selectedValue={field.value}
                         />
                      </FormControl>
