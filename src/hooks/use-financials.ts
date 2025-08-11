@@ -6,7 +6,7 @@ import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc } from 'firebase/firestore';
-import { addDays, isAfter, isBefore, startOfToday, format, addMonths } from 'date-fns';
+import { addDays, isAfter, isBefore, startOfToday, format, addMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -176,9 +176,8 @@ export const useFinancials = () => {
   }, [user, reportMonth]);
 
 
-  const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any) => {
+  const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any, date = new Date()) => {
       if (!user) return;
-      const date = new Date();
       const monthStr = format(date, 'yyyy-MM');
       const monthDocRef = doc(db, `users/${user.uid}/${collectionName}`, monthStr);
       await setDoc(monthDocRef, { month: monthStr }, { merge: true });
@@ -314,6 +313,36 @@ export const useFinancials = () => {
     });
   }, [user]);
 
+  const payDownDebt = useCallback(async (debtId: string, amount: number, category: string) => {
+    if (!user) return;
+    const debtRef = doc(db, `users/${user.uid}/debts`, debtId);
+    
+    await runTransaction(db, async (transaction) => {
+      const debtDoc = await transaction.get(debtRef);
+      if (!debtDoc.exists()) {
+        throw new Error("Compromisso não encontrado.");
+      }
+      
+      const currentAmount = debtDoc.data().amount;
+      const newAmount = currentAmount - amount;
+      
+      transaction.update(debtRef, { 
+        amount: newAmount,
+        lastPaymentDate: new Date().toISOString(),
+        status: newAmount <= 0 ? 'Pago' : 'Pendente'
+      });
+      
+      // This is not atomic across collections in this simple implementation,
+      // but it's good enough for this app.
+      // For a real-world app, we might use a Cloud Function to ensure atomicity.
+    });
+
+    // Add the payment as a regular expense
+    await addMonthlyDocWithDate('expenses', { category, amount });
+
+  }, [user]);
+
+
   const favoriteCategories = useMemo(() => favorites.map(f => f.name), [favorites]);
   
   const totals = useMemo(() => {
@@ -395,6 +424,15 @@ export const useFinancials = () => {
       return planned.filter(p => !actualCategories.includes(normalize(p.name)));
   }, [currentMonthPlanItemsForSuggestions, expenses]);
 
+  const pendingDebtPayments = useMemo(() => {
+    const thisMonth = new Date();
+    return debts.filter(debt => {
+      if (debt.status !== 'Pendente') return false;
+      if (!debt.lastPaymentDate) return true; // Always suggest if never paid
+      return !isSameMonth(new Date(debt.lastPaymentDate), thisMonth);
+    });
+  }, [debts]);
+
   return {
     income,
     expenses,
@@ -407,6 +445,7 @@ export const useFinancials = () => {
     favoriteCategories,
     pendingPlannedIncome,
     pendingPlannedExpenses,
+    pendingDebtPayments,
     reportIncome,
     reportExpenses,
     reportMonthlyPlanItems,
@@ -432,6 +471,7 @@ export const useFinancials = () => {
     removeAdvice,
     removeCategory,
     updateGoalContribution,
+    payDownDebt,
     totals,
     expensesByCategory,
     upcomingPayments,

@@ -64,6 +64,7 @@ export function AddDebtDialog() {
             ...values,
             dueDate: values.dueDate.toISOString(),
             status: 'Pendente' as const,
+            lastPaymentDate: null,
         };
         await addDebt(newDebt);
         toast({

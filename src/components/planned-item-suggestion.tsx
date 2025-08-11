@@ -8,15 +8,16 @@ import type { MonthlyPlanItem } from '@/types';
 import { useState } from 'react';
 
 interface PlannedItemSuggestionProps {
-  item: MonthlyPlanItem;
+  item: Omit<MonthlyPlanItem, 'dueDate' | 'priority' | 'status'>;
   onAdd: () => void;
+  suggestionType: 'plan' | 'debt';
 }
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-export function PlannedItemSuggestion({ item, onAdd }: PlannedItemSuggestionProps) {
+export function PlannedItemSuggestion({ item, onAdd, suggestionType }: PlannedItemSuggestionProps) {
   const [ignored, setIgnored] = useState(false);
 
   const handleAdd = () => {
@@ -32,21 +33,27 @@ export function PlannedItemSuggestion({ item, onAdd }: PlannedItemSuggestionProp
       return null;
   }
 
+  const suggestionText = suggestionType === 'debt' 
+    ? <>Você tem um pagamento de <strong>{item.name}</strong> no valor de <strong>{formatCurrency(item.amount)}</strong> para este mês.</>
+    : <>Você planejou um {item.type} de <strong>{item.name}</strong> no valor de <strong>{formatCurrency(item.amount)}</strong>.</>;
+
+  const buttonText = suggestionType === 'debt' ? "Pagar este mês" : "Adicionar";
+
   return (
     <div className="p-3 rounded-lg border bg-accent/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
             <Info className="h-5 w-5 text-primary" />
             <div>
-                <p className="text-sm font-medium">Lançamento Planejado</p>
+                <p className="text-sm font-medium">Lançamento Sugerido</p>
                 <p className="text-sm text-muted-foreground">
-                    Você planejou um {item.type} de <strong>{item.name}</strong> no valor de <strong>{formatCurrency(item.amount)}</strong>.
+                   {suggestionText}
                 </p>
             </div>
         </div>
         <div className="flex gap-2 self-end sm:self-center">
             <Button size="sm" onClick={handleAdd}>
                 <Plus className="mr-2 h-4 w-4" />
-                Adicionar
+                {buttonText}
             </Button>
              <Button size="sm" variant="ghost" onClick={handleIgnore}>
                 <X className="mr-2 h-4 w-4" />

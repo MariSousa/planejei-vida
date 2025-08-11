@@ -34,7 +34,7 @@ const formSchema = z.object({
 });
 
 function ExpensesPageContent() {
-  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals, pendingPlannedExpenses } = useFinancials();
+  const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals, pendingPlannedExpenses, pendingDebtPayments, payDownDebt } = useFinancials();
   const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   
@@ -110,6 +110,23 @@ function ExpensesPageContent() {
             className: 'border-accent'
         });
   }
+
+   const handlePayDebt = async (debtId: string, name: string, amount: number) => {
+        try {
+            await payDownDebt(debtId, amount, name);
+            toast({
+                title: 'Pagamento de Compromisso Realizado!',
+                description: `O valor foi deduzido de "${name}" e adicionado como um gasto.`,
+                className: 'border-accent',
+            });
+        } catch (error) {
+             toast({
+                title: 'Erro ao processar pagamento',
+                description: 'Não foi possível registrar o pagamento do compromisso.',
+                variant: 'destructive',
+            });
+        }
+    };
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -126,17 +143,31 @@ function ExpensesPageContent() {
 
   return (
     <div className="flex flex-col gap-6">
-        {pendingPlannedExpenses.length > 0 && (
+         {(pendingPlannedExpenses.length > 0 || pendingDebtPayments.length > 0) && (
             <Card>
                 <CardHeader>
-                    <CardTitle>Lançamentos Planejados</CardTitle>
+                    <CardTitle>Lançamentos Sugeridos</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
+                    {pendingDebtPayments.map(debt => (
+                         <PlannedItemSuggestion
+                            key={debt.id}
+                            item={{
+                                id: debt.id,
+                                name: debt.name,
+                                amount: debt.monthlyPaymentGoal,
+                                type: 'gasto'
+                            }}
+                            onAdd={() => handlePayDebt(debt.id, debt.name, debt.monthlyPaymentGoal)}
+                            suggestionType="debt"
+                        />
+                    ))}
                     {pendingPlannedExpenses.map(item => (
                         <PlannedItemSuggestion
                             key={item.id}
                             item={item}
                             onAdd={() => handleAddPlannedExpense(item.name, item.amount)}
+                            suggestionType="plan"
                         />
                     ))}
                 </CardContent>
