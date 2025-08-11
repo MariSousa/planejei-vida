@@ -16,6 +16,7 @@ import {
   Target,
   BrainCircuit,
   User,
+  Settings,
 } from 'lucide-react';
 
 const menuItems = [
@@ -26,6 +27,7 @@ const menuItems = [
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
   { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
   { href: '/profile', label: 'Meu Perfil', icon: User },
+  { href: '/settings', label: 'Configurações', icon: Settings },
 ];
 
 export function MainNav() {

@@ -13,34 +13,26 @@ interface DataExporterProps {
 
 export function DataExporter({ income, expenses }: DataExporterProps) {
 
-  const convertToCSV = (data: (Income | Expense)[], type: 'income' | 'expense') => {
-    const headers = type === 'income' 
-      ? ['id', 'source', 'amount', 'date'] 
-      : ['id', 'category', 'amount', 'date'];
+  const convertToCSV = (data: (Income | Expense)[]) => {
+    const headers = ['Tipo', 'ID', 'Data', 'Descricao/Categoria', 'Valor'];
+    
+    const incomeRows = income.map(item => 
+        `"Ganho","${item.id}","${new Date(item.date).toLocaleDateString('pt-BR')}","${item.source}",${item.amount}`
+    );
 
-    const rows = data.map(item => {
-      const date = new Date(item.date).toISOString();
-      if (type === 'income' && 'source' in item) {
-          return [item.id, `"${item.source}"`, item.amount, date].join(',');
-      }
-      if (type === 'expense' && 'category' in item) {
-          return [item.id, `"${item.category}"`, item.amount, date].join(',');
-      }
-      return '';
-    }).filter(Boolean);
+    const expenseRows = expenses.map(item => 
+         `"Gasto","${item.id}","${new Date(item.date).toLocaleDateString('pt-BR')}","${item.category}",${item.amount}`
+    );
 
-    return [headers.join(','), ...rows].join('\n');
+    const allRows = [...incomeRows, ...expenseRows];
+
+    return [headers.join(','), ...allRows].join('\n');
   };
 
   const handleExport = () => {
-    const incomeCSV = convertToCSV(income, 'income');
-    const expensesCSV = convertToCSV(expenses, 'expense');
-
-    const csvContent = `Tipo,ID,Descricao/Categoria,Valor,Data\n` +
-     income.map(i => `Ganho,${i.id},"${i.source}",${i.amount},${new Date(i.date).toISOString()}`).join('\n') + '\n' +
-     expenses.map(e => `Gasto,${e.id},"${e.category}",${e.amount},${new Date(e.date).toISOString()}`).join('\n');
+    const csvContent = convertToCSV([...income, ...expenses]);
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     if (link.href) {
       URL.revokeObjectURL(link.href);
@@ -58,12 +50,12 @@ export function DataExporter({ income, expenses }: DataExporterProps) {
       <CardHeader>
         <CardTitle>Exportar Seus Dados</CardTitle>
         <CardDescription>
-          Faça o download de seus ganhos e gastos em formato CSV para usar em outras ferramentas.
+          Faça o download de seus ganhos e gastos em formato CSV para usar em outras ferramentas. A exportação para PDF será adicionada em breve.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Button onClick={handleExport} disabled={income.length === 0 && expenses.length === 0}>
-          <Download className="mr-2" />
+          <Download className="mr-2 h-4 w-4" />
           Exportar para CSV
         </Button>
       </CardContent>
