@@ -117,13 +117,17 @@ function DebtsPageContent() {
                                 <div className="space-y-3 p-3 border rounded-md bg-background/50">
                                     <h4 className="text-sm font-semibold">Próximos Pagamentos:</h4>
                                     {installmentsToShow.map((_, index) => {
-                                        const installmentId = `${item.id}-installment-${index}`;
+                                        // Calculate the actual installment number
+                                        const paidInstallments = item.totalInstallments - item.remainingInstallments;
+                                        const currentInstallmentNumber = paidInstallments + index + 1;
+                                        const installmentId = `${item.id}-installment-${currentInstallmentNumber}`;
+                                        
                                         return (
                                             <div key={installmentId} className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-2">
                                                     <Checkbox id={installmentId} onCheckedChange={() => handleInstallmentPay(item)} />
                                                     <Label htmlFor={installmentId} className="capitalize text-sm">
-                                                        Parcela {getInstallmentDate(item, index + 1)}
+                                                        Parcela {getInstallmentDate(item, index)}
                                                     </Label>
                                                 </div>
                                                 <span className="font-medium text-sm">{formatCurrency(item.monthlyPaymentGoal)}</span>
