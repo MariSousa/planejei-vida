@@ -4,26 +4,26 @@
 import { db } from '@/lib/firebase';
 import { addDoc, collection } from 'firebase/firestore';
 import { revalidatePath } from 'next/cache';
-import { useAuth } from '@/contexts/auth-context';
-import { auth } from '@/lib/firebase';
 
 interface TicketInput {
     subject: string;
     message: string;
     userEmail: string;
+    userId: string; // Add userId to the input
 }
 
 export async function sendSupportTicket(input: TicketInput): Promise<{ error?: string }> {
-    const user = auth.currentUser;
-
-    if (!user) {
+    // We get the userId from the client now, which is more reliable.
+    if (!input.userId) {
         return { error: 'Você precisa estar logado para enviar uma solicitação de suporte.' };
     }
 
     try {
-        await addDoc(collection(db, `users/${user.uid}/supportTickets`), {
-            ...input,
-            userId: user.uid,
+        await addDoc(collection(db, `users/${input.userId}/supportTickets`), {
+            subject: input.subject,
+            message: input.message,
+            userEmail: input.userEmail,
+            userId: input.userId,
             status: 'Aberto',
             date: new Date().toISOString(),
         });

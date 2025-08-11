@@ -13,9 +13,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/contexts/auth-context';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { sendSupportTicket } from './actions';
+import Link from 'next/link';
 
 const faqItems = [
     {
@@ -57,6 +58,7 @@ function SupportPageContent() {
         const result = await sendSupportTicket({
             ...values,
             userEmail: user.email,
+            userId: user.uid,
         });
 
         if (result.error) {
@@ -85,6 +87,28 @@ function SupportPageContent() {
                         Precisa de ajuda? Tire suas dúvidas ou entre em contato com nossa equipe.
                     </p>
                 </div>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Canais Rápidos</CardTitle>
+                        <CardDescription>
+                            Para um contato mais direto, utilize um dos canais abaixo.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col sm:flex-row gap-4">
+                        <Button asChild className="w-full">
+                            <Link href="https://wa.me/5521975775053" target="_blank">
+                                <MessageCircle className="mr-2 h-4 w-4" />
+                                WhatsApp
+                            </Link>
+                        </Button>
+                         <Button asChild variant="outline" className="w-full">
+                            <Link href="mailto:sousaessens@gmail.com">
+                                <Mail className="mr-2 h-4 w-4" />
+                                E-mail
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader>
                         <CardTitle>Perguntas Frequentes (FAQ)</CardTitle>
