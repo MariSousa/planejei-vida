@@ -139,7 +139,7 @@ function InvestmentsPageContent() {
                         name="yieldRate"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Rendimento (% CDI)</FormLabel>
+                            <FormLabel>Rendimento (% CDI / ano)</FormLabel>
                             <FormControl>
                                 <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
                             </FormControl>
@@ -190,7 +190,7 @@ function InvestmentsPageContent() {
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{item.type}</TableCell>
                         <TableCell>{item.institution}</TableCell>
-                        <TableCell>{item.yieldRate}% CDI</TableCell>
+                        <TableCell>{item.yieldRate}% CDI / ano</TableCell>
                         <TableCell className="text-right font-semibold">{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">

@@ -160,7 +160,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                     name="yieldRate"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Rendimento (% CDI)</FormLabel>
+                        <FormLabel>Rendimento (% CDI / ano)</FormLabel>
                         <FormControl>
                             <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
                         </FormControl>
