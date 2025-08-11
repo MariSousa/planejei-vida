@@ -10,7 +10,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calculator, TrendingUp } from 'lucide-react';
+import { Calculator, Loader2 } from 'lucide-react';
+import { type SimulationResult, calculateInvestment } from '@/ai/flows/investment-calculator';
+import { Skeleton } from './ui/skeleton';
+
 
 const formSchema = z.object({
   initialAmount: z.coerce.number().min(0, { message: 'O valor inicial deve ser zero ou maior.' }),
@@ -19,29 +22,14 @@ const formSchema = z.object({
   periodInMonths: z.coerce.number().int().positive({ message: 'O prazo deve ser de pelo menos 1 mês.' }),
 });
 
-interface SimulationResult {
-  month: number;
-  totalInvested: number;
-  netYield: number;
-  finalAmount: number;
-}
-
-// Assuming a constant CDI rate for simulation purposes. In a real-world app, this would be dynamic.
-const MOCK_CDI_RATE_ANNUAL = 0.105; // 10.5%
-
-const getIrRate = (days: number): number => {
-  if (days <= 180) return 0.225; // 22.5%
-  if (days <= 360) return 0.200; // 20.0%
-  if (days <= 720) return 0.175; // 17.5%
-  return 0.150; // 15.0%
-};
-
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
 export function InvestmentSimulator() {
-  const [results, setResults] = useState<SimulationResult[] | null>(null);
+  const [results, setResults] = useState<SimulationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,43 +41,20 @@ export function InvestmentSimulator() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const { initialAmount, monthlyContribution, yieldRate, periodInMonths } = values;
-    
-    const effectiveAnnualRate = MOCK_CDI_RATE_ANNUAL * (yieldRate / 100);
-    const monthlyRate = Math.pow(1 + effectiveAnnualRate, 1 / 12) - 1;
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    setError(null);
+    setResults(null);
 
-    let totalAmount = initialAmount;
-    let totalInvested = initialAmount;
-    const simulationResults: SimulationResult[] = [];
-
-    for (let month = 1; month <= periodInMonths; month++) {
-      if (month > 1) {
-        totalAmount += monthlyContribution;
-        totalInvested += monthlyContribution;
-      } else if (month === 1 && initialAmount === 0) {
-        // If initial amount is 0, the first contribution happens in month 1
-        totalAmount += monthlyContribution;
-        totalInvested += monthlyContribution;
-      }
-      
-      const grossYieldOfMonth = totalAmount * monthlyRate;
-      totalAmount += grossYieldOfMonth;
+    try {
+      const result = await calculateInvestment(values);
+      setResults(result);
+    } catch (e) {
+      console.error(e);
+      setError("Ocorreu um erro ao calcular o rendimento. Tente novamente.");
+    } finally {
+        setIsLoading(false);
     }
-
-    const grossYieldTotal = totalAmount - totalInvested;
-    const daysInvested = periodInMonths * 30; // Approximation
-    const irRate = getIrRate(daysInvested);
-    const irValue = grossYieldTotal * irRate;
-    const netYield = grossYieldTotal - irValue;
-    const finalAmount = totalInvested + netYield;
-    
-    setResults([{
-        month: periodInMonths,
-        totalInvested,
-        netYield,
-        finalAmount,
-    }]);
   }
 
   return (
@@ -116,7 +81,7 @@ export function InvestmentSimulator() {
                                 <FormItem>
                                 <FormLabel>Valor Inicial (R$)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" step="100" placeholder="1000" {...field} />
+                                    <Input type="number" step="100" placeholder="1000" {...field} value={field.value ?? ''} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -129,7 +94,7 @@ export function InvestmentSimulator() {
                                 <FormItem>
                                 <FormLabel>Aporte Mensal (R$)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" step="50" placeholder="100" {...field} />
+                                    <Input type="number" step="50" placeholder="100" {...field} value={field.value ?? ''} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -144,7 +109,7 @@ export function InvestmentSimulator() {
                                 <FormItem>
                                 <FormLabel>Rendimento (% do CDI)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" step="10" placeholder="100" {...field} />
+                                    <Input type="number" step="10" placeholder="100" {...field} value={field.value ?? ''} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -157,7 +122,7 @@ export function InvestmentSimulator() {
                                 <FormItem>
                                 <FormLabel>Prazo (meses)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" placeholder="12" {...field} />
+                                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
                                 </FormControl>
                                 <FormMessage />
                                 </FormItem>
@@ -165,16 +130,29 @@ export function InvestmentSimulator() {
                         />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Simulação baseada em uma taxa CDI de {(MOCK_CDI_RATE_ANNUAL * 100).toFixed(2)}% ao ano.
+                        A simulação usa uma taxa CDI de referência para o cálculo.
                     </p>
-                    <Button type="submit">Simular Rendimentos</Button>
+                    <Button type="submit" disabled={isLoading}>
+                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Simular Rendimentos
+                    </Button>
                 </form>
                 </Form>
             </div>
 
             <div>
                 <h3 className="font-semibold mb-2">Resultado da Simulação</h3>
-                {results ? (
+                {isLoading ? (
+                     <div className="space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                ) : error ? (
+                     <div className="flex h-full min-h-[150px] items-center justify-center rounded-lg border border-destructive bg-destructive/10 text-destructive text-sm p-4">
+                        <p className="text-center">{error}</p>
+                    </div>
+                ) : results ? (
                     <div className="border rounded-md">
                         <Table>
                             <TableHeader>
@@ -186,15 +164,15 @@ export function InvestmentSimulator() {
                             <TableBody>
                                 <TableRow>
                                     <TableCell>Total Investido</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(results[0].totalInvested)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(results.totalInvested)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Rendimento Líquido (após IR)</TableCell>
-                                    <TableCell className="text-right text-green-600 font-medium">{formatCurrency(results[0].netYield)}</TableCell>
+                                    <TableCell className="text-right text-green-600 font-medium">{formatCurrency(results.netYield)}</TableCell>
                                 </TableRow>
                                  <TableRow className="bg-muted/50 font-bold">
                                     <TableCell>Montante Final</TableCell>
-                                    <TableCell className="text-right">{formatCurrency(results[0].finalAmount)}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(results.finalAmount)}</TableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>

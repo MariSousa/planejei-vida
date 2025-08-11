@@ -15,3 +15,5 @@ const helloFlow = ai.defineFlow({ name: 'helloFlow' }, async (name: string) => {
 helloFlow('Chris');
 
 import '@/ai/flows/personalized-savings-advice.ts';
+import '@/ai/flows/investment-explainer.ts';
+import '@/ai/flows/investment-calculator.ts';
