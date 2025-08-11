@@ -46,7 +46,7 @@ function DebtsPageContent() {
   const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
     // Correctly handle the base date for calculation.
     // If there's no last payment, always start from the debt's start date.
-    const baseDate = new Date(debt.lastPaymentDate || debt.startDate);
+    const baseDate = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : new Date(debt.startDate);
     const installmentDate = addMonths(baseDate, installmentIndex + 1);
     
     return format(installmentDate, "MMMM, yyyy", { locale: ptBR });
