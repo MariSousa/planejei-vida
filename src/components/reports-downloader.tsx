@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Download, FileText, FileSpreadsheet } from 'lucide-react';
-import type { Income, Expense, Debt, Goal, Advice } from '@/types';
+import type { Income, Expense, MonthlyPlanItem, Goal, Advice } from '@/types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -12,16 +12,16 @@ import autoTable from 'jspdf-autotable';
 interface ReportsDownloaderProps {
   income: Income[];
   expenses: Expense[];
-  debts: Debt[];
+  monthlyPlanItems: MonthlyPlanItem[];
   goals: Goal[];
   advices: Advice[];
 }
 
-type ReportType = 'income' | 'expenses' | 'debts' | 'goals' | 'advices';
+type ReportType = 'income' | 'expenses' | 'monthlyPlanItems' | 'goals' | 'advices';
 
-export function ReportsDownloader({ income, expenses, debts, goals, advices }: ReportsDownloaderProps) {
+export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, advices }: ReportsDownloaderProps) {
 
-  const dataMap = { income, expenses, debts, goals, advices };
+  const dataMap = { income, expenses, monthlyPlanItems, goals, advices };
 
   const getHeaders = (type: ReportType): string[] => {
     const data = dataMap[type];
@@ -100,7 +100,7 @@ export function ReportsDownloader({ income, expenses, debts, goals, advices }: R
   const reportOptions = [
       { type: 'income' as ReportType, title: 'Relatório de Ganhos', description: 'Todas as suas fontes de renda registradas.' },
       { type: 'expenses' as ReportType, title: 'Relatório de Gastos', description: 'Todos os seus gastos, detalhados por categoria.' },
-      { type: 'debts' as ReportType, title: 'Relatório de Compromissos', description: 'Suas dívidas e contas a pagar.' },
+      { type: 'monthlyPlanItems' as ReportType, title: 'Relatório de Planejamento Mensal', description: 'Seus itens de planejamento, incluindo ganhos e gastos previstos.' },
       { type: 'goals' as ReportType, title: 'Relatório de Sonhos', description: 'O progresso de todas as suas metas financeiras.' },
       { type: 'advices' as ReportType, title: 'Relatório de Conselhos', description: 'Todos os conselhos gerados pelo FinMentor.' },
   ];

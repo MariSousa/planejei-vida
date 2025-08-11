@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReportsDownloader } from '@/components/reports-downloader';
 
 function ReportsPageContent() {
-    const { income, expenses, debts, goals, advices, isClient } = useFinancials();
+    const { income, expenses, monthlyPlanItems, goals, advices, isClient } = useFinancials();
 
     if (!isClient) {
         return (
@@ -30,7 +30,7 @@ function ReportsPageContent() {
             <ReportsDownloader
                 income={income}
                 expenses={expenses}
-                debts={debts}
+                monthlyPlanItems={monthlyPlanItems}
                 goals={goals}
                 advices={advices}
             />
