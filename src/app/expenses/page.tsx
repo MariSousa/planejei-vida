@@ -35,6 +35,7 @@ const formSchema = z.object({
 function ExpensesPageContent() {
   const { expenses, addExpense, removeExpense, isClient, customCategories, favoriteCategories, addFavorite, removeFavorite, removeCategory, totals } = useFinancials();
   const { toast } = useToast();
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,6 +53,7 @@ function ExpensesPageContent() {
       className: 'border-accent'
     });
     form.reset({amount: undefined, category: undefined});
+    setSelectedCategory(undefined);
   }
 
   const handleFavoriteToggle = async (category: string, isCurrentlyFavorite: boolean) => {
@@ -90,6 +92,11 @@ function ExpensesPageContent() {
             });
       }
   }
+
+  const handleCategorySelect = (category: string) => {
+      setSelectedCategory(category);
+      form.setValue('category', category, { shouldValidate: true });
+  }
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -111,47 +118,43 @@ function ExpensesPageContent() {
           <CardTitle>Adicionar Nova Despesa</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
+            <div className="space-y-4">
+                 <div>
+                    <div className="flex justify-between items-center mb-2">
                       <FormLabel>Categoria</FormLabel>
                       <CreateCategoryDialog />
                     </div>
-                     <FormControl>
-                        <CategorySelector
-                            customCategories={customCategories}
-                            favoriteCategories={favoriteCategories}
-                            onSelect={(category) => form.setValue('category', category, { shouldValidate: true })}
-                            onFavoriteToggle={handleFavoriteToggle}
-                            onRemoveCategory={handleRemoveCategory}
-                            selectedValue={field.value}
+                    <CategorySelector
+                        customCategories={customCategories}
+                        favoriteCategories={favoriteCategories}
+                        onSelect={handleCategorySelect}
+                        onFavoriteToggle={handleFavoriteToggle}
+                        onRemoveCategory={handleRemoveCategory}
+                        selectedValue={selectedCategory}
+                    />
+                    {/* Display validation message for category manually */}
+                    {form.formState.errors.category && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.category.message}</p>}
+                </div>
+
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        <FormField
+                            control={form.control}
+                            name="amount"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Valor</FormLabel>
+                                <FormControl>
+                                <Input type="number" step="0.01" placeholder="150.00" {...field} value={field.value ?? ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
                         />
-                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="150.00" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Adicionar Despesa</Button>
-            </form>
-          </Form>
+                        <Button type="submit">Adicionar Despesa</Button>
+                    </form>
+                </Form>
+            </div>
         </CardContent>
       </Card>
       
