@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,7 +28,7 @@ const formSchema = z.object({
 });
 
 function IncomePageContent() {
-  const { income, addIncome, removeIncome, isClient } = useFinancials();
+  const { income, addIncome, removeIncome, isClient, totals } = useFinancials();
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -105,7 +105,7 @@ function IncomePageContent() {
       
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Rendas</CardTitle>
+          <CardTitle>Histórico de Rendas do Mês</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="border rounded-md">
@@ -133,10 +133,16 @@ function IncomePageContent() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">Nenhuma renda registrada.</TableCell>
+                    <TableCell colSpan={3} className="h-24 text-center">Nenhuma renda registrada este mês.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={1} className="font-bold">Total</TableCell>
+                  <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(totals.totalIncome)}</TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </div>
         </CardContent>
