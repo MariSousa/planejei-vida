@@ -89,3 +89,13 @@ export interface Debt {
     date: string; 
     lastPaymentDate: string | null;
 }
+
+export interface SupportTicket {
+    id: string;
+    subject: string;
+    message: string;
+    userEmail: string;
+    status: 'Aberto' | 'Em Andamento' | 'Fechado';
+    date: string;
+    userId: string;
+}

@@ -21,7 +21,8 @@ import {
   FileText,
   CalendarCheck2,
   PiggyBank,
-  BookOpen
+  BookOpen,
+  LifeBuoy
 } from 'lucide-react';
 
 const menuItems = [
@@ -36,6 +37,10 @@ const menuItems = [
   { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
   { href: '/reports', label: 'Relatórios', icon: FileText },
 ];
+
+const secondaryMenuItems = [
+    { href: '/support', label: 'Ajuda e Suporte', icon: LifeBuoy },
+]
 
 export function MainNav() {
   const pathname = usePathname();
@@ -55,8 +60,9 @@ export function MainNav() {
                 asChild
                 isActive={pathname === item.href}
                 tooltip={{children: item.label}}
+                onClick={handleLinkClick}
             >
-                <Link href={item.href} onClick={handleLinkClick}>
+                <Link href={item.href}>
                     <Icon />
                     <span>{item.label}</span>
                 </Link>
@@ -64,6 +70,26 @@ export function MainNav() {
             </SidebarMenuItem>
         )
       })}
+        <div className="mt-auto">
+             {secondaryMenuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                    <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}
+                        tooltip={{children: item.label}}
+                        onClick={handleLinkClick}
+                    >
+                        <Link href={item.href}>
+                            <Icon />
+                            <span>{item.label}</span>
+                        </Link>
+                    </SidebarMenuButton>
+                    </SidebarMenuItem>
+                )
+            })}
+        </div>
     </SidebarMenu>
   );
 }
