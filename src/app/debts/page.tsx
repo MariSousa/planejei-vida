@@ -9,7 +9,7 @@ import { Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { Debt } from '@/types';
@@ -44,11 +44,17 @@ function DebtsPageContent() {
   };
 
   const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
-    // Correctly handle the base date for calculation.
-    // If there's no last payment, always start from the debt's start date.
-    const baseDate = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : new Date(debt.startDate);
-    const installmentDate = addMonths(baseDate, installmentIndex + 1);
+    let baseDate = new Date(); // Fallback to current date
+    const lastPayment = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : null;
+    const debtStartDate = debt.startDate ? new Date(debt.startDate) : null;
+
+    if (lastPayment && isValid(lastPayment)) {
+        baseDate = lastPayment;
+    } else if (debtStartDate && isValid(debtStartDate)) {
+        baseDate = debtStartDate;
+    }
     
+    const installmentDate = addMonths(baseDate, installmentIndex + 1);
     return format(installmentDate, "MMMM, yyyy", { locale: ptBR });
   };
 
@@ -87,7 +93,7 @@ function DebtsPageContent() {
         {debts.length > 0 ? (
             debts.map((item) => {
                 const remaining = item.remainingInstallments;
-                const installmentsToShow = Array.from({ length: Math.min(remaining, 3) });
+                const installmentsToShow = item.totalInstallments > 1 ? Array.from({ length: Math.min(remaining, 3) }) : [];
                 const hasMoreInstallments = remaining > 3;
 
                 return (
@@ -103,7 +109,7 @@ function DebtsPageContent() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                           {item.status === 'Pendente' && item.totalInstallments > 1 && installmentsToShow.length > 0 && (
+                           {item.status === 'Pendente' && installmentsToShow.length > 0 && (
                                 <div className="space-y-3 p-3 border rounded-md bg-background/50">
                                     <h4 className="text-sm font-semibold">Próximos Pagamentos:</h4>
                                     {installmentsToShow.map((_, index) => {
