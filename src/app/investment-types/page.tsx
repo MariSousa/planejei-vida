@@ -3,50 +3,45 @@
 
 import { PrivateRoute } from '@/components/private-route';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, BarChartHorizontalBig, Calculator, HandHeart, Landmark, PiggyBank, PieChart, ShieldAlert, UserCheck } from 'lucide-react';
+import { ArrowRight, Landmark, PiggyBank, ShieldCheck, TrendingUp, UserCheck, Calculator, BrainCircuit, Receipt } from 'lucide-react';
 import React from 'react';
 
 const guideSections = [
     {
-        icon: PieChart,
-        title: "Introduction",
-        description: "What investing is and why you should start, the power of compounding, and more.",
+        icon: ShieldCheck,
+        title: "O Primeiro Passo: Organização e Reserva",
+        description: "Diagnóstico, gestão de dívidas e a importância da reserva de emergência.",
     },
     {
         icon: UserCheck,
-        title: "Investor Profile",
-        description: "Determine your investor profile and its influence on your choices.",
+        title: "Perfil de Investidor",
+        description: "Determine seu perfil e como ele influencia suas escolhas de investimentos.",
     },
     {
         icon: Landmark,
-        title: "Types of Investments",
-        description: "Learn about fixed income, stocks, funds, and more.",
+        title: "Conhecendo a Renda Fixa",
+        description: "Entenda o que são CDB, LCI, LCA e o Tesouro Selic, o mais seguro do país.",
     },
     {
-        icon: HandHeart,
-        title: "Where to Invest",
-        description: "Different institutions to invest with, and how to select one.",
+        icon: TrendingUp,
+        title: "O Motor dos Rendimentos: Selic e CDI",
+        description: "Desvende como a taxa básica de juros e o CDI influenciam seus retornos.",
     },
     {
-        icon: PiggyBank,
-        title: "How to Analyze an Investment",
-        description: "Understanding profitability, liquidity, risk, and more.",
+        icon: Receipt,
+        title: "O Sócio Obrigatório: Imposto de Renda",
+        description: "Saiba como o IR afeta seu lucro e conheça a tabela regressiva.",
     },
     {
-        icon: ShieldAlert,
-        title: "Basic Strategies",
-        description: "Essential strategies for building your portfolio.",
+        icon: BrainCircuit,
+        title: "Estratégias e Erros Comuns",
+        description: "Aprenda sobre diversificação, aportes e os erros que você deve evitar.",
     },
     {
         icon: Calculator,
-        title: "Tools and Simulators",
-        description: "Useful calculators and investment simulation tools.",
+        title: "Ferramentas e Próximos Passos",
+        description: "Use simuladores e aprenda a montar e acompanhar sua primeira carteira.",
     },
-    {
-        icon: BarChartHorizontalBig,
-        title: "Next Steps",
-        description: "How to build your first portfolio and keep evolving.",
-    }
 ];
 
 const GuideItem = ({ icon: Icon, title, description }: typeof guideSections[0]) => (
@@ -69,7 +64,7 @@ function InvestmentTypesPageContent() {
   return (
     <div className="flex flex-col gap-8 max-w-2xl mx-auto">
       <div className="text-left">
-        <h1 className="text-4xl font-bold font-headline">Complete Guide for a Beginner Investor</h1>
+        <h1 className="text-4xl font-bold font-headline">Guia do Investidor Iniciante</h1>
       </div>
 
        <Card className="overflow-hidden">
