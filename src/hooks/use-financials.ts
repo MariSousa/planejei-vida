@@ -6,7 +6,7 @@ import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
-import { addDays, isAfter, isBefore, startOfToday, format, getYear, getMonth, set } from 'date-fns';
+import { addDays, isAfter, isBefore, startOfToday, format, getYear, getMonth, set, addMonths } from 'date-fns';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -40,7 +40,7 @@ export const useFinancials = () => {
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isClient, setIsClient] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(addMonths(new Date(), 1));
 
   const getMonthlyQuery = (col: string) => {
     if (!user) return null;
