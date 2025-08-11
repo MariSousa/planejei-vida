@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PiggyBank, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +25,8 @@ import { PrivateRoute } from '@/components/private-route';
 import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 import { InvestmentSelector } from '@/components/investment-selector';
 import { InstitutionSelector } from '@/components/institution-selector';
+import { InvestmentSimulator } from '@/components/investment-simulator';
+import { InvestmentAIAssistant } from '@/components/investment-ai-assistant';
 
 
 const formSchema = z.object({
@@ -90,6 +93,7 @@ function InvestmentsPageContent() {
       <div className="flex flex-col gap-8">
         <Skeleton className="h-[480px]" />
         <Skeleton className="h-[250px]" />
+        <Skeleton className="h-[400px]" />
       </div>
     );
   }
@@ -215,7 +219,7 @@ function InvestmentsPageContent() {
                     <TableFooter>
                         <TableRow>
                             <TableCell colSpan={5} className="font-bold text-lg">Total Investido</TableCell>
-                            <TableCell colSpan={1} className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
+                            <TableCell className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
                         </TableRow>
                     </TableFooter>
                  )}
@@ -224,6 +228,10 @@ function InvestmentsPageContent() {
           </CardContent>
         </Card>
       </div>
+
+      <InvestmentSimulator />
+
+      <InvestmentAIAssistant />
     </div>
   );
 }
