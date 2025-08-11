@@ -37,7 +37,11 @@ function DebtsPageContent() {
       return format(new Date(dateString), "dd/MM/yyyy");
   }
 
-  const totalDebts = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.amount, 0);
+  const totalDebts = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.remainingAmount, 0);
+  const totalOriginal = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.originalAmount, 0);
+  const totalPaid = totalOriginal > 0 ? totalOriginal - totalDebts : 0;
+  const progress = totalOriginal > 0 ? (totalPaid / totalOriginal) * 100 : 0;
+
 
   if (!isClient) {
     return (
@@ -64,9 +68,8 @@ function DebtsPageContent() {
         </CardHeader>
         <CardContent>
             <p className="text-3xl font-bold">{formatCurrency(totalDebts)}</p>
-             {/* Note: The progress logic would need total original debt amounts to be accurate */}
-            <Progress value={35} className="mt-2 h-2" />
-            <p className="text-sm text-muted-foreground mt-2">Você já quitou 35% dos seus compromissos!</p>
+            <Progress value={progress} className="mt-2 h-2" />
+            <p className="text-sm text-muted-foreground mt-2">Você já quitou {progress.toFixed(0)}% dos seus compromissos!</p>
         </CardContent>
       </Card>
       
@@ -80,7 +83,7 @@ function DebtsPageContent() {
                         <CardDescription>Vence em: {formatDate(item.dueDate)}</CardDescription>
                     </div>
                      <div className="text-right">
-                        <p className={cn("font-bold text-lg", item.status === 'Pago' && 'line-through')}>{formatCurrency(item.amount)}</p>
+                        <p className={cn("font-bold text-lg", item.status === 'Pago' && 'line-through')}>{formatCurrency(item.remainingAmount)}</p>
                         {item.monthlyPaymentGoal && (
                            <p className="text-xs text-muted-foreground">Meta: {formatCurrency(item.monthlyPaymentGoal)}/mês</p>
                         )}

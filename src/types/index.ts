@@ -77,10 +77,13 @@ export interface Investment {
 export interface Debt {
     id: string;
     name: string;
-    amount: number; // This will now represent the remaining balance
+    originalAmount: number;
+    remainingAmount: number; 
     dueDate: string;
     status: 'Pendente' | 'Pago';
     monthlyPaymentGoal: number;
-    date: string; // The date the debt was added
-    lastPaymentDate: string | null; // The date of the last payment made
+    interestRate?: number;
+    installments?: number;
+    date: string; 
+    lastPaymentDate: string | null;
 }

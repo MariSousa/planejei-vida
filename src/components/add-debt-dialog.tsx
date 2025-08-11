@@ -36,9 +36,12 @@ import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
-  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  originalAmount: z.coerce.number().positive({ message: 'O valor original deve ser positivo.' }),
+  remainingAmount: z.coerce.number().positive({ message: 'O saldo devedor deve ser positivo.' }),
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
-  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
+  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
+  interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
+  installments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
 });
 
 export function AddDebtDialog() {
@@ -51,9 +54,12 @@ export function AddDebtDialog() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      amount: undefined,
+      originalAmount: undefined,
+      remainingAmount: undefined,
       dueDate: undefined,
       monthlyPaymentGoal: undefined,
+      interestRate: undefined,
+      installments: undefined,
     },
   });
 
@@ -72,7 +78,7 @@ export function AddDebtDialog() {
         description: `Seu compromisso "${values.name}" foi adicionado.`,
         className: 'border-accent'
         });
-        form.reset({ name: '', amount: undefined, dueDate: undefined, monthlyPaymentGoal: undefined });
+        form.reset();
         setOpen(false);
     } catch (error) {
         toast({
@@ -93,7 +99,7 @@ export function AddDebtDialog() {
           Adicionar Compromisso
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Adicionar Novo Compromisso</DialogTitle>
           <DialogDescription>
@@ -101,12 +107,12 @@ export function AddDebtDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                <FormItem>
+                <FormItem className="md:col-span-2">
                     <FormLabel>Nome do Compromisso</FormLabel>
                     <FormControl>
                     <Input placeholder="Ex: Fatura do Cartão, Empréstimo Pessoal" {...field} />
@@ -115,14 +121,27 @@ export function AddDebtDialog() {
                 </FormItem>
                 )}
             />
-            <FormField
+             <FormField
                 control={form.control}
-                name="amount"
+                name="originalAmount"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Valor Total (R$)</FormLabel>
+                    <FormLabel>Valor Original (R$)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="850.00" {...field} value={field.value ?? ''} />
+                    <Input type="number" step="0.01" placeholder="5000.00" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="remainingAmount"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Saldo Devedor Atual (R$)</FormLabel>
+                    <FormControl>
+                    <Input type="number" step="0.01" placeholder="3500.00" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -172,7 +191,7 @@ export function AddDebtDialog() {
                 name="monthlyPaymentGoal"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Valor mensal para quitar (R$)</FormLabel>
+                    <FormLabel>Meta de Pagamento Mensal (R$)</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
                     </FormControl>
@@ -180,7 +199,33 @@ export function AddDebtDialog() {
                 </FormItem>
                 )}
             />
-            <DialogFooter>
+            <FormField
+                control={form.control}
+                name="interestRate"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Taxa de Juros (% a.m.)</FormLabel>
+                    <FormControl>
+                    <Input type="number" step="0.01" placeholder="8.5" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+             <FormField
+                control={form.control}
+                name="installments"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Nº de Parcelas Restantes</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <DialogFooter className="md:col-span-2">
                 <DialogClose asChild>
                     <Button type="button" variant="ghost">Cancelar</Button>
                 </DialogClose>

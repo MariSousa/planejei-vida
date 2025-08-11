@@ -8,7 +8,7 @@ import type { MonthlyPlanItem } from '@/types';
 import { useState } from 'react';
 
 interface PlannedItemSuggestionProps {
-  item: Omit<MonthlyPlanItem, 'dueDate' | 'priority' | 'status'>;
+  item: Omit<MonthlyPlanItem, 'dueDate' | 'priority' | 'status' | 'type'> & { type?: 'ganho' | 'gasto' | undefined };
   onAdd: () => void;
   suggestionType: 'plan' | 'debt';
 }

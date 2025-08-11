@@ -122,7 +122,7 @@ function ExpensesPageContent() {
         } catch (error) {
              toast({
                 title: 'Erro ao processar pagamento',
-                description: 'Não foi possível registrar o pagamento do compromisso.',
+                description: String(error),
                 variant: 'destructive',
             });
         }
@@ -156,7 +156,6 @@ function ExpensesPageContent() {
                                 id: debt.id,
                                 name: debt.name,
                                 amount: debt.monthlyPaymentGoal,
-                                type: 'gasto'
                             }}
                             onAdd={() => handlePayDebt(debt.id, debt.name, debt.monthlyPaymentGoal)}
                             suggestionType="debt"

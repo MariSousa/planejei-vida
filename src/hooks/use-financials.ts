@@ -323,11 +323,11 @@ export const useFinancials = () => {
         throw new Error("Compromisso não encontrado.");
       }
       
-      const currentAmount = debtDoc.data().amount;
+      const currentAmount = debtDoc.data().remainingAmount;
       const newAmount = currentAmount - amount;
       
       transaction.update(debtRef, { 
-        amount: newAmount,
+        remainingAmount: newAmount,
         lastPaymentDate: new Date().toISOString(),
         status: newAmount <= 0 ? 'Pago' : 'Pendente'
       });
@@ -427,7 +427,7 @@ export const useFinancials = () => {
   const pendingDebtPayments = useMemo(() => {
     const thisMonth = new Date();
     return debts.filter(debt => {
-      if (debt.status !== 'Pendente') return false;
+      if (debt.status !== 'Pendente' || !debt.monthlyPaymentGoal) return false;
       if (!debt.lastPaymentDate) return true; // Always suggest if never paid
       return !isSameMonth(new Date(debt.lastPaymentDate), thisMonth);
     });
