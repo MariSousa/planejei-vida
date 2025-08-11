@@ -153,9 +153,9 @@ export const useFinancials = () => {
   const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addMonthlyDocWithDate('income', newIncome), [user]);
   const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addMonthlyDocWithDate('expenses', newExpense), [user]);
   
-  const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'month' | 'status'>) => {
+  const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'status'>) => {
     if (!user) return;
-    const monthStr = format(new Date(item.dueDate), 'yyyy-MM');
+    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
     const monthDocRef = doc(db, `users/${user.uid}/monthlyPlan`, monthStr);
     await setDoc(monthDocRef, { month: monthStr }, { merge: true }); 
 
@@ -164,7 +164,7 @@ export const useFinancials = () => {
         ...item,
         status: 'Previsto' as Status
     });
-  }, [user]);
+  }, [user, currentPlanningMonth]);
 
   const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
     if (!user) return;

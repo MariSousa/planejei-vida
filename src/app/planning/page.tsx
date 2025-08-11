@@ -104,7 +104,9 @@ function PlanningPageContent() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
         const itemToAdd = {
-            ...values,
+            name: values.name,
+            amount: values.amount,
+            type: values.type,
             dueDate: (values.dueDate || new Date()).toISOString(),
             priority: values.priority || 'Baixa',
         };
