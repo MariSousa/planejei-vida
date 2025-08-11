@@ -137,7 +137,7 @@ const categoryIconMap: { [key: string]: React.ElementType } = {
     // Despesas Domésticas
     'Utensílios': Utensils,
     'Eletrodomésticos': Speaker,
-    'Móveis/Decoração': Sofa,
+    'Móveis/Decoração': Building2, // Changed from Sofa
     'Produtos de Limpeza': SprayCan,
 
     // Animais de Estimação
