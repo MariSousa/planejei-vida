@@ -80,6 +80,16 @@ export function AddDebtDialog() {
         const parsedStartDate = parse(values.startDate, 'dd/MM/yyyy', new Date());
         const parsedDueDate = parse(values.dueDate, 'dd/MM/yyyy', new Date());
 
+        if (isNaN(parsedStartDate.getTime()) || isNaN(parsedDueDate.getTime())) {
+            toast({
+                title: 'Data Inválida',
+                description: 'Por favor, insira uma data de início e vencimento válidas.',
+                variant: 'destructive',
+            });
+            setIsLoading(false);
+            return;
+        }
+
         const originalAmount = values.originalAmount / 100;
         const paidAmount = (values.paidAmount || 0) / 100;
 
@@ -105,9 +115,10 @@ export function AddDebtDialog() {
         form.reset();
         setOpen(false);
     } catch (error) {
+        console.error("Error adding debt: ", error);
         toast({
             title: 'Erro ao adicionar compromisso',
-            description: 'Não foi possível salvar o compromisso. Tente novamente.',
+            description: 'Não foi possível salvar o compromisso. Verifique o console para mais detalhes.',
             variant: 'destructive',
         });
     } finally {
