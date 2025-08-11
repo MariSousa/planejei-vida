@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -39,6 +40,11 @@ const menuItems = [
 
 export function MainNav() {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
   return (
     <SidebarMenu>
@@ -51,7 +57,7 @@ export function MainNav() {
                 isActive={pathname === item.href}
                 tooltip={{children: item.label}}
             >
-                <Link href={item.href}>
+                <Link href={item.href} onClick={handleLinkClick}>
                     <Icon />
                     <span>{item.label}</span>
                 </Link>

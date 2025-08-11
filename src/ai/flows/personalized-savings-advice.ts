@@ -89,23 +89,20 @@ O usuário está utilizando um aplicativo de controle financeiro. Você tem aces
 </Restrições>
 
 <Formato de Saída>
-Sua resposta DEVE estar contida dentro do campo 'advice' do JSON de saída e seguir estritamente este formato de texto, usando quebras de linha (\\n) para separar as seções.
+Sua resposta DEVE estar contida dentro do campo 'advice' do JSON de saída e seguir estritamente este formato de texto, usando quebras de linha (\\n) para separar as seções. Não use formatação de negrito como "**".
 
-**Título:** "Análise Financeira Rápida para o seu Objetivo: '{{{savingsGoal}}}'"
+<strong>"Análise Financeira Rápida para o seu Objetivo: '{{{savingsGoal}}}'"</strong>
 
-**Resumo da Situação:**
+<strong>Resumo da Situação:</strong>
 Um parágrafo curto que resume a saúde financeira do usuário no momento (Renda, Despesas, Saldo).
 
-**Análise e Sugestões:**
+<strong>Análise e Sugestões:</strong>
 *   Destaque a categoria que precisa de mais atenção.
 *   Aponte um padrão de gasto ou uma anomalia relevante.
 *   Sugira uma ação específica e motivacional (ex: "Seu gasto em restaurantes foi 20% maior que o esperado. Que tal planejar 2 refeições em casa por semana?").
 
-**Plano de Ação Personalizado:**
+<strong>Plano de Ação Personalizado:</strong>
 Uma lista numerada ou com bullet points, com 2 a 3 ações claras que o usuário pode tomar nos próximos 30 dias.
-
-**Próximos Passos:**
-Uma frase de encerramento que convida a um novo check-in ou a uma nova pergunta. Ex: "O que você achou desta análise? Podemos focar em uma área específica no próximo mês?".
 </Formato de Saída>
 `,
 });
