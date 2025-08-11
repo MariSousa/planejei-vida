@@ -315,15 +315,17 @@ export const useFinancials = () => {
   }, [monthlyPlanItems]);
 
   const pendingPlannedIncome = useMemo(() => {
-    const planned = currentMonthPlanItems.filter(p => p.type === 'ganho');
-    const actualSources = income.map(i => i.source);
-    return planned.filter(p => !actualSources.includes(p.name));
+    const normalize = (str: string) => str.trim().toLowerCase();
+    const planned = currentMonthPlanItems.filter(p => p.type === 'ganho' && p.status === 'Previsto');
+    const actualSources = income.map(i => normalize(i.source));
+    return planned.filter(p => !actualSources.includes(normalize(p.name)));
   }, [currentMonthPlanItems, income]);
 
   const pendingPlannedExpenses = useMemo(() => {
-      const planned = currentMonthPlanItems.filter(p => p.type === 'gasto');
-      const actualCategories = expenses.map(e => e.category);
-      return planned.filter(p => !actualCategories.includes(p.name));
+      const normalize = (str: string) => str.trim().toLowerCase();
+      const planned = currentMonthPlanItems.filter(p => p.type === 'gasto' && p.status === 'Previsto');
+      const actualCategories = expenses.map(e => normalize(e.category));
+      return planned.filter(p => !actualCategories.includes(normalize(p.name)));
   }, [currentMonthPlanItems, expenses]);
 
   return {
