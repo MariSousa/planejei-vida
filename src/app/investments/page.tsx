@@ -26,6 +26,7 @@ import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
+  name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
@@ -39,6 +40,7 @@ function InvestmentsPageContent() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: undefined,
+      name: '',
       institution: '',
       amount: undefined,
       yieldRate: undefined,
@@ -54,6 +56,7 @@ function InvestmentsPageContent() {
     });
     form.reset({
       type: undefined,
+      name: '',
       institution: '',
       amount: undefined,
       yieldRate: undefined,
@@ -85,7 +88,7 @@ function InvestmentsPageContent() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 <FormField
                   control={form.control}
                   name="type"
@@ -106,6 +109,19 @@ function InvestmentsPageContent() {
                           <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Investimento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -149,7 +165,7 @@ function InvestmentsPageContent() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="lg:col-span-4">Adicionar Investimento</Button>
+                <Button type="submit" className="lg:col-span-5">Adicionar Investimento</Button>
               </form>
             </Form>
           </CardContent>
@@ -166,6 +182,7 @@ function InvestmentsPageContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Tipo</TableHead>
+                    <TableHead>Nome</TableHead>
                     <TableHead>Instituição</TableHead>
                     <TableHead>Rendimento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
@@ -177,6 +194,7 @@ function InvestmentsPageContent() {
                     investments.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.type}</TableCell>
+                        <TableCell>{item.name}</TableCell>
                         <TableCell>{item.institution}</TableCell>
                         <TableCell>{item.yieldRate}% CDI</TableCell>
                         <TableCell className="text-right font-semibold">{formatCurrency(item.amount)}</TableCell>
@@ -193,7 +211,7 @@ function InvestmentsPageContent() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
+                      <TableCell colSpan={6} className="h-24 text-center">
                         <PiggyBank className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
                         Nenhum investimento registrado.
                       </TableCell>
@@ -203,7 +221,7 @@ function InvestmentsPageContent() {
                  {investments.length > 0 && (
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={4} className="font-bold text-lg">Total Investido</TableCell>
+                            <TableCell colSpan={5} className="font-bold text-lg">Total Investido</TableCell>
                             <TableCell colSpan={1} className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
                         </TableRow>
                     </TableFooter>

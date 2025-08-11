@@ -67,6 +67,7 @@ export interface Favorite {
 export interface Investment {
     id: string;
     type: string;
+    name: string;
     institution: string;
     amount: number;
     yieldRate: number;

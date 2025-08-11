@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
+  name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
@@ -51,6 +52,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: investment.type,
+      name: investment.name,
       institution: investment.institution,
       amount: investment.amount,
       yieldRate: investment.yieldRate,
@@ -117,6 +119,19 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                     </Select>
                     <FormMessage />
                 </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Nome do Investimento</FormLabel>
+                        <FormControl>
+                        <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )}
             />
             <FormField
