@@ -19,14 +19,13 @@ export async function sendSupportTicket(input: TicketInput): Promise<{ error?: s
     }
 
     try {
-        // Save tickets to the Realtime Database
-        const ticketsRef = ref(rtdb, 'supportTickets');
-        const newTicketRef = push(ticketsRef);
+        // Save tickets under the user's specific path
+        const userTicketsRef = ref(rtdb, `supportTickets/${input.userId}`);
+        const newTicketRef = push(userTicketsRef);
         await set(newTicketRef, {
             subject: input.subject,
             message: input.message,
             userEmail: input.userEmail,
-            userId: input.userId,
             status: 'Aberto',
             date: new Date().toISOString(),
         });
