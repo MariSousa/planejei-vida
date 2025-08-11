@@ -5,7 +5,7 @@ import {
     Book, Coffee, Beer, Soup, Dumbbell, Wallet, Briefcase, Gift, Building2,
     Lightbulb, Tv, Wrench, Wind, Waves, Droplets, Flame, Wifi, Phone,
     Truck, Bus, ParkingCircle, HandCoins, User, PiggyBank, Scale,
-    Receipt, Tag
+    Receipt, Tag, BookOpen
 } from 'lucide-react';
 
 export const expenseCategoryGroups = [
@@ -97,6 +97,7 @@ export const getIconForCategory = (categoryLabel: string) => {
             case 'Investimentos': return PiggyBank;
             case 'Freelance': return Briefcase;
             case 'Presentes': return Gift;
+            case 'Tipos de Investimento': return BookOpen;
             default: return category.icon;
         }
     }

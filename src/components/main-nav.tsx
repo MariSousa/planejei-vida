@@ -18,7 +18,8 @@ import {
   Settings,
   FileText,
   CalendarCheck2,
-  PiggyBank
+  PiggyBank,
+  BookOpen
 } from 'lucide-react';
 
 const menuItems = [
@@ -28,6 +29,7 @@ const menuItems = [
   { href: '/planning', label: 'Planejamento Mensal', icon: CalendarCheck2 },
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
   { href: '/investments', label: 'Meus Investimentos', icon: PiggyBank },
+  { href: '/investment-types', label: 'Tipos de Investimento', icon: BookOpen },
   { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
   { href: '/profile', label: 'Meu Perfil', icon: User },
   { href: '/reports', label: 'Relatórios', icon: FileText },
