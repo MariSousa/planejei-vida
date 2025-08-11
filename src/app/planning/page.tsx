@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,10 +38,27 @@ import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-
 const formSchema = z.object({
   name: z.string().min(2, { message: 'A descrição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
-  dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.' }),
-  priority: z.enum(['Alta', 'Média', 'Baixa'], { required_error: 'A prioridade é obrigatória.' }),
+  dueDate: z.date().optional(),
+  priority: z.enum(['Alta', 'Média', 'Baixa']).optional(),
   type: z.enum(['ganho', 'gasto'], { required_error: 'Selecione o tipo.' }),
+}).refine(data => {
+    if (data.type === 'gasto') {
+        return !!data.dueDate;
+    }
+    return true;
+}, {
+    message: 'A data de vencimento é obrigatória para gastos.',
+    path: ['dueDate'],
+}).refine(data => {
+    if (data.type === 'gasto') {
+        return !!data.priority;
+    }
+    return true;
+}, {
+    message: 'A prioridade é obrigatória para gastos.',
+    path: ['priority'],
 });
+
 
 function PlanningPageContent() {
   const { 
@@ -67,14 +84,36 @@ function PlanningPageContent() {
     },
   });
 
+  const typeValue = form.watch('type');
+
+  useEffect(() => {
+    if (typeValue === 'ganho') {
+        form.setValue('dueDate', undefined);
+        form.setValue('priority', undefined);
+        form.clearErrors(['dueDate', 'priority']);
+    } else {
+        if (!form.getValues('dueDate')) {
+            form.setValue('dueDate', new Date());
+        }
+        if (!form.getValues('priority')) {
+            form.setValue('priority', 'Média');
+        }
+    }
+  }, [typeValue, form]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-        await addPlanItem({
-            ...values,
-            dueDate: values.dueDate.toISOString(),
-            priority: values.priority as Priority,
-            type: values.type as PlanItemType,
-        });
+        const itemToAdd = {
+            name: values.name,
+            amount: values.amount,
+            type: values.type,
+            // Use current date for dueDate if it's a 'ganho'
+            dueDate: (values.dueDate || new Date()).toISOString(),
+            // Use 'Baixa' as default for priority if it's a 'ganho'
+            priority: values.priority || 'Baixa',
+        };
+
+        await addPlanItem(itemToAdd);
         toast({
             title: 'Item Adicionado ao Plano!',
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
@@ -241,7 +280,7 @@ function PlanningPageContent() {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Prioridade</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={typeValue === 'ganho'}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione a prioridade" />
@@ -272,6 +311,7 @@ function PlanningPageContent() {
                                         "pl-3 text-left font-normal",
                                         !field.value && "text-muted-foreground"
                                     )}
+                                    disabled={typeValue === 'ganho'}
                                     >
                                     {field.value ? (
                                         format(field.value, 'dd/MM/yyyy')
@@ -290,6 +330,7 @@ function PlanningPageContent() {
                                     defaultMonth={currentMonth}
                                     initialFocus
                                     locale={ptBR}
+                                    disabled={typeValue === 'ganho'}
                                 />
                                 </PopoverContent>
                             </Popover>
@@ -332,16 +373,18 @@ function PlanningPageContent() {
                         </TableCell>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>
-                            <Badge variant={priorityBadgeVariant[item.priority as Priority] || 'default'}>
-                                {item.priority}
-                            </Badge>
+                             {item.type === 'gasto' && (
+                                <Badge variant={priorityBadgeVariant[item.priority as Priority] || 'default'}>
+                                    {item.priority}
+                                </Badge>
+                            )}
                         </TableCell>
                         <TableCell>{formatDate(item.dueDate)}</TableCell>
                         <TableCell className={cn(
-                            "text-right",
+                            "text-right font-medium",
                             item.type === 'ganho' && 'text-green-600',
                             item.type === 'gasto' && 'text-red-600'
-                        )}>{formatCurrency(item.amount)}</TableCell>
+                        )}>{item.type === 'ganho' ? '+' : '-'} {formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                             <Button variant="ghost" size="icon" onClick={() => removePlanItem(item.id)}>
                             <Trash2 className="h-4 w-4" />

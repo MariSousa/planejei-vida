@@ -254,7 +254,9 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
+    // Filter only expenses that are still 'Previsto'
     return monthlyPlanItems.filter(item => {
+        if (item.type !== 'gasto' || item.status !== 'Previsto') return false;
         const dueDate = new Date(item.dueDate);
         return isAfter(dueDate, today) && isBefore(dueDate, next7Days);
     });
