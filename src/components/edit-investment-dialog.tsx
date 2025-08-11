@@ -29,48 +29,15 @@ import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import type { Investment } from '@/types';
 import { Loader2, Pencil } from 'lucide-react';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { InvestmentSelector } from './investment-selector';
 
-const investmentGroups = [
-    {
-        label: 'Renda Fixa',
-        options: ['Tesouro Selic', 'Tesouro Prefixado', 'Tesouro IPCA+', 'CDB', 'LCI', 'LCA', 'Debêntures', 'CRI', 'CRA', 'Notas Promissórias', 'Fundos de Renda Fixa', 'Poupança']
-    },
-    {
-        label: 'Renda Variável',
-        options: ['Ações', 'Fundos de Ações', 'ETFs', 'BDRs', 'Fundos Imobiliários (FIIs)', 'Opções', 'Contratos Futuros']
-    },
-    {
-        label: 'Fundos de Investimento',
-        options: ['Fundos Multimercado', 'Fundos Cambiais', 'Fundos de Previdência Privada', 'Fundos de Crédito Privado']
-    },
-    {
-        label: 'Criptoativos',
-        options: ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Stablecoins', 'Altcoins']
-    },
-     {
-        label: 'Alternativos',
-        options: ['Crowdfunding Imobiliário', 'Peer-to-peer lending', 'Arte e Colecionáveis']
-    }
-];
-
-const allInvestmentTypes = investmentGroups.flatMap(group => group.options);
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
-  customType: z.string().optional(),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
-}).refine(data => {
-    if (data.type === 'Outro') {
-        return data.customType && data.customType.length >= 2;
-    }
-    return true;
-}, {
-    message: 'O nome do tipo deve ter pelo menos 2 caracteres.',
-    path: ['customType'],
 });
 
 interface EditInvestmentDialogProps {
@@ -82,15 +49,12 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const [isLoading, setIsLoading] = useState(false);
   const { updateInvestment } = useFinancials();
   const { toast } = useToast();
-  const [showCustomType, setShowCustomType] = useState(false);
-
-  const isCustomTypeInitial = !allInvestmentTypes.includes(investment.type);
+  const [selectedType, setSelectedType] = useState<string | undefined>(investment.type);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: isCustomTypeInitial ? 'Outro' : investment.type,
-      customType: isCustomTypeInitial ? investment.type : '',
+      type: investment.type,
       name: investment.name,
       institution: investment.institution,
       amount: investment.amount,
@@ -99,31 +63,26 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   });
 
   useEffect(() => {
-    setShowCustomType(isCustomTypeInitial);
-     form.reset({
-      type: isCustomTypeInitial ? 'Outro' : investment.type,
-      customType: isCustomTypeInitial ? investment.type : '',
-      name: investment.name,
-      institution: investment.institution,
-      amount: investment.amount,
-      yieldRate: investment.yieldRate,
-    });
-  }, [investment, isCustomTypeInitial, form, open]);
+    if (open) {
+        form.reset({
+            type: investment.type,
+            name: investment.name,
+            institution: investment.institution,
+            amount: investment.amount,
+            yieldRate: investment.yieldRate,
+        });
+        setSelectedType(investment.type);
+    }
+  }, [investment, form, open]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        const investmentData = {
-            ...values,
-            type: values.type === 'Outro' ? values.customType! : values.type,
-        };
-        const { customType, ...dataToSave } = investmentData;
-
-        await updateInvestment(investment.id, dataToSave);
+        await updateInvestment(investment.id, values);
         toast({
             title: 'Investimento Atualizado!',
-            description: `Seu investimento em ${dataToSave.type} foi atualizado com sucesso.`,
+            description: `Seu investimento em ${values.type} foi atualizado com sucesso.`,
             className: 'border-accent'
         });
         setOpen(false);
@@ -138,14 +97,9 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
     }
   }
 
-  const handleTypeChange = (value: string) => {
-      form.setValue('type', value);
-      if (value === 'Outro') {
-          setShowCustomType(true);
-      } else {
-          setShowCustomType(false);
-          form.setValue('customType', '');
-      }
+  const handleTypeSelect = (type: string) => {
+    setSelectedType(type);
+    form.setValue('type', type, { shouldValidate: true });
   }
 
   return (
@@ -156,7 +110,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
             <span className="sr-only">Editar</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Editar Investimento</DialogTitle>
           <DialogDescription>
@@ -165,104 +119,71 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-             <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Tipo de Investimento</FormLabel>
-                    <Select onValueChange={handleTypeChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo..." />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {investmentGroups.map(group => (
-                            <SelectGroup key={group.label}>
-                                <SelectLabel>{group.label}</SelectLabel>
-                                {group.options.map(option => (
-                                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                                ))}
-                            </SelectGroup>
-                        ))}
-                         <SelectGroup>
-                            <SelectLabel>Outros</SelectLabel>
-                            <SelectItem value="Outro">Outro...</SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                    </Select>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-             {showCustomType && (
-                <FormField
-                    control={form.control}
-                    name="customType"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Nome do Tipo</FormLabel>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Nome do Investimento</FormLabel>
                             <FormControl>
-                                <Input placeholder="Ex: Fundo Imobiliário" {...field} />
+                                <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
                             </FormControl>
                             <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            )}
-            <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Nome do Investimento</FormLabel>
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                    control={form.control}
+                    name="institution"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Instituição Financeira</FormLabel>
                         <FormControl>
-                        <Input placeholder="Ex: CDB Banco Y 2028" {...field} />
+                            <Input placeholder="Ex: Meu Banco" {...field} />
                         </FormControl>
                         <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="institution"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Instituição Financeira</FormLabel>
-                    <FormControl>
-                    <Input placeholder="Ex: Meu Banco" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Valor Investido (R$)</FormLabel>
-                    <FormControl>
-                    <Input type="number" step="0.01" placeholder="1000.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="yieldRate"
-                render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Rendimento (% CDI ao ano)</FormLabel>
-                    <FormControl>
-                    <Input type="number" step="0.1" placeholder="110" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
+                        </FormItem>
+                    )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                        control={form.control}
+                        name="amount"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Valor Investido (R$)</FormLabel>
+                            <FormControl>
+                                <Input type="number" step="0.01" placeholder="1000.00" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="yieldRate"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Rendimento (% CDI)</FormLabel>
+                            <FormControl>
+                                <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                </div>
+                <div>
+                        <div className="space-y-2">
+                            <FormLabel>Tipo de Investimento</FormLabel>
+                        <InvestmentSelector onSelect={handleTypeSelect} selectedValue={selectedType} />
+                            {form.formState.errors.type && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.type.message}</p>}
+                        </div>
+                </div>
+            </div>
             <DialogFooter>
                 <DialogClose asChild>
                     <Button type="button" variant="ghost">Cancelar</Button>
