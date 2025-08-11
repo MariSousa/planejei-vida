@@ -43,19 +43,22 @@ function DebtsPageContent() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
-  const getInstallmentDate = (debt: Debt, installmentIndex: number) => {
+  const getInstallmentDate = (debt: Debt, installmentOffset: number) => {
     let baseDate: Date;
-    const lastPayment = debt.lastPaymentDate ? new Date(debt.lastPaymentDate) : null;
 
-    if (lastPayment && isValid(lastPayment)) {
-        baseDate = lastPayment;
-    } else if (debt.startDate && isValid(new Date(debt.startDate))) {
+    // Use startDate as the primary reference point
+    if (debt.startDate && isValid(new Date(debt.startDate))) {
         baseDate = new Date(debt.startDate);
     } else {
-        baseDate = new Date(); // Fallback to current date
+        // Fallback to current date if startDate is invalid or missing
+        baseDate = new Date();
     }
     
-    const installmentDate = addMonths(baseDate, installmentIndex + 1);
+    // Calculate how many installments have been paid
+    const paidInstallments = debt.totalInstallments - debt.remainingInstallments;
+    
+    // The date for the next installment is the baseDate + total paid + offset
+    const installmentDate = addMonths(baseDate, paidInstallments + installmentOffset);
     return format(installmentDate, "MMMM, yyyy", { locale: ptBR });
   };
 
@@ -120,7 +123,7 @@ function DebtsPageContent() {
                                                 <div className="flex items-center space-x-2">
                                                     <Checkbox id={installmentId} onCheckedChange={() => handleInstallmentPay(item)} />
                                                     <Label htmlFor={installmentId} className="capitalize text-sm">
-                                                        Parcela {getInstallmentDate(item, index)}
+                                                        Parcela {getInstallmentDate(item, index + 1)}
                                                     </Label>
                                                 </div>
                                                 <span className="font-medium text-sm">{formatCurrency(item.monthlyPaymentGoal)}</span>
