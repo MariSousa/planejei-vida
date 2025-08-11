@@ -65,7 +65,7 @@ function PlanningPageContent() {
     defaultValues: {
       name: '',
       amount: undefined,
-      dueDate: new Date(),
+      dueDate: currentMonth,
       priority: 'Média',
     },
   });
@@ -90,7 +90,12 @@ function PlanningPageContent() {
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
             className: 'border-accent'
         });
-        expenseForm.reset();
+        expenseForm.reset({
+            name: '',
+            amount: undefined,
+            dueDate: currentMonth,
+            priority: 'Média',
+        });
     } catch (error) {
          toast({
             title: 'Erro',
@@ -114,7 +119,10 @@ function PlanningPageContent() {
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
             className: 'border-accent'
         });
-        incomeForm.reset();
+        incomeForm.reset({
+            name: '',
+            amount: undefined
+        });
     } catch (error) {
          toast({
             title: 'Erro',
@@ -419,4 +427,3 @@ export default function PlanningPage() {
         </PrivateRoute>
     )
 }
-
