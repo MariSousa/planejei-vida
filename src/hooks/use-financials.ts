@@ -6,7 +6,7 @@ import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc } from 'firebase/firestore';
-import { addDays, isAfter, isBefore, startOfToday, format, getYear, getMonth, set, addMonths } from 'date-fns';
+import { addDays, isAfter, isBefore, startOfToday, format, addMonths } from 'date-fns';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -40,28 +40,14 @@ export const useFinancials = () => {
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isClient, setIsClient] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(addMonths(new Date(), 1));
+  const [currentPlanningMonth, setCurrentPlanningMonth] = useState(addMonths(new Date(), 1));
 
-  const getMonthlyQuery = (col: string) => {
-    if (!user) return null;
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-    
-    return query(
-        collection(db, `users/${user.uid}/${col}`),
-        where('date', '>=', startOfMonth),
-        where('date', '<=', endOfMonth),
-        orderBy('date', 'desc')
-    );
-  }
 
   useEffect(() => {
     if (user) {
-      const collections = ['income', 'expenses', 'goals', 'advices', 'categories', 'favorites'];
+      // Listener for non-monthly data (goals, advices, categories, favorites)
+      const collections = ['goals', 'advices', 'categories', 'favorites'];
       const setters: any = {
-        income: setIncome,
-        expenses: setExpenses,
         goals: setGoals,
         advices: setAdvices,
         categories: setCustomCategories,
@@ -69,25 +55,37 @@ export const useFinancials = () => {
       };
 
       const unsubscribes = collections.map(col => {
-        let q;
-        if (['income', 'expenses'].includes(col)) {
-          q = getMonthlyQuery(col);
-        } else {
-          q = query(collection(db, `users/${user.uid}/${col}`), orderBy('date', 'desc'));
-        }
-        
-        if (!q) return () => {};
-
+        const q = query(collection(db, `users/${user.uid}/${col}`), orderBy('date', 'desc'));
         return onSnapshot(q, (querySnapshot) => {
           const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setters[col](data);
         });
       });
 
+      // Listener for current month's income
+      const incomeMonthStr = format(new Date(), 'yyyy-MM');
+      const incomeItemsCollectionRef = collection(db, `users/${user.uid}/income/${incomeMonthStr}/items`);
+      const incomeQuery = query(incomeItemsCollectionRef, orderBy('date', 'desc'));
+      const unsubIncome = onSnapshot(incomeQuery, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
+        setIncome(items);
+      });
+
+       // Listener for current month's expenses
+      const expensesMonthStr = format(new Date(), 'yyyy-MM');
+      const expensesItemsCollectionRef = collection(db, `users/${user.uid}/expenses/${expensesMonthStr}/items`);
+      const expensesQuery = query(expensesItemsCollectionRef, orderBy('date', 'desc'));
+      const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+        setExpenses(items);
+      });
+
       setIsClient(true);
 
       return () => {
         unsubscribes.forEach(unsub => unsub());
+        unsubIncome();
+        unsubExpenses();
       };
     } else {
         setIncome([]);
@@ -100,10 +98,10 @@ export const useFinancials = () => {
     }
   }, [user]);
 
-  // Specific listener for monthly plan items
+  // Specific listener for monthly plan items based on currentPlanningMonth
   useEffect(() => {
     if (user) {
-      const monthStr = format(currentMonth, 'yyyy-MM');
+      const monthStr = format(currentPlanningMonth, 'yyyy-MM');
       const itemsCollectionRef = collection(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`);
       const q = query(itemsCollectionRef, orderBy('dueDate', 'asc'));
       
@@ -114,10 +112,32 @@ export const useFinancials = () => {
       
       return () => unsubscribe();
     }
-  }, [user, currentMonth]);
+  }, [user, currentPlanningMonth]);
 
+  const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any) => {
+      if (!user) return;
+      const date = new Date();
+      const monthStr = format(date, 'yyyy-MM');
+      const monthDocRef = doc(db, `users/${user.uid}/${collectionName}`, monthStr);
+      await setDoc(monthDocRef, { month: monthStr }, { merge: true });
 
-  const addDocWithDate = async (collectionName: string, data: any) => {
+      const itemsCollectionRef = collection(monthDocRef, 'items');
+      await addDoc(itemsCollectionRef, {
+          ...data,
+          date: date.toISOString()
+      });
+  }
+
+  const deleteMonthlyDocById = async (collectionName: 'income' | 'expenses', id: string) => {
+      if (!user) return;
+      const date = new Date(); // Assuming we delete from the current month
+      const monthStr = format(date, 'yyyy-MM');
+      const itemRef = doc(db, `users/${user.uid}/${collectionName}/${monthStr}/items`, id);
+      await deleteDoc(itemRef);
+  }
+
+  // Generic functions for collections not structured by month
+  const addDocToCollection = async (collectionName: string, data: any) => {
       if (!user) return;
       await addDoc(collection(db, `users/${user.uid}/${collectionName}`), {
           ...data,
@@ -125,20 +145,19 @@ export const useFinancials = () => {
       });
   }
   
-  const deleteDocById = async (collectionName: string, id: string) => {
+  const deleteDocFromCollection = async (collectionName: string, id: string) => {
       if (!user) return;
       await deleteDoc(doc(db, `users/${user.uid}/${collectionName}`, id));
   }
 
-  const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addDocWithDate('income', newIncome), [user]);
-  const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addDocWithDate('expenses', newExpense), [user]);
+  const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addMonthlyDocWithDate('income', newIncome), [user]);
+  const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addMonthlyDocWithDate('expenses', newExpense), [user]);
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'month' | 'status'>) => {
     if (!user) return;
     const monthStr = format(new Date(item.dueDate), 'yyyy-MM');
-    // Ensure the month document exists. We can write an empty doc or a doc with summary data.
     const monthDocRef = doc(db, `users/${user.uid}/monthlyPlan`, monthStr);
-    await setDoc(monthDocRef, { month: monthStr }, { merge: true }); // Using merge to not overwrite if it exists
+    await setDoc(monthDocRef, { month: monthStr }, { merge: true }); 
 
     const itemsCollectionRef = collection(monthDocRef, 'items');
     await addDoc(itemsCollectionRef, {
@@ -149,28 +168,25 @@ export const useFinancials = () => {
 
   const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
     if (!user) return;
-    const monthStr = format(currentMonth, 'yyyy-MM');
+    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     await updateDoc(itemRef, { status });
-  }, [user, currentMonth]);
+  }, [user, currentPlanningMonth]);
 
   const removePlanItem = useCallback((id: string) => {
     if (!user) return;
-    const monthStr = format(currentMonth, 'yyyy-MM');
+    const monthStr = format(currentPlanningMonth, 'yyyy-MM');
     const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     return deleteDoc(itemRef);
-  }, [user, currentMonth]);
+  }, [user, currentPlanningMonth]);
 
-  const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocWithDate('goals', newGoal), [user]);
-  const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocWithDate('advices', newAdvice), [user]);
-  const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocWithDate('categories', newCategory), [user]);
+  const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocToCollection('goals', newGoal), [user]);
+  const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
+  const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
 
   const addFavorite = useCallback(async (categoryName: string) => {
     if (!user) return;
-    await addDoc(collection(db, `users/${user.uid}/favorites`), {
-      name: categoryName,
-      date: new Date().toISOString()
-    });
+    await addDocToCollection('favorites', { name: categoryName });
   }, [user]);
 
   const removeFavorite = useCallback(async (categoryName: string) => {
@@ -184,11 +200,11 @@ export const useFinancials = () => {
     await batch.commit();
   }, [user]);
 
-  const removeIncome = useCallback((id: string) => deleteDocById('income', id), [user]);
-  const removeExpense = useCallback((id: string) => deleteDocById('expenses', id), [user]);
-  const removeGoal = useCallback((id: string) => deleteDocById('goals', id), [user]);
-  const removeAdvice = useCallback((id: string) => deleteDocById('advices', id), [user]);
-  const removeCategory = useCallback((id: string) => deleteDocById('categories', id), [user]);
+  const removeIncome = useCallback((id: string) => deleteMonthlyDocById('income', id), [user]);
+  const removeExpense = useCallback((id: string) => deleteMonthlyDocById('expenses', id), [user]);
+  const removeGoal = useCallback((id: string) => deleteDocFromCollection('goals', id), [user]);
+  const removeAdvice = useCallback((id: string) => deleteDocFromCollection('advices', id), [user]);
+  const removeCategory = useCallback((id: string) => deleteDocFromCollection('categories', id), [user]);
 
   const updateGoalContribution = useCallback(async (goalId: string, amount: number, type: 'add' | 'withdraw') => {
     if (!user) return;
@@ -261,7 +277,6 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
-    // Filter only expenses that are still 'Previsto'
     return monthlyPlanItems.filter(item => {
         if (item.type !== 'gasto' || item.status !== 'Previsto') return false;
         const dueDate = new Date(item.dueDate);
@@ -316,7 +331,7 @@ export const useFinancials = () => {
     upcomingPayments,
     planningTotals,
     isClient,
-    currentMonth,
-    setCurrentMonth
+    currentMonth: currentPlanningMonth,
+    setCurrentMonth: setCurrentPlanningMonth
   };
 };
