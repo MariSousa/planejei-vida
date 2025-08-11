@@ -16,9 +16,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CalendarIcon, Trash2, CheckCircle, Circle, MoreHorizontal } from 'lucide-react';
+import { CalendarIcon, Trash2, CheckCircle, Circle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
@@ -27,13 +27,12 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { type Priority, type Status, type PlanItemType } from '@/types';
+import { type Priority, type Status } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/summary-card';
 import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 
 
 const formSchema = z.object({
@@ -105,9 +104,7 @@ function PlanningPageContent() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
         const itemToAdd = {
-            name: values.name,
-            amount: values.amount,
-            type: values.type,
+            ...values,
             dueDate: (values.dueDate || new Date()).toISOString(),
             priority: values.priority || 'Baixa',
         };
@@ -158,9 +155,6 @@ function PlanningPageContent() {
     'Média': 'secondary',
     'Baixa': 'default',
   };
-
-  const plannedIncomes = useMemo(() => monthlyPlanItems.filter(item => item.type === 'ganho'), [monthlyPlanItems]);
-  const plannedExpenses = useMemo(() => monthlyPlanItems.filter(item => item.type === 'gasto'), [monthlyPlanItems]);
   
   if (!isClient) {
     return (
@@ -282,7 +276,7 @@ function PlanningPageContent() {
                     render={({ field }) => (
                     <FormItem>
                         <FormLabel>Prioridade</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={typeValue === 'ganho'}>
+                        <Select onValueChange={field.onChange} value={field.value || 'Média'} disabled={typeValue === 'ganho'}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione a prioridade" />
@@ -332,7 +326,7 @@ function PlanningPageContent() {
                                     defaultMonth={currentMonth}
                                     initialFocus
                                     locale={ptBR}
-                                    disabled={typeValue === 'ganho'}
+                                    disabled={(date) => typeValue === 'ganho' || date < new Date("1900-01-01")}
                                 />
                                 </PopoverContent>
                             </Popover>
@@ -381,7 +375,7 @@ function PlanningPageContent() {
                                 </Badge>
                             )}
                         </TableCell>
-                        <TableCell>{formatDate(item.dueDate)}</TableCell>
+                        <TableCell>{item.type === 'gasto' ? formatDate(item.dueDate) : '-'}</TableCell>
                         <TableCell className={cn(
                             "text-right font-medium",
                             item.type === 'ganho' && 'text-green-600',
@@ -406,48 +400,6 @@ function PlanningPageContent() {
             </CardContent>
         </Card>
       </div>
-
-      <Separator />
-
-      <div>
-        <h2 className="text-2xl font-bold mb-4 text-center">Resumo do Planejamento</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-green-600">Ganhos Previstos</CardTitle>
-              <CardDescription>{formatCurrency(planningTotals.plannedIncome)}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {plannedIncomes.map(item => (
-                  <li key={item.id} className="flex justify-between">
-                    <span>{item.name}</span>
-                    <span className="font-medium">{formatCurrency(item.amount)}</span>
-                  </li>
-                ))}
-                {plannedIncomes.length === 0 && <p className="text-muted-foreground">Nenhum ganho previsto.</p>}
-              </ul>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg text-red-600">Gastos Previstos</CardTitle>
-              <CardDescription>{formatCurrency(planningTotals.plannedExpenses)}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {plannedExpenses.map(item => (
-                  <li key={item.id} className="flex justify-between">
-                    <span>{item.name}</span>
-                    <span className="font-medium">{formatCurrency(item.amount)}</span>
-                  </li>
-                ))}
-                 {plannedExpenses.length === 0 && <p className="text-muted-foreground">Nenhum gasto previsto.</p>}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }
@@ -459,5 +411,3 @@ export default function PlanningPage() {
         </PrivateRoute>
     )
 }
-
-    
