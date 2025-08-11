@@ -64,8 +64,8 @@ const runCalculation = (input: InvestmentInput): SimulationResult => {
 
     const getIrRate = (days: number): number => {
         if (days <= 180) return 0.225; // 22.5%
-        if (days <= 360) return 0.175; // 17.5%
-        if (days <= 720) return 0.150; // 15.0%
+        if (days <= 360) return 0.20; // 20%
+        if (days <= 720) return 0.175; // 17.5%
         return 0.150; // A alíquota mínima é 15%
     };
 
