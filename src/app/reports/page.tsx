@@ -16,7 +16,9 @@ function ReportsPageContent() {
         reportExpenses, 
         reportMonthlyPlanItems, 
         goals, 
-        advices, 
+        advices,
+        investments,
+        debts,
         isClient,
         reportMonth,
         setReportMonth,
@@ -59,6 +61,8 @@ function ReportsPageContent() {
                 monthlyPlanItems={reportMonthlyPlanItems}
                 goals={goals}
                 advices={advices}
+                investments={investments}
+                debts={debts}
             />
         </div>
     );

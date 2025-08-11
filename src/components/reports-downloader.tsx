@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
-import type { Income, Expense, MonthlyPlanItem, Goal, Advice } from '@/types';
+import type { Income, Expense, MonthlyPlanItem, Goal, Advice, Investment, Debt } from '@/types';
 
 interface ReportsDownloaderProps {
   income: Income[];
@@ -12,13 +12,15 @@ interface ReportsDownloaderProps {
   monthlyPlanItems: MonthlyPlanItem[];
   goals: Goal[];
   advices: Advice[];
+  investments: Investment[];
+  debts: Debt[];
 }
 
-type ReportType = 'income' | 'expenses' | 'monthlyPlanItems' | 'goals' | 'advices';
+type ReportType = 'income' | 'expenses' | 'monthlyPlanItems' | 'goals' | 'advices' | 'investments' | 'debts';
 
-export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, advices }: ReportsDownloaderProps) {
+export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, advices, investments, debts }: ReportsDownloaderProps) {
 
-  const dataMap = { income, expenses, monthlyPlanItems, goals, advices };
+  const dataMap = { income, expenses, monthlyPlanItems, goals, advices, investments, debts };
 
   const getReportTitle = (type: ReportType): string => {
     const titles = {
@@ -27,6 +29,8 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
         monthlyPlanItems: 'Relatório de Planejamento Mensal',
         goals: 'Relatório de Sonhos',
         advices: 'Relatório de Conselhos do FinMentor',
+        investments: 'Relatório de Investimentos',
+        debts: 'Relatório de Compromissos',
     };
     return titles[type];
   }
@@ -35,7 +39,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
     const data = dataMap[type];
     if (!data || data.length === 0) return [];
     
-    const ignoredFields = ['id', 'goalId', 'date']; 
+    const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate']; 
     // Mapeamento de nomes de campos para cabeçalhos em português
     const headerTranslations: Record<string, string> = {
         source: 'Fonte',
@@ -43,15 +47,22 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
         category: 'Categoria',
         name: 'Nome',
         institution: 'Instituição',
-        yieldRate: 'Taxa de Rendimento',
+        yieldRate: 'Taxa Rendimento (% CDI)',
         type: 'Tipo',
-        dueDate: 'Data de Vencimento',
+        dueDate: 'Vencimento',
         priority: 'Prioridade',
         status: 'Status',
         goalName: 'Nome da Meta',
         adviceText: 'Conselho',
         targetAmount: 'Valor Alvo',
         currentAmount: 'Valor Atual',
+        originalAmount: 'Valor Original',
+        remainingAmount: 'Valor Restante',
+        startDate: 'Data de Início',
+        monthlyPaymentGoal: 'Parcela Mensal',
+        interestRate: 'Taxa de Juros (% a.m.)',
+        totalInstallments: 'Total de Parcelas',
+        remainingInstallments: 'Parcelas Restantes',
     };
 
     return Object.keys(data[0])
@@ -61,7 +72,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
   
   const getBodyRows = (type: ReportType): string[][] => {
       const data = dataMap[type];
-      const headers = Object.keys(data.length > 0 ? data[0] : {}).filter(h => !['id', 'goalId', 'date'].includes(h));
+      const headers = Object.keys(data.length > 0 ? data[0] : {}).filter(h => !['id', 'goalId', 'date', 'lastPaymentDate'].includes(h));
       if (!data || data.length === 0) return [];
       
       return data.map(item =>
@@ -188,9 +199,11 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
   };
   
   const reportOptions = [
-      { type: 'income' as ReportType, title: 'Relatório de Ganhos', description: 'Todas as suas fontes de renda registradas.' },
-      { type: 'expenses' as ReportType, title: 'Relatório de Gastos', description: 'Todos os seus gastos, detalhados por categoria.' },
+      { type: 'income' as ReportType, title: 'Relatório de Ganhos', description: 'Todas as suas fontes de renda registradas no mês selecionado.' },
+      { type: 'expenses' as ReportType, title: 'Relatório de Gastos', description: 'Todos os seus gastos, detalhados por categoria, no mês selecionado.' },
       { type: 'monthlyPlanItems' as ReportType, title: 'Relatório de Planejamento', description: 'Seus itens de planejamento para o mês selecionado.' },
+      { type: 'investments' as ReportType, title: 'Relatório de Investimentos', description: 'Um resumo de toda a sua carteira de investimentos.' },
+      { type: 'debts' as ReportType, title: 'Relatório de Compromissos', description: 'Todos os seus compromissos financeiros pendentes e pagos.' },
       { type: 'goals' as ReportType, title: 'Relatório de Sonhos', description: 'O progresso de todas as suas metas financeiras.' },
       { type: 'advices' as ReportType, title: 'Relatório de Conselhos', description: 'Todos os conselhos gerados pelo FinMentor.' },
   ];
