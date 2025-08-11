@@ -1,3 +1,4 @@
+
 import { config } from 'dotenv';
 config();
 
@@ -17,3 +18,4 @@ helloFlow('Chris');
 import '@/ai/flows/personalized-savings-advice.ts';
 import '@/ai/flows/investment-explainer.ts';
 import '@/ai/flows/investment-calculator.ts';
+import '@/ai/flows/portfolio-projection.ts';

@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { PiggyBank, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,8 +25,7 @@ import { PrivateRoute } from '@/components/private-route';
 import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 import { InvestmentSelector } from '@/components/investment-selector';
 import { InstitutionSelector } from '@/components/institution-selector';
-import { InvestmentSimulator } from '@/components/investment-simulator';
-import { InvestmentAIAssistant } from '@/components/investment-ai-assistant';
+import { PortfolioProjection } from '@/components/portfolio-projection';
 
 
 const formSchema = z.object({
@@ -229,9 +228,8 @@ function InvestmentsPageContent() {
         </Card>
       </div>
 
-      <InvestmentSimulator />
+      <PortfolioProjection investments={investments} />
 
-      <InvestmentAIAssistant />
     </div>
   );
 }
