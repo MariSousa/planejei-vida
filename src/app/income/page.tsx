@@ -35,7 +35,7 @@ function IncomePageContent() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       source: '',
-      amount: 0,
+      amount: undefined,
     },
   });
 
@@ -46,7 +46,7 @@ function IncomePageContent() {
       description: `Renda de ${values.source} adicionada com sucesso.`,
       className: 'border-accent'
     });
-    form.reset({source: '', amount: 0});
+    form.reset({source: '', amount: undefined});
   }
   
   const formatCurrency = (value: number) => {
