@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -71,12 +72,14 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
 
     const headers = Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
     
+    let orderedHeaders;
     if (type === 'debts') {
-        const orderedHeaders = debtHeaderOrder.filter(key => headers.includes(key));
-        return orderedHeaders.map(key => headerTranslations[key] || key);
+        orderedHeaders = debtHeaderOrder.filter(key => headers.includes(key));
+    } else {
+        orderedHeaders = headers;
     }
     
-    return headers.map(header => headerTranslations[header] || header);
+    return orderedHeaders.map(key => headerTranslations[key] || key);
   };
   
   const getBodyRows = (type: ReportType): string[][] => {
@@ -106,9 +109,11 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
                       return String(value);
                   }
               }
-              if (header === 'adviceText') {
-                const cleanedText = String(value).replace(/\*\*/g, ''); // Remove asterisks
-                return cleanedText.replace(/\n/g, '<br/>');
+               if (header === 'adviceText') {
+                // First, replace all newline characters with <br> for HTML display.
+                // Then, remove any remaining markdown-like asterisks.
+                const htmlText = String(value).replace(/\n/g, '<br/>');
+                return htmlText.replace(/\*\*/g, '');
               }
               return String(value ?? '-');
           })
@@ -155,6 +160,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
             padding: 12px 15px; 
             text-align: left; 
             vertical-align: top;
+            word-wrap: break-word;
         }
         th { 
             background-color: #f1f3f5; 
