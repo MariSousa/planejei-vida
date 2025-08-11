@@ -37,7 +37,7 @@ function AdvicePageContent() {
   });
 
   const expenseData = useMemo(() => expenses.map(e => ({ category: e.category, amount: e.amount })), [expenses]);
-  const debtData = useMemo(() => debts.map(d => ({ name: d.name, amount: d.amount })), [debts]);
+  const debtData = useMemo(() => debts.map(d => ({ name: d.name, amount: d.remainingAmount })), [debts]);
   const goalData = useMemo(() => goals.map(g => ({ name: g.name, targetAmount: g.targetAmount, currentAmount: g.currentAmount })), [goals]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
