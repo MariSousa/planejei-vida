@@ -10,7 +10,7 @@ export function QuickActions() {
     const actions = [
         { href: '/income', label: 'Ganho', icon: Wallet },
         { href: '/expenses', label: 'Gasto', icon: Receipt },
-        { href: '/debts', label: 'Compromisso', icon: Landmark },
+        { href: '/planning', label: 'Planejamento', icon: Landmark },
         { href: '/goals', label: 'Sonho', icon: Target },
     ];
 

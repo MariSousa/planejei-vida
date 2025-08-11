@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType, type Investment } from '@/types';
+import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType, type Investment, type Debt } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc } from 'firebase/firestore';
@@ -39,7 +39,7 @@ export const useFinancials = () => {
   const [currentMonthPlanItemsForSuggestions, setCurrentMonthPlanItemsForSuggestions] = useState<MonthlyPlanItem[]>([]);
 
   // States for planning page
-  const [currentPlanningMonth, setCurrentPlanningMonth] = useState(addMonths(new Date(), 1));
+  const [currentPlanningMonth, setCurrentPlanningMonth] = useState(new Date());
   const [planningMonthItems, setPlanningMonthItems] = useState<MonthlyPlanItem[]>([]);
 
   // States for reports page
@@ -51,6 +51,7 @@ export const useFinancials = () => {
   // States for non-monthly data
   const [goals, setGoals] = useState<Goal[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -61,13 +62,14 @@ export const useFinancials = () => {
   useEffect(() => {
     if (user) {
       // Listener for non-monthly data (goals, advices, categories, favorites)
-      const collections = ['goals', 'advices', 'categories', 'favorites', 'investments'];
+      const collections = ['goals', 'advices', 'categories', 'favorites', 'investments', 'debts'];
       const setters: any = {
         goals: setGoals,
         advices: setAdvices,
         categories: setCustomCategories,
         favorites: setFavorites,
         investments: setInvestments,
+        debts: setDebts,
       };
 
       const unsubscribes = collections.map(col => {
@@ -119,6 +121,7 @@ export const useFinancials = () => {
         setCurrentMonthPlanItemsForSuggestions([]);
         setGoals([]);
         setInvestments([]);
+        setDebts([]);
         setAdvices([]);
         setCustomCategories([]);
         setFavorites([]);
@@ -241,6 +244,8 @@ export const useFinancials = () => {
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocToCollection('goals', newGoal), [user]);
   const addInvestment = useCallback((newInvestment: Omit<Investment, 'id' | 'date'>) => addDocToCollection('investments', newInvestment), [user]);
+  const addDebt = useCallback((newDebt: Omit<Debt, 'id' | 'date'>) => addDocToCollection('debts', newDebt), [user]);
+  
   const updateInvestment = useCallback(async (id: string, data: Partial<Omit<Investment, 'id' | 'date'>>) => {
     if (!user) return;
     const investmentRef = doc(db, `users/${user.uid}/investments`, id);
@@ -270,6 +275,7 @@ export const useFinancials = () => {
   const removeExpense = useCallback((id: string) => deleteMonthlyDocById('expenses', id), [user]);
   const removeGoal = useCallback((id: string) => deleteDocFromCollection('goals', id), [user]);
   const removeInvestment = useCallback((id: string) => deleteDocFromCollection('investments', id), [user]);
+  const removeDebt = useCallback((id: string) => deleteDocFromCollection('debts', id), [user]);
   const removeAdvice = useCallback((id: string) => deleteDocFromCollection('advices', id), [user]);
   const removeCategory = useCallback((id: string) => deleteDocFromCollection('categories', id), [user]);
 
@@ -344,12 +350,12 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
-    return currentMonthPlanItemsForSuggestions.filter(item => {
-        if (item.type !== 'gasto' || item.status !== 'Previsto') return false;
+    return debts.filter(item => {
+        if (item.status !== 'Pendente') return false;
         const dueDate = new Date(item.dueDate);
         return isAfter(dueDate, today) && isBefore(dueDate, next7Days);
     });
-  }, [currentMonthPlanItemsForSuggestions]);
+  }, [debts]);
 
   const planningTotals = useMemo(() => {
     const plannedIncome = planningMonthItems
@@ -389,6 +395,7 @@ export const useFinancials = () => {
     planningMonthItems,
     goals,
     investments,
+    debts,
     advices,
     customCategories,
     favoriteCategories,
@@ -404,6 +411,7 @@ export const useFinancials = () => {
     removePlanItem,
     addGoal,
     addInvestment,
+    addDebt,
     updateInvestment,
     addAdvice,
     addCategory,
@@ -413,6 +421,7 @@ export const useFinancials = () => {
     removeExpense,
     removeGoal,
     removeInvestment,
+    removeDebt,
     removeAdvice,
     removeCategory,
     updateGoalContribution,
@@ -421,8 +430,8 @@ export const useFinancials = () => {
     upcomingPayments,
     planningTotals,
     isClient,
-    currentPlanningMonth,
-    setCurrentPlanningMonth,
+    currentMonth: currentPlanningMonth,
+    setCurrentMonth: setCurrentPlanningMonth,
     reportMonth,
     setReportMonth,
   };

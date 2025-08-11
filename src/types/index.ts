@@ -73,3 +73,12 @@ export interface Investment {
     yieldRate: number;
     date: string;
 }
+
+export interface Debt {
+    id: string;
+    name: string;
+    amount: number;
+    dueDate: string;
+    status: 'Pendente' | 'Pago';
+    date: string;
+}

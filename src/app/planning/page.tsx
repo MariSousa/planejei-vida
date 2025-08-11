@@ -49,7 +49,7 @@ const incomeSchema = z.object({
 
 function PlanningPageContent() {
   const { 
-    monthlyPlanItems, 
+    planningMonthItems: monthlyPlanItems, 
     addPlanItem, 
     removePlanItem,
     updatePlanItemStatus, 
