@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -38,45 +37,66 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
   const getHeaders = (type: ReportType): string[] => {
     const data = dataMap[type];
     if (!data || data.length === 0) return [];
+
+    const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
     
-    const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate']; 
     // Mapeamento de nomes de campos para cabeçalhos em português
     const headerTranslations: Record<string, string> = {
+        name: 'Nome',
+        monthlyPaymentGoal: 'Parcela Mensal',
+        originalAmount: 'Valor Original',
+        remainingAmount: 'Valor Restante',
+        interestRate: 'Taxa de Juros (% a.m.)',
+        status: 'Status',
+        startDate: 'Data de Início',
+        dueDate: 'Vencimento',
+        totalInstallments: 'Total de Parcelas',
+        remainingInstallments: 'Parcelas Restantes',
         source: 'Fonte',
         amount: 'Valor',
         category: 'Categoria',
-        name: 'Nome',
         institution: 'Instituição',
         yieldRate: 'Taxa Rendimento (% CDI)',
         type: 'Tipo',
-        dueDate: 'Vencimento',
         priority: 'Prioridade',
-        status: 'Status',
         goalName: 'Nome da Meta',
         adviceText: 'Conselho',
         targetAmount: 'Valor Alvo',
         currentAmount: 'Valor Atual',
-        originalAmount: 'Valor Original',
-        remainingAmount: 'Valor Restante',
-        startDate: 'Data de Início',
-        monthlyPaymentGoal: 'Parcela Mensal',
-        interestRate: 'Taxa de Juros (% a.m.)',
-        totalInstallments: 'Total de Parcelas',
-        remainingInstallments: 'Parcelas Restantes',
     };
 
-    return Object.keys(data[0])
-        .filter(header => !ignoredFields.includes(header))
-        .map(header => headerTranslations[header] || header);
+    // Define a ordem correta para os compromissos
+    const debtHeaderOrder = [
+        'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
+    ];
+
+    const headers = Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
+    
+    // Usa a ordem específica para compromissos, senão usa a ordem padrão
+    if (type === 'debts') {
+        return debtHeaderOrder.map(key => headerTranslations[key] || key);
+    }
+    
+    return headers.map(header => headerTranslations[header] || header);
   };
   
   const getBodyRows = (type: ReportType): string[][] => {
       const data = dataMap[type];
-      const headers = Object.keys(data.length > 0 ? data[0] : {}).filter(h => !['id', 'goalId', 'date', 'lastPaymentDate'].includes(h));
       if (!data || data.length === 0) return [];
       
+      const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
+      
+       // Define a ordem correta para os compromissos
+      const debtHeaderOrder = [
+        'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
+      ];
+      
+      const headers = Object.keys(data[0]).filter(h => !ignoredFields.includes(h));
+
+      const orderedHeaders = type === 'debts' ? debtHeaderOrder : headers;
+
       return data.map(item =>
-          headers.map(header => {
+          orderedHeaders.map(header => {
               const value = (item as any)[header];
               if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount', 'yieldRate', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount'].includes(header)) {
                   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -111,7 +131,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
             padding: 20px; 
         }
         .container { 
-            max-width: 800px; 
+            max-width: 90%; 
             margin: auto; 
             background: #fff; 
             border-radius: 8px; 
@@ -135,6 +155,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
             padding: 12px 15px; 
             text-align: left; 
             vertical-align: top;
+            white-space: nowrap;
         }
         th { 
             background-color: #f1f3f5; 
