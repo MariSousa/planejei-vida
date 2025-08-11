@@ -1,8 +1,8 @@
 
 'use server';
 
-import { db } from '@/lib/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { rtdb } from '@/lib/firebase';
+import { ref, push, serverTimestamp, set } from 'firebase/database';
 import { revalidatePath } from 'next/cache';
 
 interface TicketInput {
@@ -19,8 +19,10 @@ export async function sendSupportTicket(input: TicketInput): Promise<{ error?: s
     }
 
     try {
-        // Save tickets to a top-level collection for simplicity and security
-        await addDoc(collection(db, `supportTickets`), {
+        // Save tickets to the Realtime Database
+        const ticketsRef = ref(rtdb, 'supportTickets');
+        const newTicketRef = push(ticketsRef);
+        await set(newTicketRef, {
             subject: input.subject,
             message: input.message,
             userEmail: input.userEmail,
@@ -35,7 +37,7 @@ export async function sendSupportTicket(input: TicketInput): Promise<{ error?: s
 
         return {};
     } catch (error) {
-        console.error("Error sending support ticket: ", error);
+        console.error("Error sending support ticket to RTDB: ", error);
         return { error: 'Não foi possível enviar sua mensagem. Tente novamente mais tarde.' };
     }
 }
