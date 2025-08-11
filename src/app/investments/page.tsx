@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,20 +27,31 @@ import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
+  customType: z.string().optional(),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
-  yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
+  yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
+}).refine(data => {
+    if (data.type === 'Outro') {
+        return data.customType && data.customType.length >= 2;
+    }
+    return true;
+}, {
+    message: 'O nome do tipo deve ter pelo menos 2 caracteres.',
+    path: ['customType'],
 });
 
 function InvestmentsPageContent() {
-  const { investments, addInvestment, removeInvestment, isClient } = useFinancials();
+  const { investments, addInvestment, isClient } = useFinancials();
   const { toast } = useToast();
+  const [showCustomType, setShowCustomType] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: undefined,
+      customType: '',
       name: '',
       institution: '',
       amount: undefined,
@@ -48,19 +60,29 @@ function InvestmentsPageContent() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addInvestment(values);
+    const investmentData = {
+        ...values,
+        type: values.type === 'Outro' ? values.customType! : values.type,
+    };
+    
+    // Remove customType from the data to be saved
+    const { customType, ...dataToSave } = investmentData;
+
+    addInvestment(dataToSave);
     toast({
       title: 'Investimento Adicionado!',
-      description: `Seu investimento em ${values.type} foi adicionado.`,
+      description: `Seu investimento em ${dataToSave.type} foi adicionado.`,
       className: 'border-accent'
     });
     form.reset({
       type: undefined,
+      customType: '',
       name: '',
       institution: '',
       amount: undefined,
       yieldRate: undefined,
     });
+    setShowCustomType(false);
   }
   
   const formatCurrency = (value: number) => {
@@ -68,6 +90,16 @@ function InvestmentsPageContent() {
   };
 
   const totalInvested = investments.reduce((acc, item) => acc + item.amount, 0);
+
+  const handleTypeChange = (value: string) => {
+      form.setValue('type', value);
+      if (value === 'Outro') {
+          setShowCustomType(true);
+      } else {
+          setShowCustomType(false);
+          form.setValue('customType', '');
+      }
+  }
 
   if (!isClient) {
     return (
@@ -88,31 +120,50 @@ function InvestmentsPageContent() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
                 <FormField
                   control={form.control}
                   name="type"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Investimento</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={handleTypeChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione o tipo..." />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                          <SelectItem value="Poupança">Poupança</SelectItem>
                           <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
                           <SelectItem value="CDB">CDB</SelectItem>
                           <SelectItem value="LCI">LCI</SelectItem>
                           <SelectItem value="LCA">LCA</SelectItem>
                           <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
+                          <SelectItem value="Outro">Outro...</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {showCustomType && (
+                     <FormField
+                        control={form.control}
+                        name="customType"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nome do Tipo</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ex: Fundo Imobiliário" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
                 <FormField
                   control={form.control}
                   name="name"
@@ -157,7 +208,7 @@ function InvestmentsPageContent() {
                   name="yieldRate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Rendimento (% do CDI)</FormLabel>
+                      <FormLabel>Rendimento (% CDI ao ano)</FormLabel>
                       <FormControl>
                         <Input type="number" step="0.1" placeholder="110" {...field} value={field.value ?? ''} />
                       </FormControl>
@@ -165,7 +216,7 @@ function InvestmentsPageContent() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="lg:col-span-5">Adicionar Investimento</Button>
+                <Button type="submit" className="md:col-span-full">Adicionar Investimento</Button>
               </form>
             </Form>
           </CardContent>

@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,12 +31,23 @@ import type { Investment } from '@/types';
 import { Loader2, Pencil } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const defaultInvestmentTypes = ["Poupança", "Renda Fixa", "CDB", "LCI", "LCA", "Tesouro Selic"];
+
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
+  customType: z.string().optional(),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
-  yieldRate: z.coerce.number().positive({ message: 'O rendimento deve ser um número positivo.' }),
+  yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
+}).refine(data => {
+    if (data.type === 'Outro') {
+        return data.customType && data.customType.length >= 2;
+    }
+    return true;
+}, {
+    message: 'O nome do tipo deve ter pelo menos 2 caracteres.',
+    path: ['customType'],
 });
 
 interface EditInvestmentDialogProps {
@@ -47,11 +59,15 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const [isLoading, setIsLoading] = useState(false);
   const { updateInvestment } = useFinancials();
   const { toast } = useToast();
+  const [showCustomType, setShowCustomType] = useState(false);
+
+  const isCustomTypeInitial = !defaultInvestmentTypes.includes(investment.type);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: investment.type,
+      type: isCustomTypeInitial ? 'Outro' : investment.type,
+      customType: isCustomTypeInitial ? investment.type : '',
       name: investment.name,
       institution: investment.institution,
       amount: investment.amount,
@@ -59,13 +75,23 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
     },
   });
 
+  useEffect(() => {
+    setShowCustomType(isCustomTypeInitial);
+  }, [isCustomTypeInitial]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        await updateInvestment(investment.id, values);
+        const investmentData = {
+            ...values,
+            type: values.type === 'Outro' ? values.customType! : values.type,
+        };
+        const { customType, ...dataToSave } = investmentData;
+
+        await updateInvestment(investment.id, dataToSave);
         toast({
             title: 'Investimento Atualizado!',
-            description: `Seu investimento em ${values.type} foi atualizado com sucesso.`,
+            description: `Seu investimento em ${dataToSave.type} foi atualizado com sucesso.`,
             className: 'border-accent'
         });
         setOpen(false);
@@ -78,6 +104,16 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
     } finally {
         setIsLoading(false);
     }
+  }
+
+  const handleTypeChange = (value: string) => {
+      form.setValue('type', value);
+      if (value === 'Outro') {
+          setShowCustomType(true);
+      } else {
+          setShowCustomType(false);
+          form.setValue('customType', '');
+      }
   }
 
   return (
@@ -103,24 +139,41 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Tipo de Investimento</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={handleTypeChange} defaultValue={field.value}>
                     <FormControl>
                         <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo..." />
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                        <SelectItem value="Poupança">Poupança</SelectItem>
                         <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
                         <SelectItem value="CDB">CDB</SelectItem>
                         <SelectItem value="LCI">LCI</SelectItem>
                         <SelectItem value="LCA">LCA</SelectItem>
                         <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
+                        <SelectItem value="Outro">Outro...</SelectItem>
                     </SelectContent>
                     </Select>
                     <FormMessage />
                 </FormItem>
                 )}
             />
+             {showCustomType && (
+                <FormField
+                    control={form.control}
+                    name="customType"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Nome do Tipo</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ex: Fundo Imobiliário" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
             <FormField
                 control={form.control}
                 name="name"
@@ -165,7 +218,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                 name="yieldRate"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Rendimento (% do CDI)</FormLabel>
+                    <FormLabel>Rendimento (% CDI ao ano)</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.1" placeholder="110" {...field} />
                     </FormControl>
