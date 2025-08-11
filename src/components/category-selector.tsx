@@ -68,7 +68,7 @@ export function CategorySelector({
     <Tabs defaultValue="favorites">
       <TabsList className="w-full">
         <TabsTrigger value="favorites" className="w-full">
-          <Star className="mr-2" /> Favoritos
+          <Star className="mr-2 h-4 w-4" /> Favoritos
         </TabsTrigger>
         <TabsTrigger value="all" className="w-full">Todas</TabsTrigger>
       </TabsList>
@@ -92,7 +92,7 @@ export function CategorySelector({
                             <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="ml-2"
+                            className="ml-2 shrink-0"
                             onClick={() => onFavoriteToggle(option, true)}
                             >
                             <Heart className="h-4 w-4 text-red-500" fill="currentColor" />
@@ -170,28 +170,29 @@ export function CategorySelector({
                                             {option.name}
                                         </Button>
                                         
-                                        {isCustom ? (
+                                        <div className="flex items-center shrink-0">
                                             <Button 
                                                 variant="ghost" 
-                                                size="icon" 
-                                                className="ml-2"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onRemoveCategory(option.id)
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        ) : (
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="ml-2"
+                                                size="icon"
+                                                className="ml-auto"
                                                 onClick={() => onFavoriteToggle(option.name, isFavorite)}
                                             >
                                                 <Heart className={cn("h-4 w-4", isFavorite && "text-red-500 fill-current")} />
                                             </Button>
-                                        )}
+                                            
+                                            {isCustom && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onRemoveCategory(option.id)
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 )
                             })}
