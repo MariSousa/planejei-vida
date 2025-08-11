@@ -96,7 +96,7 @@ function DebtsPageContent() {
     <div className="flex flex-col gap-8">
       <Card>
         <CardHeader>
-            <CardTitle>Visão Geral dos Compromissos</CardTitle>
+            <CardTitle>Visão Geral dos Compromissos a Quitar</CardTitle>
             <CardDescription>O valor total dos seus compromissos pendentes.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,6 +107,7 @@ function DebtsPageContent() {
         <Card>
           <CardHeader>
             <CardTitle>Adicionar Novo Compromisso</CardTitle>
+            <CardDescription>Cadastre dívidas, financiamentos ou saldos de cartão de crédito que você deseja quitar.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -118,7 +119,7 @@ function DebtsPageContent() {
                     <FormItem>
                       <FormLabel>Nome do Compromisso</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Fatura do Cartão" {...field} />
+                        <Input placeholder="Ex: Fatura do Cartão, Empréstimo Pessoal" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
