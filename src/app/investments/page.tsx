@@ -24,26 +24,29 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 import { InvestmentSelector } from '@/components/investment-selector';
+import { InstitutionSelector } from '@/components/institution-selector';
+
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
-  institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
+  institution: z.string({ required_error: 'Por favor, selecione a instituição.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
 });
 
 function InvestmentsPageContent() {
-  const { investments, addInvestment, removeInvestment, isClient } = useFinancials();
+  const { investments, addInvestment, isClient } = useFinancials();
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string | undefined>();
+  const [selectedInstitution, setSelectedInstitution] = useState<string | undefined>();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: undefined,
       name: '',
-      institution: '',
+      institution: undefined,
       amount: undefined,
       yieldRate: undefined,
     },
@@ -59,11 +62,12 @@ function InvestmentsPageContent() {
     form.reset({
       type: undefined,
       name: '',
-      institution: '',
+      institution: undefined,
       amount: undefined,
       yieldRate: undefined,
     });
     setSelectedType(undefined);
+    setSelectedInstitution(undefined);
   }
   
   const formatCurrency = (value: number) => {
@@ -75,6 +79,11 @@ function InvestmentsPageContent() {
   const handleTypeSelect = (type: string) => {
       setSelectedType(type);
       form.setValue('type', type, { shouldValidate: true });
+  }
+
+  const handleInstitutionSelect = (institution: string) => {
+    setSelectedInstitution(institution);
+    form.setValue('institution', institution, { shouldValidate: true });
   }
 
   if (!isClient) {
@@ -112,19 +121,11 @@ function InvestmentsPageContent() {
                                 </FormItem>
                             )}
                             />
-                        <FormField
-                        control={form.control}
-                        name="institution"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Instituição Financeira</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Ex: Meu Banco" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                        <div className="space-y-2">
+                             <FormLabel>Instituição Financeira</FormLabel>
+                            <InstitutionSelector onSelect={handleInstitutionSelect} selectedValue={selectedInstitution} />
+                             {form.formState.errors.institution && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.institution.message}</p>}
+                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <FormField
                             control={form.control}

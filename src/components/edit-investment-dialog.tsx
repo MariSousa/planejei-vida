@@ -30,12 +30,13 @@ import { useToast } from '@/hooks/use-toast';
 import type { Investment } from '@/types';
 import { Loader2, Pencil } from 'lucide-react';
 import { InvestmentSelector } from './investment-selector';
+import { InstitutionSelector } from './institution-selector';
 
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
-  institution: z.string().min(2, { message: 'A instituição deve ter pelo menos 2 caracteres.' }),
+  institution: z.string({ required_error: 'Por favor, selecione a instituição.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   yieldRate: z.coerce.number().min(0, { message: 'O rendimento não pode ser negativo.' }),
 });
@@ -50,6 +51,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const { updateInvestment } = useFinancials();
   const { toast } = useToast();
   const [selectedType, setSelectedType] = useState<string | undefined>(investment.type);
+  const [selectedInstitution, setSelectedInstitution] = useState<string | undefined>(investment.institution);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,6 +74,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
             yieldRate: investment.yieldRate,
         });
         setSelectedType(investment.type);
+        setSelectedInstitution(investment.institution);
     }
   }, [investment, form, open]);
 
@@ -100,6 +103,11 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const handleTypeSelect = (type: string) => {
     setSelectedType(type);
     form.setValue('type', type, { shouldValidate: true });
+  }
+  
+  const handleInstitutionSelect = (institution: string) => {
+    setSelectedInstitution(institution);
+    form.setValue('institution', institution, { shouldValidate: true });
   }
 
   return (
@@ -134,19 +142,11 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                             </FormItem>
                         )}
                         />
-                    <FormField
-                    control={form.control}
-                    name="institution"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Instituição Financeira</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Ex: Meu Banco" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                    <div className="space-y-2">
+                            <FormLabel>Instituição Financeira</FormLabel>
+                        <InstitutionSelector onSelect={handleInstitutionSelect} selectedValue={selectedInstitution} />
+                            {form.formState.errors.institution && <p className="text-sm font-medium text-destructive mt-2">{form.formState.errors.institution.message}</p>}
+                        </div>
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
                         control={form.control}
