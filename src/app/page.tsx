@@ -1,22 +1,67 @@
-import FinancialDashboard from '@/components/financial-dashboard';
 
-export default function Home() {
+'use client';
+
+import { useFinancials } from '@/hooks/use-financials';
+import { PrivateRoute } from '@/components/private-route';
+import { Skeleton } from '@/components/ui/skeleton';
+import { BalanceCard } from '@/components/dashboard/balance-card';
+import { BudgetPieChart } from '@/components/dashboard/budget-pie-chart';
+import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
+import { RecentActivity } from '@/components/dashboard/recent-activity';
+import { QuickActions } from '@/components/dashboard/quick-actions';
+import { useAuth } from '@/contexts/auth-context';
+
+function DashboardContent() {
+  const { user } = useAuth();
+  const { totals, goals, income, expenses, isClient } = useFinancials();
+
+  if (!isClient) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-[150px] w-full" />
+        <Skeleton className="h-[100px] w-full" />
+        <Skeleton className="h-[250px] w-full" />
+        <Skeleton className="h-[200px] w-full" />
+        <Skeleton className="h-[200px] w-full" />
+      </div>
+    );
+  }
+
+  const recentTransactions = [...income, ...expenses]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-10 w-full border-b bg-background/80 backdrop-blur-sm no-print">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <h1 className="text-2xl font-bold text-primary font-headline">Planejei</h1>
-          <p className="hidden text-muted-foreground md:block">Seu assistente financeiro pessoal</p>
-        </div>
-      </header>
-      <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
-        <FinancialDashboard />
-      </main>
-      <footer className="mt-auto border-t py-6 no-print">
-          <div className="container mx-auto text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Planejei. Todos os direitos reservados.
-          </div>
-      </footer>
+    <div className="flex flex-col gap-6">
+        <BalanceCard
+            greeting={getGreeting()}
+            userName={user?.displayName || user?.email?.split('@')[0] || 'Usuário'}
+            balance={totals.savings}
+        />
+        <QuickActions />
+        <BudgetPieChart
+            totalIncome={totals.totalIncome}
+            totalNecessities={totals.totalNecessities}
+            totalWants={totals.totalWants}
+        />
+        <GoalsProgressCard goals={goals} />
+        <RecentActivity transactions={recentTransactions} />
     </div>
   );
+}
+
+
+export default function Dashboard() {
+    return (
+        <PrivateRoute>
+            <DashboardContent />
+        </PrivateRoute>
+    )
 }

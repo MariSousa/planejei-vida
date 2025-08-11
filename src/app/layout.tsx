@@ -1,27 +1,36 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/auth-context';
+import { AppLayout } from '@/components/app-layout';
 
+// Metadata must be exported from a Server Component.
 export const metadata: Metadata = {
-  title: 'Planejei - Seu Assistente Financeiro',
-  description: 'Organize suas finanças, crie metas e receba conselhos com IA.',
+  title: 'Planejei - Vida Financeira Planejada',
+  description: 'Sua vida financeira organizada e planejada.',
 };
 
+// RootLayout is a Server Component.
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"></link>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <AuthProvider>
+            <AppLayout>{children}</AppLayout>
+            <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

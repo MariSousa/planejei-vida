@@ -2,18 +2,19 @@
 
 ## Core Features:
 
-- Budget Input: Allow the user to input their income, expenses, and savings goals.
-- Data Visualization: Visualize the user's financial data using charts and graphs.
-- AI Financial Advice: Provide personalized recommendations and insights for the user based on their financial data, using AI tool to suggest potential saving strategies.
-- Goal Setting: Set financial goals (e.g., saving for a down payment, paying off debt) and track progress toward those goals.
-- Report Generation: Enable the user to generate a PDF report of their financial data.
+- Financial Overview Dashboard: Dashboard displaying an overview of the user's financial status, including income, expenses, and savings.
+- Income Tracking: Users can manually enter income sources (salary, investments, etc.) and their amounts.
+- Expense Tracking: Allow users to input their expenses, categorizing them (e.g., rent, food, transportation) for better analysis.
+- Personalized Savings Advice: AI tool which learns from spending patterns to generate personalized advice to save money and improve their financial habits. 
+- Data Visualization: Visualization of financial data through charts and graphs to illustrate spending habits, income distribution, and progress toward financial goals.
+- Data Export: Option to export financial data into a CSV file for personal record-keeping or further analysis in spreadsheet software.
 
 ## Style Guidelines:
 
-- Primary color: Deep sky blue (#3EB4E8) to convey trust and clarity.
-- Background color: Light cyan (#E0F7FA) for a clean and calm backdrop.
-- Accent color: Emerald green (#50C878) to highlight progress and positive financial changes.
-- Body and headline font: 'Inter' sans-serif for a modern, readable, objective look.
-- Use flat, minimalist icons to represent different categories of income, expenses, and goals.
-- Use a clean, intuitive layout with clear visual hierarchy to make financial data easy to understand.
-- Incorporate subtle animations, such as smooth transitions when updating charts and graphs, to enhance user engagement.
+- Primary color: Calm blue (#64B5F6) to inspire trust and stability in financial planning.
+- Background color: Light gray (#F5F5F5) to provide a clean, neutral backdrop that enhances readability and focus.
+- Accent color: Soft green (#A5D6A7) for positive actions like saving and reaching financial goals.
+- Body and headline font: 'Inter' (sans-serif) for a modern, clean, and readable text across all devices.
+- Use a set of clear and intuitive icons to represent different categories (income, expenses, savings, etc.)
+- The app layout should be clean and intuitive, focusing on providing the most important information at a glance. Use a grid system for consistent spacing and alignment.
+- Subtle transitions and animations to provide feedback on user actions and improve the overall user experience. Keep animations short and purposeful.
