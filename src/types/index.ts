@@ -13,11 +13,17 @@ export interface Expense {
   date: string;
 }
 
-export interface Debt {
+export type Priority = 'Alta' | 'Média' | 'Baixa';
+export type Status = 'Previsto' | 'Pago';
+
+export interface MonthlyPlanItem {
   id: string;
   name: string;
   amount: number;
   dueDate: string;
+  priority: Priority;
+  status: Status;
+  month: string; // YYYY-MM format
 }
 
 export interface Goal {

@@ -18,13 +18,14 @@ import {
   User,
   Settings,
   FileText,
+  CalendarCheck2
 } from 'lucide-react';
 
 const menuItems = [
   { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
   { href: '/income', label: 'Meus Ganhos', icon: Wallet },
   { href: '/expenses', label: 'Meus Gastos', icon: Receipt },
-  { href: '/debts', label: 'Compromissos', icon: Landmark },
+  { href: '/planning', label: 'Planejamento Mensal', icon: CalendarCheck2 },
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
   { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
   { href: '/profile', label: 'Meu Perfil', icon: User },

@@ -2,11 +2,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { type Income, type Expense, type Debt, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite } from '@/types';
+import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs } from 'firebase/firestore';
-import { addDays, isAfter, isBefore, startOfToday } from 'date-fns';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
+import { addDays, isAfter, isBefore, startOfToday, format, getYear, getMonth, set } from 'date-fns';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -34,12 +34,13 @@ export const useFinancials = () => {
   const { user } = useAuth();
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [debts, setDebts] = useState<Debt[]>([]);
+  const [monthlyPlanItems, setMonthlyPlanItems] = useState<MonthlyPlanItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [advices, setAdvices] = useState<Advice[]>([]);
   const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const getMonthlyQuery = (col: string) => {
     if (!user) return null;
@@ -57,11 +58,10 @@ export const useFinancials = () => {
 
   useEffect(() => {
     if (user) {
-      const collections = ['income', 'expenses', 'debts', 'goals', 'advices', 'categories', 'favorites'];
+      const collections = ['income', 'expenses', 'goals', 'advices', 'categories', 'favorites'];
       const setters: any = {
         income: setIncome,
         expenses: setExpenses,
-        debts: setDebts,
         goals: setGoals,
         advices: setAdvices,
         categories: setCustomCategories,
@@ -72,8 +72,6 @@ export const useFinancials = () => {
         let q;
         if (['income', 'expenses'].includes(col)) {
           q = getMonthlyQuery(col);
-        } else if (col === 'debts') {
-          q = query(collection(db, `users/${user.uid}/${col}`), orderBy('dueDate', 'asc'));
         } else {
           q = query(collection(db, `users/${user.uid}/${col}`), orderBy('date', 'desc'));
         }
@@ -94,7 +92,7 @@ export const useFinancials = () => {
     } else {
         setIncome([]);
         setExpenses([]);
-        setDebts([]);
+        setMonthlyPlanItems([]);
         setGoals([]);
         setAdvices([]);
         setCustomCategories([]);
@@ -102,10 +100,25 @@ export const useFinancials = () => {
     }
   }, [user]);
 
-  const addDocWithoutDate = async (collectionName: string, data: any) => {
-      if (!user) return;
-      await addDoc(collection(db, `users/${user.uid}/${collectionName}`), data);
-  }
+  // Specific listener for monthly plan items
+  useEffect(() => {
+    if (user) {
+      const monthStr = format(currentMonth, 'yyyy-MM');
+      const q = query(
+        collection(db, `users/${user.uid}/monthlyPlan`),
+        where('month', '==', monthStr),
+        orderBy('dueDate', 'asc')
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
+        setMonthlyPlanItems(items);
+      });
+      
+      return () => unsubscribe();
+    }
+  }, [user, currentMonth]);
+
 
   const addDocWithDate = async (collectionName: string, data: any) => {
       if (!user) return;
@@ -122,7 +135,26 @@ export const useFinancials = () => {
 
   const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addDocWithDate('income', newIncome), [user]);
   const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addDocWithDate('expenses', newExpense), [user]);
-  const addDebt = useCallback((newDebt: Omit<Debt, 'id'>) => addDocWithoutDate('debts', newDebt), [user]);
+  
+  const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'month' | 'status'>) => {
+    if (!user) return;
+    const month = format(new Date(item.dueDate), 'yyyy-MM');
+    await addDoc(collection(db, `users/${user.uid}/monthlyPlan`), {
+        ...item,
+        month,
+        status: 'Previsto' as Status,
+        dueDate: item.dueDate // already an ISO string
+    });
+  }, [user]);
+
+  const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
+    if (!user) return;
+    const itemRef = doc(db, `users/${user.uid}/monthlyPlan`, id);
+    await updateDoc(itemRef, { status });
+  }, [user]);
+
+  const removePlanItem = useCallback((id: string) => deleteDocById('monthlyPlan', id), [user]);
+
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocWithDate('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocWithDate('advices', newAdvice), [user]);
   const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocWithDate('categories', newCategory), [user]);
@@ -139,15 +171,15 @@ export const useFinancials = () => {
     if (!user) return;
     const q = query(collection(db, `users/${user.uid}/favorites`), where("name", "==", categoryName));
     const querySnapshot = await getDocs(q);
+    const batch = writeBatch(db);
     querySnapshot.forEach((doc) => {
-      deleteDoc(doc.ref);
+      batch.delete(doc.ref);
     });
+    await batch.commit();
   }, [user]);
-
 
   const removeIncome = useCallback((id: string) => deleteDocById('income', id), [user]);
   const removeExpense = useCallback((id: string) => deleteDocById('expenses', id), [user]);
-  const removeDebt = useCallback((id: string) => deleteDocById('debts', id), [user]);
   const removeGoal = useCallback((id: string) => deleteDocById('goals', id), [user]);
   const removeAdvice = useCallback((id: string) => deleteDocById('advices', id), [user]);
   const removeCategory = useCallback((id: string) => deleteDocById('categories', id), [user]);
@@ -186,7 +218,7 @@ export const useFinancials = () => {
   const totals = useMemo(() => {
     const totalIncome = income.reduce((acc, i) => acc + i.amount, 0);
     const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
-    const totalDebts = debts.reduce((acc, d) => acc + d.amount, 0);
+    const totalDebts = monthlyPlanItems.reduce((acc, d) => acc + d.amount, 0);
     const totalGoals = goals.reduce((acc, g) => acc + g.targetAmount, 0);
     const totalSavedForGoals = goals.reduce((acc, g) => acc + g.currentAmount, 0);
     const savings = totalIncome - totalExpenses;
@@ -209,7 +241,7 @@ export const useFinancials = () => {
         totalNecessities,
         totalWants
     };
-  }, [income, expenses, debts, goals, customCategories]);
+  }, [income, expenses, monthlyPlanItems, goals, customCategories]);
 
   const expensesByCategory = useMemo(() => {
     return expenses.reduce((acc, expense) => {
@@ -225,23 +257,37 @@ export const useFinancials = () => {
   const upcomingPayments = useMemo(() => {
     const today = startOfToday();
     const next7Days = addDays(today, 7);
-    return debts.filter(debt => {
-        const dueDate = new Date(debt.dueDate);
+    return monthlyPlanItems.filter(item => {
+        const dueDate = new Date(item.dueDate);
         return isAfter(dueDate, today) && isBefore(dueDate, next7Days);
     });
-  }, [debts]);
+  }, [monthlyPlanItems]);
+
+  const planningTotals = useMemo(() => {
+    // This will be expanded with planned income
+    const plannedExpenses = monthlyPlanItems.reduce((acc, item) => acc + item.amount, 0);
+    const plannedIncome = 0; // Placeholder
+    const expectedSurplus = plannedIncome - plannedExpenses;
+    return {
+        plannedExpenses,
+        plannedIncome,
+        expectedSurplus
+    }
+  }, [monthlyPlanItems]);
 
   return {
     income,
     expenses,
-    debts,
+    monthlyPlanItems,
     goals,
     advices,
     customCategories,
     favoriteCategories,
     addIncome,
     addExpense,
-    addDebt,
+    addPlanItem,
+    updatePlanItemStatus,
+    removePlanItem,
     addGoal,
     addAdvice,
     addCategory,
@@ -249,7 +295,6 @@ export const useFinancials = () => {
     removeFavorite,
     removeIncome,
     removeExpense,
-    removeDebt,
     removeGoal,
     removeAdvice,
     removeCategory,
@@ -257,6 +302,9 @@ export const useFinancials = () => {
     totals,
     expensesByCategory,
     upcomingPayments,
+    planningTotals,
     isClient,
+    currentMonth,
+    setCurrentMonth
   };
 };
