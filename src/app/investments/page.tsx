@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
@@ -168,7 +169,7 @@ function InvestmentsPageContent() {
                     <TableHead>Instituição</TableHead>
                     <TableHead>Rendimento</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="w-[50px] text-right">Ação</TableHead>
+                    <TableHead className="w-[100px] text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -180,10 +181,13 @@ function InvestmentsPageContent() {
                         <TableCell>{item.yieldRate}% CDI</TableCell>
                         <TableCell className="text-right font-semibold">{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => removeInvestment(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remover</span>
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <EditInvestmentDialog investment={item} />
+                            <Button variant="ghost" size="icon" onClick={() => removeInvestment(item.id)}>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Remover</span>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -199,8 +203,8 @@ function InvestmentsPageContent() {
                  {investments.length > 0 && (
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={3} className="font-bold text-lg">Total Investido</TableCell>
-                            <TableCell colSpan={2} className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
+                            <TableCell colSpan={4} className="font-bold text-lg">Total Investido</TableCell>
+                            <TableCell colSpan={1} className="text-right font-bold text-lg">{formatCurrency(totalInvested)}</TableCell>
                         </TableRow>
                     </TableFooter>
                  )}
@@ -220,7 +224,3 @@ export default function InvestmentsPage() {
         </PrivateRoute>
     )
 }
-
-    
-
-    

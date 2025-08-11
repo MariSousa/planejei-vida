@@ -241,6 +241,12 @@ export const useFinancials = () => {
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocToCollection('goals', newGoal), [user]);
   const addInvestment = useCallback((newInvestment: Omit<Investment, 'id' | 'date'>) => addDocToCollection('investments', newInvestment), [user]);
+  const updateInvestment = useCallback(async (id: string, data: Partial<Omit<Investment, 'id' | 'date'>>) => {
+    if (!user) return;
+    const investmentRef = doc(db, `users/${user.uid}/investments`, id);
+    await updateDoc(investmentRef, data);
+  }, [user]);
+
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
   const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
 
@@ -398,6 +404,7 @@ export const useFinancials = () => {
     removePlanItem,
     addGoal,
     addInvestment,
+    updateInvestment,
     addAdvice,
     addCategory,
     addFavorite,
