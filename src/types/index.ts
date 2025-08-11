@@ -25,7 +25,7 @@ export interface MonthlyPlanItem {
   priority: Priority;
   status: Status;
   type: PlanItemType;
-  month: string; // YYYY-MM format
+  // month is no longer needed here as it's part of the collection path
 }
 
 export interface Goal {

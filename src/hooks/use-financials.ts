@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc } from 'firebase/firestore';
 import { addDays, isAfter, isBefore, startOfToday, format, getYear, getMonth, set, addMonths } from 'date-fns';
 
 const necessityCategories = [
@@ -104,11 +104,8 @@ export const useFinancials = () => {
   useEffect(() => {
     if (user) {
       const monthStr = format(currentMonth, 'yyyy-MM');
-      const q = query(
-        collection(db, `users/${user.uid}/monthlyPlan`),
-        where('month', '==', monthStr),
-        orderBy('dueDate', 'asc')
-      );
+      const itemsCollectionRef = collection(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`);
+      const q = query(itemsCollectionRef, orderBy('dueDate', 'asc'));
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
@@ -138,21 +135,31 @@ export const useFinancials = () => {
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'month' | 'status'>) => {
     if (!user) return;
-    const month = format(new Date(item.dueDate), 'yyyy-MM');
-    await addDoc(collection(db, `users/${user.uid}/monthlyPlan`), {
+    const monthStr = format(new Date(item.dueDate), 'yyyy-MM');
+    // Ensure the month document exists. We can write an empty doc or a doc with summary data.
+    const monthDocRef = doc(db, `users/${user.uid}/monthlyPlan`, monthStr);
+    await setDoc(monthDocRef, { month: monthStr }, { merge: true }); // Using merge to not overwrite if it exists
+
+    const itemsCollectionRef = collection(monthDocRef, 'items');
+    await addDoc(itemsCollectionRef, {
         ...item,
-        month,
         status: 'Previsto' as Status
     });
   }, [user]);
 
   const updatePlanItemStatus = useCallback(async (id: string, status: Status) => {
     if (!user) return;
-    const itemRef = doc(db, `users/${user.uid}/monthlyPlan`, id);
+    const monthStr = format(currentMonth, 'yyyy-MM');
+    const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
     await updateDoc(itemRef, { status });
-  }, [user]);
+  }, [user, currentMonth]);
 
-  const removePlanItem = useCallback((id: string) => deleteDocById('monthlyPlan', id), [user]);
+  const removePlanItem = useCallback((id: string) => {
+    if (!user) return;
+    const monthStr = format(currentMonth, 'yyyy-MM');
+    const itemRef = doc(db, `users/${user.uid}/monthlyPlan/${monthStr}/items`, id);
+    return deleteDoc(itemRef);
+  }, [user, currentMonth]);
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'date'>) => addDocWithDate('goals', newGoal), [user]);
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocWithDate('advices', newAdvice), [user]);
