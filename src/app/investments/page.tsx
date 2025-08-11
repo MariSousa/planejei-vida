@@ -17,12 +17,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PiggyBank, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivateRoute } from '@/components/private-route';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EditInvestmentDialog } from '@/components/edit-investment-dialog';
 
 const formSchema = z.object({
@@ -42,8 +42,31 @@ const formSchema = z.object({
     path: ['customType'],
 });
 
+const investmentGroups = [
+    {
+        label: 'Renda Fixa',
+        options: ['Tesouro Selic', 'Tesouro Prefixado', 'Tesouro IPCA+', 'CDB', 'LCI', 'LCA', 'Debêntures', 'CRI', 'CRA', 'Notas Promissórias', 'Fundos de Renda Fixa', 'Poupança']
+    },
+    {
+        label: 'Renda Variável',
+        options: ['Ações', 'Fundos de Ações', 'ETFs', 'BDRs', 'Fundos Imobiliários (FIIs)', 'Opções', 'Contratos Futuros']
+    },
+    {
+        label: 'Fundos de Investimento',
+        options: ['Fundos Multimercado', 'Fundos Cambiais', 'Fundos de Previdência Privada', 'Fundos de Crédito Privado']
+    },
+    {
+        label: 'Criptoativos',
+        options: ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Stablecoins', 'Altcoins']
+    },
+     {
+        label: 'Alternativos',
+        options: ['Crowdfunding Imobiliário', 'Peer-to-peer lending', 'Arte e Colecionáveis']
+    }
+];
+
 function InvestmentsPageContent() {
-  const { investments, addInvestment, isClient } = useFinancials();
+  const { investments, addInvestment, removeInvestment, isClient } = useFinancials();
   const { toast } = useToast();
   const [showCustomType, setShowCustomType] = useState(false);
 
@@ -134,13 +157,18 @@ function InvestmentsPageContent() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Poupança">Poupança</SelectItem>
-                          <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
-                          <SelectItem value="CDB">CDB</SelectItem>
-                          <SelectItem value="LCI">LCI</SelectItem>
-                          <SelectItem value="LCA">LCA</SelectItem>
-                          <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
-                          <SelectItem value="Outro">Outro...</SelectItem>
+                            {investmentGroups.map(group => (
+                                <SelectGroup key={group.label}>
+                                    <SelectLabel>{group.label}</SelectLabel>
+                                    {group.options.map(option => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            ))}
+                            <SelectGroup>
+                                <SelectLabel>Outros</SelectLabel>
+                                <SelectItem value="Outro">Outro...</SelectItem>
+                            </SelectGroup>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -29,9 +29,32 @@ import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import type { Investment } from '@/types';
 import { Loader2, Pencil } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const defaultInvestmentTypes = ["Poupança", "Renda Fixa", "CDB", "LCI", "LCA", "Tesouro Selic"];
+const investmentGroups = [
+    {
+        label: 'Renda Fixa',
+        options: ['Tesouro Selic', 'Tesouro Prefixado', 'Tesouro IPCA+', 'CDB', 'LCI', 'LCA', 'Debêntures', 'CRI', 'CRA', 'Notas Promissórias', 'Fundos de Renda Fixa', 'Poupança']
+    },
+    {
+        label: 'Renda Variável',
+        options: ['Ações', 'Fundos de Ações', 'ETFs', 'BDRs', 'Fundos Imobiliários (FIIs)', 'Opções', 'Contratos Futuros']
+    },
+    {
+        label: 'Fundos de Investimento',
+        options: ['Fundos Multimercado', 'Fundos Cambiais', 'Fundos de Previdência Privada', 'Fundos de Crédito Privado']
+    },
+    {
+        label: 'Criptoativos',
+        options: ['Bitcoin (BTC)', 'Ethereum (ETH)', 'Stablecoins', 'Altcoins']
+    },
+     {
+        label: 'Alternativos',
+        options: ['Crowdfunding Imobiliário', 'Peer-to-peer lending', 'Arte e Colecionáveis']
+    }
+];
+
+const allInvestmentTypes = investmentGroups.flatMap(group => group.options);
 
 const formSchema = z.object({
   type: z.string({ required_error: 'Por favor, selecione o tipo.' }),
@@ -61,7 +84,7 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
   const { toast } = useToast();
   const [showCustomType, setShowCustomType] = useState(false);
 
-  const isCustomTypeInitial = !defaultInvestmentTypes.includes(investment.type);
+  const isCustomTypeInitial = !allInvestmentTypes.includes(investment.type);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -77,7 +100,16 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
 
   useEffect(() => {
     setShowCustomType(isCustomTypeInitial);
-  }, [isCustomTypeInitial]);
+     form.reset({
+      type: isCustomTypeInitial ? 'Outro' : investment.type,
+      customType: isCustomTypeInitial ? investment.type : '',
+      name: investment.name,
+      institution: investment.institution,
+      amount: investment.amount,
+      yieldRate: investment.yieldRate,
+    });
+  }, [investment, isCustomTypeInitial, form, open]);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -146,13 +178,18 @@ export function EditInvestmentDialog({ investment }: EditInvestmentDialogProps) 
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="Poupança">Poupança</SelectItem>
-                        <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
-                        <SelectItem value="CDB">CDB</SelectItem>
-                        <SelectItem value="LCI">LCI</SelectItem>
-                        <SelectItem value="LCA">LCA</SelectItem>
-                        <SelectItem value="Tesouro Selic">Tesouro Selic</SelectItem>
-                        <SelectItem value="Outro">Outro...</SelectItem>
+                        {investmentGroups.map(group => (
+                            <SelectGroup key={group.label}>
+                                <SelectLabel>{group.label}</SelectLabel>
+                                {group.options.map(option => (
+                                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        ))}
+                         <SelectGroup>
+                            <SelectLabel>Outros</SelectLabel>
+                            <SelectItem value="Outro">Outro...</SelectItem>
+                        </SelectGroup>
                     </SelectContent>
                     </Select>
                     <FormMessage />
