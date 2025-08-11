@@ -2,7 +2,7 @@
   "rules": {
     "supportTickets": {
       "$uid": {
-        ".write": "auth !== null",
+        ".write": "auth != null && auth.uid === $uid",
         ".read": false
       }
     },
