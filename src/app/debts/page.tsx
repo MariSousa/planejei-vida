@@ -34,6 +34,7 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
+  monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }).optional(),
 });
 
 function DebtsPageContent() {
@@ -46,6 +47,7 @@ function DebtsPageContent() {
       name: '',
       amount: undefined,
       dueDate: undefined,
+      monthlyPaymentGoal: undefined,
     },
   });
 
@@ -61,7 +63,7 @@ function DebtsPageContent() {
       description: `Seu compromisso "${values.name}" foi adicionado.`,
       className: 'border-accent'
     });
-    form.reset({ name: '', amount: undefined, dueDate: undefined });
+    form.reset({ name: '', amount: undefined, dueDate: undefined, monthlyPaymentGoal: undefined });
   }
 
   const handleStatusChange = async (debt: Debt) => {
@@ -177,6 +179,19 @@ function DebtsPageContent() {
                         </FormItem>
                     )}
                     />
+                 <FormField
+                  control={form.control}
+                  name="monthlyPaymentGoal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor mensal para quitar (R$) <span className="text-muted-foreground">(Opcional)</span></FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="200.00" {...field} value={field.value ?? ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit">Adicionar Compromisso</Button>
               </form>
             </Form>
@@ -195,6 +210,7 @@ function DebtsPageContent() {
                     <TableHead>Status</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Vencimento</TableHead>
+                    <TableHead>Meta Mensal</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead className="text-right">Ação</TableHead>
                   </TableRow>
@@ -210,6 +226,7 @@ function DebtsPageContent() {
                         </TableCell>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{formatDate(item.dueDate)}</TableCell>
+                        <TableCell>{item.monthlyPaymentGoal ? formatCurrency(item.monthlyPaymentGoal) : 'N/A'}</TableCell>
                         <TableCell>{formatCurrency(item.amount)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => removeDebt(item.id)}>
@@ -221,7 +238,7 @@ function DebtsPageContent() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">Nenhum compromisso registrado.</TableCell>
+                      <TableCell colSpan={6} className="h-24 text-center">Nenhum compromisso registrado.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

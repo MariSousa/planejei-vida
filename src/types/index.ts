@@ -80,5 +80,6 @@ export interface Debt {
     amount: number;
     dueDate: string;
     status: 'Pendente' | 'Pago';
+    monthlyPaymentGoal?: number;
     date: string;
 }
