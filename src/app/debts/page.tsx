@@ -49,6 +49,8 @@ function DebtsPageContent() {
 
     if (lastPayment && isValid(lastPayment)) {
         baseDate = lastPayment;
+    } else if (debt.startDate && isValid(new Date(debt.startDate))) {
+        baseDate = new Date(debt.startDate);
     } else {
         baseDate = new Date(); // Fallback to current date
     }
