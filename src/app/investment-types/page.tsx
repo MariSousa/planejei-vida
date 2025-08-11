@@ -18,25 +18,44 @@ function InvestmentTypesPageContent() {
 
       <Card className="bg-accent/10 border-accent">
         <CardHeader>
-            <CardTitle>O Primeiro Passo: A Fundação Financeira</CardTitle>
-            <CardDescription>
-              Antes de investir, é crucial ter uma base financeira sólida. Sem organização, qualquer investimento fica arriscado.
-            </CardDescription>
+            <CardTitle>O Alicerce da Jornada Financeira</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm">
+        <CardContent className="space-y-4 text-sm leading-relaxed">
             <p>
-                A jornada para a independência financeira começa com o controle do seu dinheiro. O primeiro objetivo é entender para onde ele está indo, quitar dívidas caras e construir uma segurança para imprevistos.
+              A jornada no mundo dos investimentos não se inicia com a escolha do ativo perfeito, mas com a construção de um alicerce sólido: a organização das finanças pessoais. Antes de focar em rendimentos e juros, é fundamental estabelecer um controle sobre o próprio dinheiro.
             </p>
-            <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Orçamento Pessoal:</strong> Liste suas rendas e despesas. Use uma planilha ou nosso app para categorizar seus gastos e identificar onde pode economizar.</li>
-                <li><strong>Gestão de Dívidas:</strong> Priorize a quitação de dívidas com juros altos, como cartão de crédito e cheque especial. Elas corroem seu patrimônio mais rápido do que qualquer investimento consegue render.</li>
-                <li><strong>Reserva de Emergência:</strong> Junte o equivalente a 3 a 6 meses de suas despesas essenciais. Este dinheiro deve ficar em um investimento seguro e de resgate rápido, como o Tesouro Selic.</li>
-            </ul>
+             <p>
+                Este guia foi estruturado para levar você do diagnóstico financeiro à seleção dos primeiros ativos, com foco em educação e planejamento. O objetivo é desmistificar o processo de investimento, destacando que a disciplina e o conhecimento são os ativos mais valiosos para alcançar a independência financeira.
+            </p>
         </CardContent>
       </Card>
 
       <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
         <AccordionItem value="item-1">
+          <AccordionTrigger className="text-xl font-semibold">O Primeiro Passo: Organização e Reserva</AccordionTrigger>
+          <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-6">
+            <p>A base de qualquer estratégia de investimento é um orçamento pessoal bem-estruturado. Esta etapa é crucial para evitar que o dinheiro termine antes do mês e para prevenir o acúmulo de novas dívidas.</p>
+            <div>
+                <h4 className="font-semibold text-foreground mb-2">1. Diagnóstico e Orçamento</h4>
+                <p className="mb-2">Liste todas as suas receitas e despesas. A sugestão é dividir os gastos em três grupos para ter uma visão clara:</p>
+                <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li><strong>Gastos Essenciais:</strong> Despesas de sobrevivência (aluguel, alimentação, transporte).</li>
+                    <li><strong>Gastos Necessários:</strong> Importantes para seu padrão de vida (plano de saúde, educação).</li>
+                    <li><strong>Gastos Supérfluos:</strong> Lazer e consumo que podem ser ajustados (restaurantes, assinaturas).</li>
+                </ul>
+            </div>
+             <div>
+                <h4 className="font-semibold text-foreground mb-2">2. Gestão de Dívidas</h4>
+                <p>Se houver dívidas, a prioridade deve ser quitá-las, especialmente as com juros altos (cartão de crédito, cheque especial). Considere os métodos "Avalanche" (pagar as mais caras primeiro) ou "Bola de Neve" (pagar as menores primeiro para ganhar motivação).</p>
+            </div>
+            <div>
+                <h4 className="font-semibold text-foreground mb-2">3. Reserva de Emergência</h4>
+                <p>É um fundo para cobrir despesas inesperadas, equivalente a 3 a 6 meses de suas despesas essenciais. O <strong>Tesouro Selic</strong> é o investimento mais recomendado para a reserva, por sua alta segurança e liquidez diária.</p>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        
+        <AccordionItem value="item-2">
           <AccordionTrigger className="text-xl font-semibold">Conhecendo a Renda Fixa</AccordionTrigger>
           <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
@@ -93,7 +112,7 @@ function InvestmentTypesPageContent() {
             </Card>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="item-2">
+        <AccordionItem value="item-3">
           <AccordionTrigger className="text-xl font-semibold">O Motor dos Rendimentos: Selic e CDI</AccordionTrigger>
           <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
@@ -109,7 +128,7 @@ function InvestmentTypesPageContent() {
             </div>
           </AccordionContent>
         </AccordionItem>
-        <AccordionItem value="item-3">
+        <AccordionItem value="item-4">
           <AccordionTrigger className="text-xl font-semibold">O Sócio Obrigatório: Imposto de Renda</AccordionTrigger>
           <AccordionContent className="text-base text-muted-foreground leading-relaxed space-y-4">
             <p>
@@ -149,6 +168,10 @@ function InvestmentTypesPageContent() {
                     </Table>
                 </CardContent>
             </Card>
+             <div className="pt-4">
+                <h4 className="font-semibold text-foreground mb-2">Cenário de Mudanças (Proposta)</h4>
+                <p>Fique atento: uma Medida Provisória (1.303/2025) propõe mudar as regras a partir de 2026. A proposta inclui o fim da isenção de IR para LCI/LCA (passando para 5%) e uma alíquota única de 17,5% para CDBs e Tesouro. Acompanhar essas discussões é parte importante da vida do investidor.</p>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
