@@ -332,10 +332,14 @@ export const useFinancials = () => {
       const currentAmount = debtDoc.data().remainingAmount;
       const newAmount = currentAmount - amount;
       
+      const currentRemainingInstallments = debtDoc.data().remainingInstallments;
+      const newRemainingInstallments = currentRemainingInstallments ? currentRemainingInstallments - 1 : undefined;
+
       transaction.update(debtRef, { 
         remainingAmount: newAmount,
         lastPaymentDate: new Date().toISOString(),
-        status: newAmount <= 0 ? 'Pago' : 'Pendente'
+        status: newAmount <= 0 ? 'Pago' : 'Pendente',
+        remainingInstallments: newRemainingInstallments,
       });
       
       // This is not atomic across collections in this simple implementation,

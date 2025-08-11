@@ -42,7 +42,8 @@ const formSchema = z.object({
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  installments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
+  totalInstallments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
+  remainingInstallments: z.coerce.number().int().min(0, { message: 'O número de parcelas restante deve ser 0 ou mais.' }).optional(),
 });
 
 interface EditDebtDialogProps {
@@ -64,20 +65,22 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
         dueDate: new Date(debt.dueDate),
         monthlyPaymentGoal: debt.monthlyPaymentGoal,
         interestRate: debt.interestRate,
-        installments: debt.installments,
+        totalInstallments: debt.totalInstallments,
+        remainingInstallments: debt.remainingInstallments,
     },
   });
 
   useEffect(() => {
       if (open) {
           form.reset({
-             name: debt.name,
+            name: debt.name,
             originalAmount: debt.originalAmount,
             remainingAmount: debt.remainingAmount,
             dueDate: new Date(debt.dueDate),
             monthlyPaymentGoal: debt.monthlyPaymentGoal,
             interestRate: debt.interestRate,
-            installments: debt.installments,
+            totalInstallments: debt.totalInstallments,
+            remainingInstallments: debt.remainingInstallments,
           });
       }
   }, [debt, form, open]);
@@ -231,7 +234,20 @@ export function EditDebtDialog({ debt }: EditDebtDialogProps) {
             />
              <FormField
                 control={form.control}
-                name="installments"
+                name="totalInstallments"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Nº Total de Parcelas (Opcional)</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="24" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="remainingInstallments"
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Nº de Parcelas Restantes (Opcional)</FormLabel>

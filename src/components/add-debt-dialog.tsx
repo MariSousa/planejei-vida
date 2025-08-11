@@ -41,7 +41,7 @@ const formSchema = z.object({
   dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
   monthlyPaymentGoal: z.coerce.number().positive({ message: 'O valor da meta mensal deve ser positivo.' }),
   interestRate: z.coerce.number().min(0, { message: 'A taxa de juros não pode ser negativa.' }).optional(),
-  installments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
+  totalInstallments: z.coerce.number().int().min(1, { message: 'O número de parcelas deve ser pelo menos 1.' }).optional(),
 });
 
 export function AddDebtDialog() {
@@ -59,7 +59,7 @@ export function AddDebtDialog() {
       dueDate: undefined,
       monthlyPaymentGoal: undefined,
       interestRate: undefined,
-      installments: undefined,
+      totalInstallments: undefined,
     },
   });
 
@@ -71,6 +71,7 @@ export function AddDebtDialog() {
             dueDate: values.dueDate.toISOString(),
             status: 'Pendente' as const,
             lastPaymentDate: null,
+            remainingInstallments: values.totalInstallments, // Initially, remaining is total
         };
         await addDebt(newDebt);
         toast({
@@ -214,12 +215,12 @@ export function AddDebtDialog() {
             />
              <FormField
                 control={form.control}
-                name="installments"
+                name="totalInstallments"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Nº de Parcelas Restantes</FormLabel>
+                    <FormLabel>Nº Total de Parcelas</FormLabel>
                     <FormControl>
-                    <Input type="number" placeholder="12" {...field} value={field.value ?? ''} />
+                    <Input type="number" placeholder="24" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
