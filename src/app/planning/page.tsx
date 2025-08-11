@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,34 +29,21 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { type Priority, type Status } from '@/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/summary-card';
 import { ArrowLeft, ArrowRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 
 
-const formSchema = z.object({
+const expenseSchema = z.object({
   name: z.string().min(2, { message: 'A descrição deve ter pelo menos 2 caracteres.' }),
   amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
-  dueDate: z.date().optional(),
-  priority: z.enum(['Alta', 'Média', 'Baixa']).optional(),
-  type: z.enum(['ganho', 'gasto'], { required_error: 'Selecione o tipo.' }),
-}).refine(data => {
-    if (data.type === 'gasto') {
-        return !!data.dueDate;
-    }
-    return true;
-}, {
-    message: 'A data de vencimento é obrigatória para gastos.',
-    path: ['dueDate'],
-}).refine(data => {
-    if (data.type === 'gasto') {
-        return !!data.priority;
-    }
-    return true;
-}, {
-    message: 'A prioridade é obrigatória para gastos.',
-    path: ['priority'],
+  dueDate: z.date({ required_error: 'A data de vencimento é obrigatória.'}),
+  priority: z.enum(['Alta', 'Média', 'Baixa'], { required_error: 'A prioridade é obrigatória.'}),
+});
+
+const incomeSchema = z.object({
+  name: z.string().min(2, { message: 'A descrição deve ter pelo menos 2 caracteres.' }),
+  amount: z.coerce.number().positive({ message: 'O valor deve ser positivo.' }),
 });
 
 
@@ -73,59 +60,70 @@ function PlanningPageContent() {
   } = useFinancials();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const expenseForm = useForm<z.infer<typeof expenseSchema>>({
+    resolver: zodResolver(expenseSchema),
     defaultValues: {
       name: '',
       amount: undefined,
       dueDate: new Date(),
       priority: 'Média',
-      type: 'gasto',
     },
   });
 
-  const typeValue = form.watch('type');
+  const incomeForm = useForm<z.infer<typeof incomeSchema>>({
+    resolver: zodResolver(incomeSchema),
+    defaultValues: {
+      name: '',
+      amount: undefined,
+    },
+  });
 
-  useEffect(() => {
-    if (typeValue === 'ganho') {
-        form.setValue('dueDate', undefined);
-        form.setValue('priority', undefined);
-        form.clearErrors(['dueDate', 'priority']);
-    } else {
-        if (!form.getValues('dueDate')) {
-            form.setValue('dueDate', new Date());
-        }
-        if (!form.getValues('priority')) {
-            form.setValue('priority', 'Média');
-        }
-    }
-  }, [typeValue, form]);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
     try {
-        const itemToAdd = {
-            name: values.name,
-            amount: values.amount,
-            type: values.type,
-            dueDate: (values.dueDate || new Date()).toISOString(),
-            priority: values.priority || 'Baixa',
-        };
-
-        await addPlanItem(itemToAdd);
+        await addPlanItem({
+            ...values,
+            type: 'gasto',
+            dueDate: values.dueDate.toISOString(),
+        });
         toast({
-            title: 'Item Adicionado ao Plano!',
+            title: 'Gasto Adicionado ao Plano!',
             description: `"${values.name}" foi adicionado ao seu planejamento.`,
             className: 'border-accent'
         });
-        form.reset({ name: '', amount: undefined, dueDate: new Date(), priority: 'Média', type: 'gasto' });
+        expenseForm.reset();
     } catch (error) {
          toast({
             title: 'Erro',
-            description: 'Não foi possível adicionar o item ao plano.',
+            description: 'Não foi possível adicionar o gasto ao plano.',
             variant: 'destructive'
         });
     }
   }
+
+  async function onIncomeSubmit(values: z.infer<typeof incomeSchema>) {
+    try {
+        await addPlanItem({
+            name: values.name,
+            amount: values.amount,
+            type: 'ganho',
+            priority: 'Baixa', // Default value, not used for income
+            dueDate: new Date().toISOString() // Default value, not used for income
+        });
+        toast({
+            title: 'Ganho Adicionado ao Plano!',
+            description: `"${values.name}" foi adicionado ao seu planejamento.`,
+            className: 'border-accent'
+        });
+        incomeForm.reset();
+    } catch (error) {
+         toast({
+            title: 'Erro',
+            description: 'Não foi possível adicionar o ganho ao plano.',
+            variant: 'destructive'
+        });
+    }
+  }
+
 
   const handleStatusChange = async (id: string, currentStatus: Status) => {
     const newStatus: Status = currentStatus === 'Previsto' ? 'Pago' : 'Previsto';
@@ -207,142 +205,151 @@ function PlanningPageContent() {
             />
         </div>
       
-      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-3">
-         <Card className="lg:col-span-1">
+      <div className="grid gap-8 md:grid-cols-2">
+         <Card>
             <CardHeader>
-            <CardTitle>Adicionar ao Plano</CardTitle>
-            <CardDescription>Insira ganhos ou despesas para este mês.</CardDescription>
+                <CardTitle>Adicionar Ganho Previsto</CardTitle>
+                <CardDescription>Insira uma fonte de renda esperada para este mês.</CardDescription>
             </CardHeader>
             <CardContent>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                        <FormItem className="space-y-3">
-                            <FormLabel>Tipo</FormLabel>
-                            <FormControl>
-                                <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="flex space-x-4"
-                                >
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl>
-                                    <RadioGroupItem value="gasto" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">Gasto</FormLabel>
-                                </FormItem>
-                                <FormItem className="flex items-center space-x-2 space-y-0">
-                                    <FormControl>
-                                    <RadioGroupItem value="ganho" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">Ganho</FormLabel>
-                                </FormItem>
-                                </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Descrição</FormLabel>
-                        <FormControl>
-                        <Input placeholder="Ex: Fatura do Cartão" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Valor Previsto</FormLabel>
-                        <FormControl>
-                        <Input type="number" step="0.01" placeholder="850,00" {...field} value={field.value ?? ''} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                 <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Prioridade</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || 'Média'} disabled={typeValue === 'ganho'}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione a prioridade" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="Alta">Alta</SelectItem>
-                            <SelectItem value="Média">Média</SelectItem>
-                            <SelectItem value="Baixa">Baixa</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="dueDate"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                            <FormLabel>Data de Vencimento</FormLabel>
-                            <Popover>
-                                <PopoverTrigger asChild>
+                <Form {...incomeForm}>
+                    <form onSubmit={incomeForm.handleSubmit(onIncomeSubmit)} className="space-y-4">
+                        <FormField
+                            control={incomeForm.control}
+                            name="name"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Descrição</FormLabel>
                                 <FormControl>
-                                    <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "pl-3 text-left font-normal",
-                                        !field.value && "text-muted-foreground"
-                                    )}
-                                    disabled={typeValue === 'ganho'}
-                                    >
-                                    {field.value ? (
-                                        format(field.value, 'dd/MM/yyyy')
-                                    ) : (
-                                        <span>Selecione uma data</span>
-                                    )}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
+                                <Input placeholder="Ex: Salário" {...field} />
                                 </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    defaultMonth={currentMonth}
-                                    initialFocus
-                                    locale={ptBR}
-                                    disabled={(date) => typeValue === 'ganho' || date < new Date("1900-01-01")}
-                                />
-                                </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                <Button type="submit">Adicionar Item</Button>
-                </form>
-            </Form>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={incomeForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Valor Previsto</FormLabel>
+                                <FormControl>
+                                <Input type="number" step="0.01" placeholder="5000,00" {...field} value={field.value ?? ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit">Adicionar Ganho</Button>
+                    </form>
+                </Form>
             </CardContent>
         </Card>
-        
-        <Card className="lg:col-span-2">
+        <Card>
+            <CardHeader>
+                <CardTitle>Adicionar Gasto Previsto</CardTitle>
+                <CardDescription>Insira uma despesa ou conta a pagar neste mês.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...expenseForm}>
+                    <form onSubmit={expenseForm.handleSubmit(onExpenseSubmit)} className="space-y-4">
+                        <FormField
+                            control={expenseForm.control}
+                            name="name"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Descrição</FormLabel>
+                                <FormControl>
+                                <Input placeholder="Ex: Fatura do Cartão" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={expenseForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Valor Previsto</FormLabel>
+                                <FormControl>
+                                <Input type="number" step="0.01" placeholder="850,00" {...field} value={field.value ?? ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={expenseForm.control}
+                            name="priority"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Prioridade</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione a prioridade" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="Alta">Alta</SelectItem>
+                                    <SelectItem value="Média">Média</SelectItem>
+                                    <SelectItem value="Baixa">Baixa</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={expenseForm.control}
+                            name="dueDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Data de Vencimento</FormLabel>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <FormControl>
+                                            <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "pl-3 text-left font-normal",
+                                                !field.value && "text-muted-foreground"
+                                            )}
+                                            >
+                                            {field.value ? (
+                                                format(field.value, 'dd/MM/yyyy')
+                                            ) : (
+                                                <span>Selecione uma data</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
+                                        </FormControl>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            defaultMonth={currentMonth}
+                                            initialFocus
+                                            locale={ptBR}
+                                            disabled={(date) => date < new Date("1900-01-01")}
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        <Button type="submit">Adicionar Gasto</Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+      </div>
+
+       <Card>
             <CardHeader>
             <CardTitle>Itens do Mês</CardTitle>
             <CardDescription>Sua lista de ganhos e despesas para o mês selecionado.</CardDescription>
@@ -401,7 +408,6 @@ function PlanningPageContent() {
             </div>
             </CardContent>
         </Card>
-      </div>
     </div>
   );
 }
@@ -413,3 +419,4 @@ export default function PlanningPage() {
         </PrivateRoute>
     )
 }
+
