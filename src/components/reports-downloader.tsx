@@ -65,16 +65,15 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
         currentAmount: 'Valor Atual',
     };
 
-    // Define a ordem correta para os compromissos
     const debtHeaderOrder = [
         'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
     ];
 
     const headers = Object.keys(data[0]).filter(header => !ignoredFields.includes(header));
     
-    // Usa a ordem específica para compromissos, senão usa a ordem padrão
     if (type === 'debts') {
-        return debtHeaderOrder.map(key => headerTranslations[key] || key);
+        const orderedHeaders = debtHeaderOrder.filter(key => headers.includes(key));
+        return orderedHeaders.map(key => headerTranslations[key] || key);
     }
     
     return headers.map(header => headerTranslations[header] || header);
@@ -86,14 +85,13 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
       
       const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
       
-       // Define a ordem correta para os compromissos
       const debtHeaderOrder = [
         'name', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount', 'interestRate', 'status', 'startDate', 'dueDate', 'totalInstallments', 'remainingInstallments'
       ];
       
       const headers = Object.keys(data[0]).filter(h => !ignoredFields.includes(h));
 
-      const orderedHeaders = type === 'debts' ? debtHeaderOrder : headers;
+      const orderedHeaders = type === 'debts' ? debtHeaderOrder.filter(key => headers.includes(key)) : headers;
 
       return data.map(item =>
           orderedHeaders.map(header => {
@@ -137,6 +135,7 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
             border-radius: 8px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
             padding: 2rem; 
+            overflow-x: auto;
         }
         h1 { 
             font-size: 1.75rem;
@@ -155,7 +154,6 @@ export function ReportsDownloader({ income, expenses, monthlyPlanItems, goals, a
             padding: 12px 15px; 
             text-align: left; 
             vertical-align: top;
-            white-space: nowrap;
         }
         th { 
             background-color: #f1f3f5; 
