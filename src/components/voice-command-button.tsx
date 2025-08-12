@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, Loader2, Frown, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseExpenseFromText } from '@/ai/flows/expense-parser';
+import { parseFinancialAction } from '@/ai/flows/universal-parser';
 import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -29,9 +29,10 @@ export function VoiceCommandButton() {
   const [status, setStatus] = useState<Status>('idle');
   const [isMounted, setIsMounted] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const finalTranscriptRef = useRef(''); // Use a ref to hold the final transcript
+  const [successMessage, setSuccessMessage] = useState('');
+  const finalTranscriptRef = useRef('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const { addExpense } = useFinancials();
+  const { addExpense, addIncome, addGoal } = useFinancials();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export function VoiceCommandButton() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false; // Process after a single utterance
+    recognition.continuous = false;
     recognition.lang = 'pt-BR';
     recognition.interimResults = true;
 
@@ -67,7 +68,6 @@ export function VoiceCommandButton() {
     };
 
     recognition.onend = async () => {
-      // Use the ref for the most up-to-date value
       const finalTranscript = finalTranscriptRef.current.trim();
       
       if (finalTranscript === '') {
@@ -78,41 +78,43 @@ export function VoiceCommandButton() {
       setStatus('processing');
       try {
         const referenceDate = format(new Date(), 'yyyy-MM-dd');
-        const result = await parseExpenseFromText({ query: finalTranscript, referenceDate });
+        const result = await parseFinancialAction({ query: finalTranscript, referenceDate });
 
-        if (result.error) {
-          toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
+        if (result.action === 'error') {
+          toast({ title: 'Não entendi direito', description: result.payload.message, variant: 'destructive' });
           setStatus('error');
-          setTimeout(() => {
-              handleOpenChange(false);
-          }, 3000);
+          setTimeout(() => handleOpenChange(false), 3000);
           return;
         }
+        
+        let message = '';
+        switch(result.action) {
+            case 'add_expense':
+                const { amount, category, date } = result.payload;
+                await addExpense({ amount: amount / 100, category }, new Date(date + 'T00:00:00'));
+                message = `Gasto de ${category} adicionado!`;
+                break;
+            case 'add_income':
+                const { amount: incomeAmount, source, date: incomeDate } = result.payload;
+                await addIncome({ amount: incomeAmount / 100, source }, new Date(incomeDate + 'T00:00:00'));
+                message = `Ganho de ${source} adicionado!`;
+                break;
+            case 'add_goal':
+                 const { name, targetAmount } = result.payload;
+                 await addGoal({ name, targetAmount: targetAmount / 100, currentAmount: 0 });
+                 message = `Sua meta "${name}" foi criada!`;
+                 break;
+        }
 
-        const { amount, category, date } = result;
-
-        await addExpense({
-          amount: amount / 100,
-          category: category,
-        }, new Date(date + 'T00:00:00'));
-
-        toast({
-          title: 'Gasto Adicionado!',
-          description: `Gasto de ${category} no valor de R$ ${(amount / 100).toFixed(2)} foi adicionado.`,
-          className: 'border-accent'
-        });
+        setSuccessMessage(message);
         setStatus('success');
-         setTimeout(() => {
-            handleOpenChange(false);
-        }, 2000);
+        setTimeout(() => handleOpenChange(false), 2000);
 
       } catch (e) {
         console.error('Error processing voice command:', e);
         toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive' });
         setStatus('error');
-        setTimeout(() => {
-            handleOpenChange(false);
-        }, 3000);
+        setTimeout(() => handleOpenChange(false), 3000);
       }
     };
 
@@ -121,16 +123,14 @@ export function VoiceCommandButton() {
        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});
           setStatus('error');
-           setTimeout(() => {
-                handleOpenChange(false);
-            }, 3000);
+           setTimeout(() => handleOpenChange(false), 3000);
       } else {
         setStatus('idle');
       }
     };
     
     recognitionRef.current = recognition;
-  }, [addExpense, toast]);
+  }, [addExpense, addIncome, addGoal, toast]);
   
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen && status === 'listening') {
@@ -180,14 +180,14 @@ export function VoiceCommandButton() {
                 <div className="flex flex-col items-center justify-center h-full">
                     <Frown className="h-12 w-12 text-destructive mb-4" />
                     <p className="font-semibold text-destructive">Ocorreu um erro</p>
-                    <p className="text-muted-foreground text-center mt-2">Não foi possível adicionar seu gasto. Tente novamente.</p>
+                    <p className="text-muted-foreground text-center mt-2">Não foi possível processar seu comando. Tente novamente.</p>
                 </div>
             );
         case 'success':
              return (
-                <div className="flex flex-col items-center justify-center h-full">
+                <div className="flex flex-col items-center justify-center h-full text-center">
                     <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
-                    <p className="font-semibold text-green-500">Gasto adicionado!</p>
+                    <p className="font-semibold text-green-500">{successMessage}</p>
                 </div>
             );
           case 'idle':
@@ -195,11 +195,15 @@ export function VoiceCommandButton() {
             return (
                  <div className="flex flex-col items-center justify-center h-full text-center">
                     <DialogDescription>
-                        Diga o que você gastou, incluindo valor, descrição e data.
+                        Diga o que você quer fazer: adicionar um gasto, um ganho ou criar uma meta.
                     </DialogDescription>
-                    <div className="my-6 p-4 bg-muted rounded-lg w-full">
+                    <div className="my-6 p-4 bg-muted rounded-lg w-full text-left">
                         <p className="text-sm font-medium">Por exemplo:</p>
-                        <p className="text-sm text-muted-foreground italic">"gastei 50 reais no supermercado ontem"</p>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
+                            <li>"gastei 50 reais no supermercado ontem"</li>
+                            <li>"recebi 1200 do meu salário hoje"</li>
+                            <li>"criar meta 'viagem' de 3000 reais"</li>
+                        </ul>
                     </div>
                 </div>
             );
@@ -220,7 +224,7 @@ export function VoiceCommandButton() {
       </DialogTrigger>
       <DialogContent>
          <DialogHeader>
-          <DialogTitle>Adicionar Gasto por Voz</DialogTitle>
+          <DialogTitle>Adicionar por Voz</DialogTitle>
         </DialogHeader>
         
         <div className="min-h-[200px] flex items-center justify-center">

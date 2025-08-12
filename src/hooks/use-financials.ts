@@ -208,9 +208,8 @@ export const useFinancials = () => {
       });
   }
 
-  const deleteMonthlyDocById = async (collectionName: 'income' | 'expenses', id: string) => {
+  const deleteMonthlyDocById = async (collectionName: 'income' | 'expenses', id: string, date = new Date()) => {
       if (!user) return;
-      const date = new Date(); // Assuming we delete from the current month
       const monthStr = format(date, 'yyyy-MM');
       const itemRef = doc(db, `users/${user.uid}/${collectionName}/${monthStr}/items`, id);
       await deleteDoc(itemRef);
@@ -230,7 +229,7 @@ export const useFinancials = () => {
       await deleteDoc(doc(db, `users/${user.uid}/${collectionName}`, id));
   }
 
-  const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addMonthlyDocWithDate('income', newIncome), [user]);
+  const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>, date?: Date) => addMonthlyDocWithDate('income', newIncome, date), [user]);
   
   const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
   
@@ -340,7 +339,10 @@ export const useFinancials = () => {
   }, [user]);
 
   const removeIncome = useCallback((id: string) => deleteMonthlyDocById('income', id), [user]);
-  const removeExpense = useCallback((id: string) => deleteMonthlyDocById('expenses', id), [user]);
+  const removeExpense = useCallback((id: string, date: string) => {
+    if (!user) return;
+    return deleteMonthlyDocById('expenses', id, new Date(date));
+  }, [user]);
   const removeGoal = useCallback((id: string) => deleteDocFromCollection('goals', id), [user]);
   const removeInvestment = useCallback((id: string) => deleteDocFromCollection('investments', id), [user]);
   const removeDebt = useCallback((id: string) => deleteDocFromCollection('debts', id), [user]);

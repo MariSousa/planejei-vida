@@ -19,4 +19,5 @@ import '@/ai/flows/personalized-savings-advice.ts';
 import '@/ai/flows/investment-explainer.ts';
 import '@/ai/flows/investment-calculator.ts';
 import '@/ai/flows/portfolio-projection.ts';
-import '@/ai/flows/expense-parser.ts';
+import '@/ai/flows/universal-parser.ts';
+
