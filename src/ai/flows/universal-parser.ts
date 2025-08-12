@@ -77,7 +77,7 @@ DATA DE REFERÊNCIA (HOJE): {{{referenceDate}}}
 
 REGRAS GERAIS:
 1.  **Identifique a Ação:** Analise a intenção principal do usuário. Ele quer registrar uma ação \`add_expense\`, \`add_income\`, ou \`add_goal\`?
-2.  **Valores em Centavos:** Todos os valores monetários DEVEM ser convertidos para CENTAVOS. Ex: "R$ 8,50" se torna 850. "mil reais" significa multiplicar por 1000 e depois por 100. "R$ 1.500" se torna 150000.
+2.  **Valores em Centavos:** Todos os valores monetários DEVEM ser convertidos para CENTAVOS. Ex: "R$ 8,50" se torna 850. "R$ 1.500" se torna 150000.
 3.  **Datas:**
     *   Interprete datas relativas ("hoje", "ontem") com base na data de referência.
     *   Se nenhuma data for mencionada para gastos ou ganhos, assuma a data de referência (hoje).
@@ -85,9 +85,9 @@ REGRAS GERAIS:
 4.  **Erros:** Se você não conseguir identificar a ação ou faltarem dados essenciais (como valor para um gasto/ganho, ou nome/valor para uma meta), retorne uma ação \`error\` com uma mensagem clara explicando o que faltou.
 
 REGRAS POR AÇÃO:
--   **\`add_expense\`**: Precisa de \`amount\` (em centavos), \`category\` e \`date\` (YYYY-MM-DD).
--   **\`add_income\`**: Precisa de \`amount\` (em centavos), \`source\` (fonte da renda) e \`date\` (YYYY-MM-DD).
--   **\`add_goal\`**: Precisa de \`name\` (nome da meta) e \`targetAmount\` (valor alvo em centavos).
+-   \`add_expense\`: Precisa de \`amount\` (em centavos), \`category\` e \`date\` (YYYY-MM-DD).
+-   \`add_income\`: Precisa de \`amount\` (em centavos), \`source\` (fonte da renda) e \`date\` (YYYY-MM-DD).
+-   \`add_goal\`: Precisa de \`name\` (nome da meta) e \`targetAmount\` (valor alvo em centavos).
 
 </System>
 
@@ -96,9 +96,9 @@ Query: "adicionar gasto de 8,00 na padaria ontem"
 Referência: 2024-08-13
 Output: { "action": "add_expense", "payload": { "amount": 800, "category": "Padaria", "date": "2024-08-12" } }
 
-Query: "recebi 5 mil reais de um freelance"
+Query: "recebi 500 reais de um freelance"
 Referência: 2024-08-13
-Output: { "action": "add_income", "payload": { "amount": 500000, "source": "Freelance", "date": "2024-08-13" } }
+Output: { "action": "add_income", "payload": { "amount": 50000, "source": "Freelance", "date": "2024-08-13" } }
 
 Query: "quero criar uma meta de viagem para o japão de 15 mil reais"
 Referência: 2024-08-13
@@ -134,3 +134,4 @@ const universalParserFlow = ai.defineFlow(
     return output!;
   }
 );
+
