@@ -9,14 +9,24 @@ import { parseExpenseFromText } from '@/ai/flows/expense-parser';
 import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 
-type Status = 'idle' | 'listening' | 'processing' | 'error';
+type Status = 'idle' | 'listening' | 'processing' | 'error' | 'success';
 
-// Check for SpeechRecognition API
 const SpeechRecognition =
   (typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition)) || null;
 
 export function VoiceCommandButton() {
+  const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [isMounted, setIsMounted] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -32,7 +42,7 @@ export function VoiceCommandButton() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false; // Process after a single utterance
     recognition.lang = 'pt-BR';
     recognition.interimResults = true;
 
@@ -41,74 +51,89 @@ export function VoiceCommandButton() {
       setTranscript('');
     };
 
-    recognition.onresult = async (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = 0; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
+    recognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      for (let i = 0; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
         }
-        
-        setTranscript(interimTranscript);
-
-        if (finalTranscript) {
-            setStatus('processing');
-            recognition.stop();
-            
-            try {
-                const referenceDate = format(new Date(), 'yyyy-MM-dd');
-                const result = await parseExpenseFromText({ query: finalTranscript, referenceDate });
-
-                if (result.error) {
-                    toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
-                    setStatus('error');
-                    setTimeout(() => setStatus('idle'), 3000);
-                    return;
-                }
-
-                const { amount, category, date } = result;
-                
-                // The addExpense hook will now handle category creation
-                await addExpense({
-                    amount: amount / 100, // Convert cents to float
-                    category: category,
-                }, new Date(date + 'T00:00:00'));
-
-                toast({
-                    title: 'Gasto Adicionado!',
-                    description: `Gasto de ${category} no valor de R$ ${(amount / 100).toFixed(2)} foi adicionado.`,
-                    className: 'border-accent'
-                });
-                setStatus('idle');
-            } catch (e) {
-                console.error('Error processing voice command:', e);
-                toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive'});
-                setStatus('error');
-                setTimeout(() => setStatus('idle'), 3000);
-            }
-        }
+      }
+      setTranscript(interim || final);
     };
-    
+
+    recognition.onend = async () => {
+      if (transcript.trim() === '') {
+          setStatus('idle');
+          return;
+      }
+      
+      setStatus('processing');
+      try {
+        const referenceDate = format(new Date(), 'yyyy-MM-dd');
+        const result = await parseExpenseFromText({ query: transcript, referenceDate });
+
+        if (result.error) {
+          toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
+          setStatus('error');
+          setTimeout(() => {
+              setStatus('idle');
+              setTranscript('');
+          }, 3000);
+          return;
+        }
+
+        const { amount, category, date } = result;
+
+        await addExpense({
+          amount: amount / 100,
+          category: category,
+        }, new Date(date + 'T00:00:00'));
+
+        toast({
+          title: 'Gasto Adicionado!',
+          description: `Gasto de ${category} no valor de R$ ${(amount / 100).toFixed(2)} foi adicionado.`,
+          className: 'border-accent'
+        });
+        setStatus('success');
+         setTimeout(() => {
+            setOpen(false);
+            setStatus('idle');
+            setTranscript('');
+        }, 2000);
+
+      } catch (e) {
+        console.error('Error processing voice command:', e);
+        toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive' });
+        setStatus('error');
+        setTimeout(() => {
+            setStatus('idle');
+            setTranscript('');
+        }, 3000);
+      }
+    };
+
     recognition.onerror = (event) => {
       console.error('Speech recognition error', event.error);
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});
+       if (event.error !== 'no-speech' && event.error !== 'aborted' && status !== 'processing') {
+          toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});
+          setStatus('error');
       }
-      setStatus('idle');
-    };
-
-    recognition.onend = () => {
-        if (status === 'listening') {
-            setStatus('idle');
-        }
     };
     
     recognitionRef.current = recognition;
-  }, [addExpense, status, toast]);
+  }, [addExpense, toast, transcript, status]);
+  
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && status === 'listening') {
+      recognitionRef.current?.abort();
+    }
+    setOpen(isOpen);
+    setStatus('idle');
+    setTranscript('');
+  }
 
   const handleToggleListening = () => {
     const recognition = recognitionRef.current;
@@ -116,48 +141,98 @@ export function VoiceCommandButton() {
 
     if (status === 'listening') {
       recognition.stop();
+      setStatus('idle');
     } else {
       recognition.start();
     }
   };
 
   if (!isMounted || !SpeechRecognition) {
-    return null; // Don't render button if API is not supported or on SSR
+    return null;
   }
 
-  const getButtonContent = () => {
-    switch (status) {
-      case 'listening':
-        return <Square className="h-6 w-6 text-red-500 animate-pulse" />;
-      case 'processing':
-        return <Loader2 className="h-6 w-6 animate-spin" />;
-      case 'error':
-        return <Frown className="h-6 w-6 text-destructive" />;
-      case 'idle':
-      default:
-        return <Mic className="h-6 w-6" />;
-    }
-  };
-  
+  const getStatusContent = () => {
+      switch (status) {
+          case 'listening':
+              return (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                    <Mic className="h-12 w-12 text-primary animate-pulse mb-4" />
+                    <p className="font-semibold">Ouvindo...</p>
+                    <p className="text-muted-foreground text-lg h-14 mt-2">{transcript || ' '}</p>
+                </div>
+              );
+          case 'processing':
+              return (
+                <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="h-12 w-12 animate-spin mb-4" />
+                    <p className="font-semibold">Processando...</p>
+                </div>
+              );
+        case 'error':
+            return (
+                <div className="flex flex-col items-center justify-center h-full">
+                    <Frown className="h-12 w-12 text-destructive mb-4" />
+                    <p className="font-semibold text-destructive">Ocorreu um erro</p>
+                </div>
+            );
+        case 'success':
+             return (
+                <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="h-12 w-12 text-green-500 mb-4" />
+                    <p className="font-semibold text-green-500">Gasto adicionado!</p>
+                </div>
+            );
+          case 'idle':
+          default:
+            return (
+                 <div className="flex flex-col items-center justify-center h-full text-center">
+                    <DialogDescription>
+                        Diga o que você gastou, incluindo valor, descrição e data.
+                    </DialogDescription>
+                    <div className="my-6 p-4 bg-muted rounded-lg w-full">
+                        <p className="text-sm font-medium">Por exemplo:</p>
+                        <p className="text-sm text-muted-foreground italic">"gastei 50 reais no supermercado ontem"</p>
+                    </div>
+                </div>
+            );
+      }
+  }
+
+
   return (
-    <>
-      {status === 'listening' && transcript && (
-          <div className="fixed bottom-28 right-8 max-w-sm bg-primary text-primary-foreground p-3 rounded-lg shadow-lg z-50">
-            <p className="text-sm">{transcript}</p>
-          </div>
-      )}
-      <Button
-        size="icon"
-        className={cn(
-          'fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300',
-          status === 'listening' && 'bg-red-500/20 hover:bg-red-500/30',
-          status === 'error' && 'bg-destructive/20'
-        )}
-        onClick={handleToggleListening}
-        disabled={status === 'processing'}
-      >
-        {getButtonContent()}
-      </Button>
-    </>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button
+          size="icon"
+          className={cn(
+            'fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300'
+          )}
+        >
+          <Mic className="h-6 w-6" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+         <DialogHeader>
+          <DialogTitle>Adicionar Gasto por Voz</DialogTitle>
+        </DialogHeader>
+        
+        <div className="min-h-[200px] flex items-center justify-center">
+            {getStatusContent()}
+        </div>
+
+        <DialogFooter>
+          {status !== 'listening' && status !== 'processing' && (
+             <Button type="button" onClick={handleToggleListening} disabled={status === 'listening' || status === 'processing'}>
+                Começar a Ouvir
+             </Button>
+          )}
+           {status === 'listening' && (
+             <Button type="button" variant="destructive" onClick={handleToggleListening}>
+                Parar de Ouvir
+             </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
