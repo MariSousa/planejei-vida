@@ -51,7 +51,8 @@ const secondaryMenuItems = [
 
 export function MainNav() {
   const pathname = usePathname();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -60,7 +61,7 @@ export function MainNav() {
   const isInvestmentActive = investmentItems.some(item => pathname.startsWith(item.href));
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className={cn(isCollapsed && 'grid grid-cols-1 gap-2')}>
       {menuItems.map((item) => {
         const Icon = item.icon;
         return (
@@ -85,6 +86,7 @@ export function MainNav() {
             isSubmenu
             isActive={isInvestmentActive}
             tooltip={{children: "Investimentos"}}
+            className="group-data-[collapsible=icon]:flex-col"
           >
               <PiggyBank />
               <span>Investimentos</span> 
@@ -107,7 +109,7 @@ asChild
           </SidebarMenuSub>
       </SidebarMenuItem>
 
-      <div className="mt-auto pt-4 border-t border-sidebar-border">
+      <div className={cn("mt-auto pt-4 border-t border-sidebar-border", isCollapsed && "hidden")}>
           <p className="px-4 text-xs font-semibold text-muted-foreground/80 mb-2">Ferramentas e Suporte</p>
           {secondaryMenuItems.map((item) => {
             const Icon = item.icon;
@@ -118,6 +120,7 @@ asChild
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
+                    className="!flex-row !justify-start !h-8 text-sm gap-2"
                 >
                     <Link href={item.href}>
                         <Icon />

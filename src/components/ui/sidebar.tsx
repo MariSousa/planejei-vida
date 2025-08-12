@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -25,8 +24,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
-const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const SIDEBAR_WIDTH_ICON = "5rem"
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -102,7 +100,7 @@ const SidebarProvider = React.forwardRef<
     React.useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
-          event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+          event.key === 'b' &&
           (event.metaKey || event.ctrlKey)
         ) {
           event.preventDefault()
@@ -504,22 +502,21 @@ const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, children, ...props }, ref) => {
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
-
-  const hasSubmenuButton = React.Children.toArray(children).some(
-    (child) => React.isValidElement(child) && (child as React.ReactElement).props.isSubmenu
-  );
-
-  if (hasSubmenuButton && !isCollapsed) {
-    return (
-      <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
-        <Collapsible>
-          {children}
-        </Collapsible>
-      </li>
+    const hasSubmenuButton = React.Children.toArray(children).some(
+        (child) => React.isValidElement(child) && (child as React.ReactElement).props.isSubmenu
     );
-  }
+    const { state } = useSidebar();
+    const isCollapsed = state === 'collapsed';
+
+    if (hasSubmenuButton && !isCollapsed) {
+        return (
+            <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
+                <Collapsible>
+                    {children}
+                </Collapsible>
+            </li>
+        );
+    }
   
   return (
     <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
@@ -530,7 +527,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center justify-center flex-col gap-1 overflow-hidden rounded-md p-2 text-center text-xs outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:text-primary data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-16 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -539,9 +536,9 @@ const sidebarMenuButtonVariants = cva(
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+        default: "h-16 text-xs",
+        sm: "h-14 text-xs",
+        lg: "h-20 text-sm group-data-[collapsible=icon]:!p-0",
       },
     },
     defaultVariants: {
@@ -586,7 +583,7 @@ const SidebarMenuButton = React.forwardRef<
       <>
         {children}
         {isSubmenu && !isCollapsed && (
-          <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
         )}
       </>
     );
