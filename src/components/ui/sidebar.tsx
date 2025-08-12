@@ -503,18 +503,37 @@ SidebarMenu.displayName = "SidebarMenu"
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
     const { state } = useSidebar();
     const isCollapsed = state === 'collapsed';
 
-    if (isCollapsed) {
-        return <li ref={ref} data-sidebar="menu-item" className={cn("group/menu-item relative", className)} {...props} />;
-    }
+    const child = React.Children.only(children) as React.ReactElement;
+    const isSubmenu = child.props.isSubmenu;
 
+    if (isCollapsed || !isSubmenu) {
+      return (
+        <li
+          ref={ref}
+          data-sidebar="menu-item"
+          className={cn('group/menu-item relative', className)}
+          {...props}
+        >
+          {children}
+        </li>
+      );
+    }
+    
     return (
-        <Collapsible asChild>
-            <li ref={ref} data-sidebar="menu-item" className={cn("group/menu-item relative", className)} {...props} />
-        </Collapsible>
+      <Collapsible asChild>
+        <li
+          ref={ref}
+          data-sidebar="menu-item"
+          className={cn('group/menu-item relative', className)}
+          {...props}
+        >
+          {children}
+        </li>
+      </Collapsible>
     )
 })
 SidebarMenuItem.displayName = "SidebarMenuItem"
