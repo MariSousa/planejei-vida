@@ -77,7 +77,7 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
       if (isLogin) {
