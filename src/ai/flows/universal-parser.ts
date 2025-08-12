@@ -76,18 +76,18 @@ Sua tarefa é identificar a **AÇÃO** (adicionar gasto, adicionar ganho, criar 
 DATA DE REFERÊNCIA (HOJE): {{{referenceDate}}}
 
 REGRAS GERAIS:
-1.  **Identifique a Ação:** Analise a intenção principal do usuário. Ele quer registrar um `add_expense`, `add_income`, ou `add_goal`?
+1.  **Identifique a Ação:** Analise a intenção principal do usuário. Ele quer registrar um \`add_expense\`, \`add_income\`, ou \`add_goal\`?
 2.  **Valores em Centavos:** Todos os valores monetários DEVEM ser convertidos para CENTAVOS. Ex: "R$ 8,50" se torna 850. "R$ 1500" se torna 150000.
 3.  **Datas:**
     *   Interprete datas relativas ("hoje", "ontem") com base na data de referência.
     *   Se nenhuma data for mencionada para gastos ou ganhos, assuma a data de referência (hoje).
-    *   Metas (`add_goal`) não precisam de data.
-4.  **Erros:** Se você não conseguir identificar a ação ou faltarem dados essenciais (como valor para um gasto/ganho, ou nome/valor para uma meta), retorne uma ação `error` com uma mensagem clara explicando o que faltou.
+    *   Metas (\`add_goal\`) não precisam de data.
+4.  **Erros:** Se você não conseguir identificar a ação ou faltarem dados essenciais (como valor para um gasto/ganho, ou nome/valor para uma meta), retorne uma ação \`error\` com uma mensagem clara explicando o que faltou.
 
 REGRAS POR AÇÃO:
--   **`add_expense`**: Precisa de `amount` (em centavos), `category` e `date` (YYYY-MM-DD).
--   **`add_income`**: Precisa de `amount` (em centavos), `source` (fonte da renda) e `date` (YYYY-MM-DD).
--   **`add_goal`**: Precisa de `name` (nome da meta) e `targetAmount` (valor alvo em centavos).
+-   **\`add_expense\`**: Precisa de \`amount\` (em centavos), \`category\` e \`date\` (YYYY-MM-DD).
+-   **\`add_income\`**: Precisa de \`amount\` (em centavos), \`source\` (fonte da renda) e \`date\` (YYYY-MM-DD).
+-   **\`add_goal\`**: Precisa de \`name\` (nome da meta) e \`targetAmount\` (valor alvo em centavos).
 
 </System>
 
