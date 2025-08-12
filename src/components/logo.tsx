@@ -1,12 +1,13 @@
 'use client';
 
 import Image from 'next/image';
+import logoIcon from '../app/planejei--icone.png';
 
 export function Logo() {
   return (
     <div className="flex items-center justify-center gap-2 p-2 h-[58px]">
       <Image
-        src="/planejei--icone.png"
+        src={logoIcon}
         alt="Logo do Planejei"
         width={32}
         height={32}
