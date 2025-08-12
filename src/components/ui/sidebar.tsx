@@ -504,13 +504,12 @@ const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, children, ...props }, ref) => {
-  const { state } = useSidebar()
-  const isCollapsed = state === "collapsed"
-
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
   const child = React.Children.only(children) as React.ReactElement;
   const isSubmenu = child.props.isSubmenu;
 
-  if (isCollapsed || !isSubmenu) {
+  if (!isSubmenu || isCollapsed) {
     return (
       <li
         ref={ref}
@@ -520,23 +519,23 @@ const SidebarMenuItem = React.forwardRef<
       >
         {children}
       </li>
-    )
+    );
   }
-
-  // If it's a submenu and not collapsed, wrap it in a Collapsible
+  
   return (
-    <li
-      ref={ref}
-      data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
-      {...props}
-    >
-      <Collapsible>
-        {children}
-      </Collapsible>
-    </li>
-  )
-})
+    <Collapsible asChild>
+        <li
+            ref={ref}
+            data-sidebar="menu-item"
+            className={cn("group/menu-item relative", className)}
+            {...props}
+        >
+            {children}
+        </li>
+    </Collapsible>
+  );
+
+});
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
@@ -812,3 +811,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
