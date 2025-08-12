@@ -553,7 +553,6 @@ const SidebarMenuButton = React.forwardRef<
     const buttonContent = (
       <>
         {children}
-        <ChevronRight className="ml-auto h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-90" />
       </>
     );
 

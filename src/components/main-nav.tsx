@@ -26,7 +26,6 @@ import {
   BookOpen,
   LifeBuoy,
 } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const mainNavItems = [
     { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
@@ -64,131 +63,61 @@ export function MainNav() {
     }
   };
 
-  const isGroupActive = (items: { href: string }[]) => items.some(item => pathname === item.href);
+  const NavItem = ({ href, label, icon: Icon, special = false }: { href: string; label: string; icon: React.ElementType; special?: boolean; }) => {
+    const isActive = pathname === href;
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive}
+          tooltip={{ children: label }}
+          onClick={handleLinkClick}
+          variant={special ? 'special' : 'default'}
+        >
+          <Link href={href}>
+            <Icon />
+            <span>{label}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
+  
+  const NavGroupLabel = ({ label }: { label: string }) => (
+    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      {label}
+    </div>
+  );
 
   return (
     <SidebarMenu>
-      {mainNavItems.map((item) => {
-        const Icon = item.icon;
-        return (
-            <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={{children: item.label}}
-                    onClick={handleLinkClick}
-                >
-                    <Link href={item.href}>
-                        <Icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        )
-      })}
+      {mainNavItems.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
       
       <SidebarSeparator />
 
-      {/* Ganhos e Gastos */}
-       <Collapsible>
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                    isActive={isGroupActive(gainsAndExpensesItems)}
-                    tooltip={{children: "Ganhos e Gastos"}}
-                >
-                    <Wallet />
-                    <span>Ganhos e Gastos</span> 
-                </SidebarMenuButton>
-            </CollapsibleTrigger>
-          </SidebarMenuItem>
-          <CollapsibleContent>
-              <SidebarMenuSub>
-                  {gainsAndExpensesItems.map((item) => (
-                      <SidebarMenuSubItem key={item.href}>
-                          <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                              <Link href={item.href}>
-                                  <span>{item.label}</span>
-                              </Link>
-                          </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                  ))}
-              </SidebarMenuSub>
-          </CollapsibleContent>
-        </Collapsible>
+      <NavGroupLabel label="Ganhos e Gastos" />
+      {gainsAndExpensesItems.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
 
-       {/* Metas e Investimentos */}
-        <Collapsible>
-           <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                        isActive={isGroupActive(goalsAndInvestmentsItems)}
-                        tooltip={{children: "Metas e Investimentos"}}
-                    >
-                        <Target />
-                        <span>Metas e Investimentos</span> 
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-            </SidebarMenuItem>
-            <CollapsibleContent>
-                <SidebarMenuSub>
-                    {goalsAndInvestmentsItems.map((item) => (
-                        <SidebarMenuSubItem key={item.href}>
-                            <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                                <Link href={item.href}>
-                                    <span>{item.label}</span>
-                                </Link>
-                            </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                    ))}
-                </SidebarMenuSub>
-            </CollapsibleContent>
-        </Collapsible>
+      <SidebarSeparator />
+      
+      <NavGroupLabel label="Metas e Investimentos" />
+      {goalsAndInvestmentsItems.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
       
       <SidebarSeparator />
       
-       {/* Ferramentas */}
-      {toolsItems.map((item) => {
-        const Icon = item.icon;
-        return (
-            <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={{children: item.label}}
-                    onClick={handleLinkClick}
-                    variant={item.special ? 'special' : 'default'}
-                >
-                    <Link href={item.href}>
-                        <Icon />
-                        <span>{item.label}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        )
-      })}
-      
-      <SidebarSeparator />
-      
-      {/* Suporte */}
-       {supportItems.map((item) => {
-        const Icon = item.icon;
-        return (
-            <SidebarMenuItem key={item.href} className="mt-auto">
-                <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    tooltip={{children: item.label}}
-                    onClick={handleLinkClick}
-                >
-                    <Link href={item.href}>
-                        <Icon />
-                        <span>{item.label}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-        )
-      })}
+      <NavGroupLabel label="Ferramentas e Suporte" />
+      {toolsItems.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
+       {supportItems.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
 
     </SidebarMenu>
   );
