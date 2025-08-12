@@ -506,35 +506,24 @@ const SidebarMenuItem = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  const child = React.Children.only(children) as React.ReactElement;
-  const isSubmenu = child.props.isSubmenu;
-
-  if (!isSubmenu || isCollapsed) {
-    return (
-      <li
-        ref={ref}
-        data-sidebar="menu-item"
-        className={cn("group/menu-item relative", className)}
-        {...props}
-      >
-        {children}
-      </li>
-    );
-  }
   
-  return (
-    <Collapsible asChild>
-        <li
-            ref={ref}
-            data-sidebar="menu-item"
-            className={cn("group/menu-item relative", className)}
-            {...props}
-        >
-            {children}
-        </li>
-    </Collapsible>
-  );
+  // Safely check if the child is a valid React element and has the isSubmenu prop
+  const isSubmenu = React.isValidElement(children) && (children.props as any).isSubmenu;
 
+  return (
+    <li
+      ref={ref}
+      data-sidebar="menu-item"
+      className={cn("group/menu-item relative", className)}
+      {...props}
+    >
+      {isSubmenu && !isCollapsed ? (
+        <Collapsible>{children}</Collapsible>
+      ) : (
+        children
+      )}
+    </li>
+  );
 });
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
