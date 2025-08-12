@@ -507,24 +507,22 @@ const SidebarMenuItem = React.forwardRef<
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
-  const child = React.Children.only(children) as React.ReactElement;
-  const isSubmenu = child.props.isSubmenu;
+  // Safely check if the child is a button with isSubmenu prop
+  const childElement = React.Children.only(children) as React.ReactElement;
+  const isSubmenu = childElement.props.isSubmenu;
 
   if (isSubmenu && !isCollapsed) {
     return (
       <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
-        <Collapsible>{children}</Collapsible>
+        <Collapsible>
+          {children}
+        </Collapsible>
       </li>
     );
   }
-
+  
   return (
-    <li
-      ref={ref}
-      data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
-      {...props}
-    >
+    <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
       {children}
     </li>
   );
@@ -558,6 +556,7 @@ const SidebarMenuButton = React.forwardRef<
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
+    isSubmenu?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>,
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
@@ -565,6 +564,7 @@ const SidebarMenuButton = React.forwardRef<
     {
       asChild = false,
       isActive = false,
+      isSubmenu = false,
       variant = "default",
       size = "default",
       tooltip,
@@ -574,17 +574,13 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    // This prop is internal to the component and should not be passed to the DOM
-    const isSubmenu = (props as any).isSubmenu;
     const { isMobile, state } = useSidebar()
     const isCollapsed = state === 'collapsed';
     
-    // Determine the component to render
     let Comp: React.ElementType = asChild ? Slot : "button"
     if (isSubmenu && !isCollapsed) {
         Comp = CollapsibleTrigger
     }
-
 
     const buttonContent = (
       <>
@@ -594,10 +590,6 @@ const SidebarMenuButton = React.forwardRef<
         )}
       </>
     );
-    
-    // Remove the internal prop before rendering
-    const domProps = { ...props };
-    delete (domProps as any).isSubmenu;
 
     let button = (
        <Comp
@@ -606,7 +598,7 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...domProps}
+        {...props}
       >
         {buttonContent}
       </Comp>

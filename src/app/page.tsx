@@ -21,8 +21,7 @@ const formatCurrency = (value: number) => {
 
 function DashboardContent() {
   const { user } = useAuth();
-  // MOVED HOOKS TO TOP LEVEL
-  const { totals, goals, income, expenses, isClient, debts, upcomingPayments } = useFinancials();
+  const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments } = useFinancials();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -60,7 +59,7 @@ function DashboardContent() {
     .slice(0, 5);
   
   const totalDebts = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.remainingAmount, 0);
-  const totalInvested = useFinancials().investments.reduce((acc, inv) => acc + inv.amount, 0);
+  const totalInvested = investments.reduce((acc, inv) => acc + inv.amount, 0);
   const financialHealth = totals.totalIncome > 0 ? ((totals.totalIncome - totals.totalExpenses) / totals.totalIncome) * 100 : 0;
 
   return (
