@@ -23,11 +23,11 @@ export function WelcomeTourDialog({ open, onOpenChange }: WelcomeTourDialogProps
   const { toast } = useToast();
 
   const handleStartTour = () => {
+    onOpenChange(false);
     toast({
       title: 'Funcionalidade em Breve!',
       description: 'O tour interativo ainda está em desenvolvimento.',
     });
-    onOpenChange(false);
   };
 
   return (
