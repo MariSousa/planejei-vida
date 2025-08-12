@@ -24,7 +24,7 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-function DashboardContent({ setRunTour }: { setRunTour: (run: boolean) => void }) {
+function DashboardContent({ setRunTour }: { setRunTour?: (run: boolean) => void }) {
   const { user } = useAuth();
   const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments, previousTotals } = useFinancials();
   const [greeting, setGreeting] = useState('');
@@ -93,7 +93,7 @@ function DashboardContent({ setRunTour }: { setRunTour: (run: boolean) => void }
 
   return (
     <>
-    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setRunTour(true)} />
+    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setRunTour?.(true)} />
     <div className="flex flex-col gap-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
@@ -158,7 +158,7 @@ function DashboardContent({ setRunTour }: { setRunTour: (run: boolean) => void }
 export default function Dashboard({ setRunTour }: { setRunTour?: (run: boolean) => void }) {
     return (
         <PrivateRoute>
-            <DashboardContent setRunTour={setRunTour!} />
+            <DashboardContent setRunTour={setRunTour} />
         </PrivateRoute>
     )
 }
