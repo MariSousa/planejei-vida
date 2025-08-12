@@ -1,15 +1,8 @@
-import Image from 'next/image';
 
 export function Logo() {
   return (
-    <div className="flex items-center justify-center p-2">
-      <Image
-        src="/icon.svg"
-        alt="Planejei Logo"
-        width={50}
-        height={50}
-        className="h-auto"
-      />
+    <div className="flex items-center justify-center p-2 h-[58px]">
+      {/* Logo can be placed here */}
     </div>
   );
 }
