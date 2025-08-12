@@ -31,7 +31,7 @@ export function VoiceCommandButton() {
   const [transcript, setTranscript] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const finalTranscriptRef = useRef('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<typeof window.SpeechRecognition | null>(null);
   const { addExpense, addIncome, addGoal } = useFinancials();
   const { toast } = useToast();
 
@@ -53,7 +53,7 @@ export function VoiceCommandButton() {
       finalTranscriptRef.current = '';
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let interim = '';
       let final = '';
       for (let i = 0; i < event.results.length; ++i) {
@@ -118,7 +118,7 @@ export function VoiceCommandButton() {
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error', event.error);
        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});

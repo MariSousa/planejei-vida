@@ -19,7 +19,7 @@ const UniversalParserInputSchema = z.object({
 export type UniversalParserInput = z.infer<typeof UniversalParserInputSchema>;
 
 const AddExpenseActionSchema = z.object({
-    action: z.literal('add_expense'),
+    action: z.enum(['add_expense']),
     payload: z.object({
         amount: z.number().describe('O valor do gasto em centavos. Ex: R$ 8,50 deve ser 850.'),
         category: z.string().describe('A categoria do gasto. Ex: Padaria, Supermercado, Aluguel.'),
@@ -28,7 +28,7 @@ const AddExpenseActionSchema = z.object({
 });
 
 const AddIncomeActionSchema = z.object({
-    action: z.literal('add_income'),
+    action: z.enum(['add_income']),
     payload: z.object({
         amount: z.number().describe('O valor do ganho em centavos. Ex: R$ 1500 deve ser 150000.'),
         source: z.string().describe('A fonte do ganho. Ex: Salário, Freelance, Venda.'),
@@ -37,7 +37,7 @@ const AddIncomeActionSchema = z.object({
 });
 
 const AddGoalActionSchema = z.object({
-    action: z.literal('add_goal'),
+    action: z.enum(['add_goal']),
     payload: z.object({
         name: z.string().describe('O nome da meta. Ex: Viagem para o Japão.'),
         targetAmount: z.number().describe('O valor alvo da meta em centavos. Ex: R$ 15.000 deve ser 1500000.'),
@@ -45,7 +45,7 @@ const AddGoalActionSchema = z.object({
 });
 
 const ErrorActionSchema = z.object({
-    action: z.literal('error'),
+    action: z.enum(['error']),
     payload: z.object({
         message: z.string().describe('A mensagem de erro explicando o que deu errado ou o que faltou na query do usuário.')
     })
