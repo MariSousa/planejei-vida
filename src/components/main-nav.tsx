@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -7,6 +8,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -85,25 +89,23 @@ export function MainNav() {
               <PiggyBank />
               <span>Investimentos</span>
           </SidebarMenuButton>
-          <ul className="space-y-1 py-1 data-[state=closed]:hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          <SidebarMenuSub>
               {investmentItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                      <li key={item.href}>
-                           <SidebarMenuButton
+                      <SidebarMenuSubItem key={item.href}>
+                           <SidebarMenuSubButton
                                 asChild
                                 isActive={pathname.startsWith(item.href)}
-                                className="h-8"
                            >
                                <Link href={item.href}>
-                                    <Icon />
                                     <span>{item.label}</span>
                                </Link>
-                           </SidebarMenuButton>
-                      </li>
+                           </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                   )
               })}
-          </ul>
+          </SidebarMenuSub>
       </SidebarMenuItem>
 
       <div className="mt-auto pt-4 border-t border-sidebar-border">

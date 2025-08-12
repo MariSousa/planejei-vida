@@ -505,10 +505,18 @@ const SidebarMenuItem = React.forwardRef<
   React.ComponentProps<"li">
 >(({ className, children, ...props }, ref) => {
   const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
-  
+  const isCollapsed = state === 'collapsed';
+
   // Safely check if the child is a valid React element and has the isSubmenu prop
   const isSubmenu = React.isValidElement(children) && (children.props as any).isSubmenu;
+
+  if (isSubmenu && !isCollapsed) {
+    return (
+      <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
+        <Collapsible>{children}</Collapsible>
+      </li>
+    );
+  }
 
   return (
     <li
@@ -517,11 +525,7 @@ const SidebarMenuItem = React.forwardRef<
       className={cn("group/menu-item relative", className)}
       {...props}
     >
-      {isSubmenu && !isCollapsed ? (
-        <Collapsible>{children}</Collapsible>
-      ) : (
-        children
-      )}
+      {children}
     </li>
   );
 });
@@ -572,7 +576,7 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
+    const Comp = asChild ? (isSubmenu ? CollapsibleTrigger : Slot) : "button"
     const { isMobile, state } = useSidebar()
     const isCollapsed = state === 'collapsed';
 
@@ -597,10 +601,6 @@ const SidebarMenuButton = React.forwardRef<
         {buttonContent}
       </Comp>
     );
-
-    if (isSubmenu && !isCollapsed) {
-        button = <CollapsibleTrigger asChild>{button}</CollapsibleTrigger>;
-    }
     
     if (!tooltip) {
       return button;
