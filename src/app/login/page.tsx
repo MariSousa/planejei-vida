@@ -77,7 +77,7 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>>) {
     setIsLoading(true);
     try {
       if (isLogin) {
@@ -171,7 +171,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
             <div className="mx-auto mb-4">
                <Logo />
