@@ -463,16 +463,16 @@ export const useFinancials = () => {
   }, [planningMonthItems]);
 
   const pendingPlannedIncome = useMemo(() => {
-    const normalize = (str: string) => str.trim().toLowerCase();
-    const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'ganho' && p.status === 'Previsto');
-    const actualSources = income.map(i => normalize(i.source));
+    const normalize = (str: string | undefined) => (str || '').trim().toLowerCase();
+    const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'ganho' && p.status === 'Previsto' && p.name);
+    const actualSources = income.filter(i => i.source).map(i => normalize(i.source));
     return planned.filter(p => !actualSources.includes(normalize(p.name)));
   }, [currentMonthPlanItemsForSuggestions, income]);
 
   const pendingPlannedExpenses = useMemo(() => {
-      const normalize = (str: string) => str.trim().toLowerCase();
-      const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'gasto' && p.status === 'Previsto');
-      const actualCategories = expenses.map(e => normalize(e.category));
+      const normalize = (str: string | undefined) => (str || '').trim().toLowerCase();
+      const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'gasto' && p.status === 'Previsto' && p.name);
+      const actualCategories = expenses.filter(e => e.category).map(e => normalize(e.category));
       return planned.filter(p => !actualCategories.includes(normalize(p.name)));
   }, [currentMonthPlanItemsForSuggestions, expenses]);
 
