@@ -1,25 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
+  experimental: {
+    allowedDevOrigins: ["https://6000-firebase-studio-1754914726186.cluster-m7tpz3bmgjgoqrktlvd4ykrc2m.cloudworkstations.dev"],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
-  // This is to allow the Next.js dev server to accept requests from the
-  // Firebase Studio environment.
-  allowedDevOrigins: ["*.cloudworkstations.dev", "*.firebase.studio"],
 };
 
 export default nextConfig;
