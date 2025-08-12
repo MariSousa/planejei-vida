@@ -83,7 +83,9 @@ export function AppLayout({
             />
           </Link>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">{React.cloneElement(children as React.ReactElement, { setRunTour })}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">
+          {React.isValidElement(children) ? React.cloneElement(children, { setRunTour } as any) : children}
+        </main>
         <VoiceCommandButton />
       </SidebarInset>
     </SidebarProvider>

@@ -24,12 +24,11 @@ const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-function DashboardContent() {
+function DashboardContent({ setRunTour }: { setRunTour: (run: boolean) => void }) {
   const { user } = useAuth();
   const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments, previousTotals } = useFinancials();
   const [greeting, setGreeting] = useState('');
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
-  const [startTour, setStartTour] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -37,7 +36,8 @@ function DashboardContent() {
     if (searchParams.get('new_user') === 'true') {
       setShowWelcomeTour(true);
       // Clean up URL without reloading
-      router.replace('/', { scroll: false });
+      const newUrl = window.location.pathname;
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
     }
   }, [searchParams, router]);
 
@@ -93,7 +93,7 @@ function DashboardContent() {
 
   return (
     <>
-    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setStartTour(true)} />
+    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setRunTour(true)} />
     <div className="flex flex-col gap-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
@@ -155,10 +155,10 @@ function DashboardContent() {
 }
 
 
-export default function Dashboard() {
+export default function Dashboard({ setRunTour }: { setRunTour?: (run: boolean) => void }) {
     return (
         <PrivateRoute>
-            <DashboardContent />
+            <DashboardContent setRunTour={setRunTour!} />
         </PrivateRoute>
     )
 }
