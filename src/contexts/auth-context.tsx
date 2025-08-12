@@ -130,21 +130,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
+        console.log("deleteUserAccount: Nenhum usuário para deletar."); // Adicionado
         throw new Error("Nenhum usuário para deletar.");
     }
 
     try {
         const functions = getFunctions(app);
         const deleteAllUserData = httpsCallable(functions, 'deleteAllUserData');
+        
+        console.log("deleteUserAccount: Chamando deleteAllUserData..."); // Adicionado
         await deleteAllUserData();
+        console.log("deleteUserAccount: deleteAllUserData concluída com sucesso."); // Adicionado
 
+        console.log("deleteUserAccount: Chamando deleteUser..."); // Adicionado
         await deleteUser(currentUser);
+        console.log("deleteUserAccount: deleteUser concluído com sucesso."); // Adicionado
         
         router.push('/account-deleted');
     } catch (error) {
-        console.error("Erro ao deletar conta:", error);
+        console.error("Erro ao deletar conta:", error); // Já existe, mas é bom verificar a saída
         
         if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
+             console.log("deleteUserAccount: Erro auth/requires-recent-login. Lançando erro."); // Adicionado
             throw error;
         }
 
@@ -152,10 +159,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (error instanceof Error) {
             errorMessage = error.message;
         }
-        
+         console.log(`deleteUserAccount: Erro capturado: ${errorMessage}`); // Adicionado
         throw new Error(`Não foi possível deletar a conta. Tente novamente mais tarde. Detalhes: ${errorMessage}`);
     }
 };
+
 
   const value = {
     user,

@@ -110,20 +110,28 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
   const performDelete = async () => {
     setIsLoading(true);
     setError('');
+    console.log("performDelete: Iniciando processo de deleção."); // Adicionado
     try {
+        console.log("performDelete: Chamando deleteUserAccount..."); // Adicionado
         await deleteUserAccount();
+        console.log("performDelete: deleteUserAccount concluída."); // Adicionado
         // Redirection will be handled by auth context
     } catch (error: any) {
+         console.log("performDelete: Erro capturado."); // Adicionado
         if (error.code === 'auth/requires-recent-login') {
+            console.log("performDelete: Erro auth/requires-recent-login. Indo para o passo 3."); // Adicionado
             setStep(3); // Go to reauthentication step
         } else {
+             console.error("performDelete: Erro desconhecido:", error); // Adicionado para capturar outros erros
             toast({ title: 'Erro ao Deletar Conta', description: error.message, variant: 'destructive' });
             handleOpenChange(false);
         }
     } finally {
+        console.log("performDelete: Finalizando."); // Adicionado
         setIsLoading(false);
     }
   };
+
 
   const handleReauthentication = async () => {
     setIsLoading(true);

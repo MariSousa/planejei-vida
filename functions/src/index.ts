@@ -1,5 +1,6 @@
-import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/v2/https";
+
+import {setGlobalOptions} from "firebase-functions/v2";
+import * as functions from "firebase-functions";
 import * as logger from "firebase-functions/logger";
 import {onCall} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
@@ -59,8 +60,8 @@ export const deleteAllUserData = onCall({
 
     logger.info(`User ${uid} has requested to delete all their data.`);
 
-    // List of top-level collections for a user
-    const collectionsToDelete = [
+    // List of top-level collections for a user that are simple (no nested collections)
+    const simpleCollectionsToDelete = [
         "advices",
         "categories",
         "debts",
@@ -69,25 +70,31 @@ export const deleteAllUserData = onCall({
         "investments",
     ];
 
-    // List of monthly collections
-    const monthlyCollections = ["income", "expenses", "monthlyPlan"];
+    // List of top-level collections that have monthly nested collections of items
+    const nestedMonthlyCollections = ["income", "expenses", "monthlyPlan"];
 
     try {
         // Delete simple top-level collections
-        for (const collection of collectionsToDelete) {
-            await deleteCollection(`users/${uid}/${collection}`, 50);
-            logger.info(`Deleted collection ${collection} for user ${uid}`);
+        for (const collection of simpleCollectionsToDelete) {
+            const path = `users/${uid}/${collection}`;
+            await deleteCollection(path, 50);
+            logger.info(`Deleted collection ${path}`);
         }
 
-        // Delete monthly (nested) collections
-        for (const collectionName of monthlyCollections) {
-             const monthlyCollectionRef = db.collection(`users/${uid}/${collectionName}`);
-             const monthsSnapshot = await monthlyCollectionRef.get();
-             for (const monthDoc of monthsSnapshot.docs) {
-                 await deleteCollection(`users/${uid}/${collectionName}/${monthDoc.id}/items`, 50);
-                 await monthDoc.ref.delete(); // Delete the month document itself
-             }
-             logger.info(`Deleted all subcollections for ${collectionName} for user ${uid}`);
+        // Delete nested monthly collections
+        for (const collectionName of nestedMonthlyCollections) {
+            const monthlyCollectionRef = db.collection(`users/${uid}/${collectionName}`);
+            const monthsSnapshot = await monthlyCollectionRef.get();
+            
+            for (const monthDoc of monthsSnapshot.docs) {
+                // Delete the "items" subcollection within each month document
+                const itemsPath = `users/${uid}/${collectionName}/${monthDoc.id}/items`;
+                await deleteCollection(itemsPath, 50);
+                
+                // After deleting the subcollection, delete the month document itself
+                await monthDoc.ref.delete();
+            }
+             logger.info(`Deleted all subcollections and month documents for ${collectionName} for user ${uid}`);
         }
         
         logger.info(`Successfully deleted all data for user ${uid}.`);
