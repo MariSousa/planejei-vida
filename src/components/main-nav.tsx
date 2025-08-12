@@ -80,7 +80,7 @@ export function MainNav() {
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
-                    className="justify-start text-sm" // Changed from flex-col to row layout
+                    className="justify-start text-sm"
                 >
                     <Link href={item.href}>
                         <Icon className="h-4 w-4" />
@@ -100,7 +100,6 @@ export function MainNav() {
                     <SidebarMenuButton
                         isActive={isGroupActive(gainsAndExpensesItems)}
                         tooltip={{children: "Ganhos e Gastos"}}
-                        className="flex-col"
                     >
                         <Wallet />
                         <span>Ganhos e Gastos</span> 
@@ -130,7 +129,6 @@ export function MainNav() {
                     <SidebarMenuButton
                         isActive={isGroupActive(goalsAndInvestmentsItems)}
                         tooltip={{children: "Metas e Investimentos"}}
-                        className="flex-col"
                     >
                         <Target />
                         <span>Metas e Investimentos</span> 
@@ -166,7 +164,6 @@ export function MainNav() {
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
                     variant={item.special ? 'special' : 'default'}
-                    className="flex-col"
                 >
                     <Link href={item.href}>
                         <Icon />
@@ -187,7 +184,6 @@ export function MainNav() {
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
-                    className="flex-col"
                 >
                     <Link href={item.href}>
                         <Icon />
