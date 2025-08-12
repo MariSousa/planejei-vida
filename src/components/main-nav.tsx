@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   SidebarMenu,
@@ -79,7 +80,6 @@ export function MainNav() {
         )
       })}
       
-      {/* Investment Dropdown */}
       <SidebarMenuItem>
           <SidebarMenuButton
             isSubmenu
@@ -87,24 +87,23 @@ export function MainNav() {
             tooltip={{children: "Investimentos"}}
           >
               <PiggyBank />
-              <span>Investimentos</span>
+              <span>Investimentos</span> 
           </SidebarMenuButton>
           <SidebarMenuSub>
-              {investmentItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                      <SidebarMenuSubItem key={item.href}>
-                           <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname.startsWith(item.href)}
-                           >
-                               <Link href={item.href}>
-                                    <span>{item.label}</span>
-                               </Link>
-                           </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                  )
-              })}
+            {investmentItems.map((item) => {
+                return (
+                    <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton
+asChild
+                              isActive={pathname.startsWith(item.href)}
+                          >
+                            <Link href={item.href}>
+                                  <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                )
+            })}
           </SidebarMenuSub>
       </SidebarMenuItem>
 

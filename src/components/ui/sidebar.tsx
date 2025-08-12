@@ -507,8 +507,8 @@ const SidebarMenuItem = React.forwardRef<
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
-  // Safely check if the child is a valid React element and has the isSubmenu prop
-  const isSubmenu = React.isValidElement(children) && (children.props as any).isSubmenu;
+  const child = React.Children.only(children) as React.ReactElement;
+  const isSubmenu = child.props.isSubmenu;
 
   if (isSubmenu && !isCollapsed) {
     return (
@@ -559,7 +559,6 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>,
-    isSubmenu?: boolean;
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
@@ -569,16 +568,23 @@ const SidebarMenuButton = React.forwardRef<
       variant = "default",
       size = "default",
       tooltip,
-      isSubmenu = false,
       className,
       children,
       ...props
     },
     ref
   ) => {
-    const Comp = asChild ? (isSubmenu ? CollapsibleTrigger : Slot) : "button"
+    // This prop is internal to the component and should not be passed to the DOM
+    const isSubmenu = (props as any).isSubmenu;
     const { isMobile, state } = useSidebar()
     const isCollapsed = state === 'collapsed';
+    
+    // Determine the component to render
+    let Comp: React.ElementType = asChild ? Slot : "button"
+    if (isSubmenu && !isCollapsed) {
+        Comp = CollapsibleTrigger
+    }
+
 
     const buttonContent = (
       <>
@@ -589,6 +595,10 @@ const SidebarMenuButton = React.forwardRef<
       </>
     );
     
+    // Remove the internal prop before rendering
+    const domProps = { ...props };
+    delete (domProps as any).isSubmenu;
+
     let button = (
        <Comp
         ref={ref}
@@ -596,7 +606,7 @@ const SidebarMenuButton = React.forwardRef<
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
+        {...domProps}
       >
         {buttonContent}
       </Comp>
@@ -800,5 +810,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    

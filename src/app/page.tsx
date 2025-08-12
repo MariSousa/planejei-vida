@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
-import { TrendingUp, TrendingDown, Target, Landmark, Wallet, ShieldCheck, PiggyBank, Scale } from 'lucide-react';
+import { TrendingDown, Wallet, PiggyBank, Scale } from 'lucide-react';
 import { BudgetPieChart } from '@/components/dashboard/budget-pie-chart';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
@@ -20,6 +21,7 @@ const formatCurrency = (value: number) => {
 
 function DashboardContent() {
   const { user } = useAuth();
+  // MOVED HOOKS TO TOP LEVEL
   const { totals, goals, income, expenses, isClient, debts, upcomingPayments } = useFinancials();
   const [greeting, setGreeting] = useState('');
 
