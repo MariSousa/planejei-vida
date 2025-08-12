@@ -15,6 +15,7 @@ import { UpcomingPayments } from '@/components/dashboard/upcoming-payments';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ExpensesReviewDialog } from '@/components/dashboard/expenses-review-dialog';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -92,9 +93,7 @@ function DashboardContent() {
                              <p className="text-sm text-muted-foreground">
                                 {healthStatus.description}
                              </p>
-                              <Button variant="link" asChild className="p-0 h-auto mt-2">
-                                <Link href="/expenses">Revisar meus gastos</Link>
-                              </Button>
+                            <ExpensesReviewDialog expenses={expenses} />
                         </div>
                     </div>
                 </CardContent>
