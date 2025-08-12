@@ -28,6 +28,7 @@ import {
   BookOpen,
   LifeBuoy
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const menuItems = [
   { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
