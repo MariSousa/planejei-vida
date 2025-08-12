@@ -76,8 +76,8 @@ Sua tarefa é identificar a **AÇÃO** (adicionar gasto, adicionar ganho, criar 
 DATA DE REFERÊNCIA (HOJE): {{{referenceDate}}}
 
 REGRAS GERAIS:
-1.  **Identifique a Ação:** Analise a intenção principal do usuário. Ele quer registrar um \`add_expense\`, \`add_income\`, ou \`add_goal\`?
-2.  **Valores em Centavos:** Todos os valores monetários DEVEM ser convertidos para CENTAVOS. Ex: "R$ 8,50" se torna 850. "R$ 1500" se torna 150000.
+1.  **Identifique a Ação:** Analise a intenção principal do usuário. Ele quer registrar uma ação \`add_expense\`, \`add_income\`, ou \`add_goal\`?
+2.  **Valores em Centavos:** Todos os valores monetários DEVEM ser convertidos para CENTAVOS. Ex: "R$ 8,50" se torna 850. "R$ 1.500" se torna 150000. "mil reais" significa multiplicar por 1000 e depois por 100.
 3.  **Datas:**
     *   Interprete datas relativas ("hoje", "ontem") com base na data de referência.
     *   Se nenhuma data for mencionada para gastos ou ganhos, assuma a data de referência (hoje).
