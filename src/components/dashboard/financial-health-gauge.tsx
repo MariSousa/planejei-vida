@@ -60,7 +60,7 @@ export function FinancialHealthGauge({ healthScore }: FinancialHealthGaugeProps)
         </TooltipTrigger>
         <TooltipContent>
           <p className="max-w-xs">
-            Este medidor representa sua taxa de poupança mensal. Ele calcula a porcentagem da sua renda que sobra após os gastos.
+            Este medidor é como um termômetro para suas finanças do mês. Ele simplesmente mostra o quanto da sua renda está sobrando após pagar os gastos. Não se preocupe com os termos técnicos, o objetivo é simples: quanto mais 'saudável' o medidor, mais perto você está dos seus sonhos!
           </p>
         </TooltipContent>
       </Tooltip>
