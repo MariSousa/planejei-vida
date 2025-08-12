@@ -507,11 +507,11 @@ const SidebarMenuItem = React.forwardRef<
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
-  // Safely check if the child is a button with isSubmenu prop
-  const childElement = React.Children.only(children) as React.ReactElement;
-  const isSubmenu = childElement.props.isSubmenu;
+  const hasSubmenuButton = React.Children.toArray(children).some(
+    (child) => React.isValidElement(child) && (child as React.ReactElement).props.isSubmenu
+  );
 
-  if (isSubmenu && !isCollapsed) {
+  if (hasSubmenuButton && !isCollapsed) {
     return (
       <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
         <Collapsible>
