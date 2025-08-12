@@ -18,6 +18,7 @@ import {
 import { auth, app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { FirebaseError } from 'firebase/app';
 
 interface UserProfile {
     displayName?: string;
@@ -127,10 +128,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const deleteUserAccount = async () => {
     const currentUser = auth.currentUser;
+    
     if (!currentUser) {
         throw new Error("Nenhum usuário para deletar.");
     }
-    
+
     try {
         const functions = getFunctions(app);
         const deleteAllUserData = httpsCallable(functions, 'deleteAllUserData');
@@ -139,17 +141,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await deleteUser(currentUser);
         
         router.push('/account-deleted');
-    } catch (error: any) {
+    } catch (error) {
         console.error("Erro ao deletar conta:", error);
-         // Propagate the specific error code for handling in the UI
-        if (error.code === 'auth/requires-recent-login') {
-            const err = new Error('Esta é uma operação sensível. Por favor, faça login novamente antes de deletar sua conta.');
-            err.code = 'auth/requires-recent-login';
-            throw err;
+        
+        if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
+            throw error;
         }
-        throw new Error('Não foi possível deletar a conta. Tente novamente mais tarde.');
+
+        let errorMessage = 'Um erro inesperado ocorreu.';
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        
+        throw new Error(`Não foi possível deletar a conta. Tente novamente mais tarde. Detalhes: ${errorMessage}`);
     }
-  };
+};
 
   const value = {
     user,
