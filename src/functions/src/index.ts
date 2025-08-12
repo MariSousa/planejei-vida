@@ -2,8 +2,9 @@
 import {setGlobalOptions} from 'firebase-functions/v2';
 import * as functions from 'firebase-functions';
 import * as logger from 'firebase-functions/logger';
-import {onCall, onCallGenkit} from 'firebase-functions/v2/https';
+import {onCall, onCallGenkit, type CallableRequest} from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
+import type {Query} from 'firebase-admin/firestore';
 import {genkit, z} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 import {defineSecret} from 'firebase-functions/params';
@@ -28,7 +29,7 @@ export const deleteAllUserData = onCall(
     // We don't need to pass the UID from the client.
     // The callable function context includes auth information.
   },
-  async (request) => {
+  async (request: CallableRequest) => {
     const uid = request.auth?.uid;
     if (!uid) {
       throw new functions.https.HttpsError(
@@ -92,14 +93,14 @@ const deleteCollection = async (collectionPath: string, batchSize: number) => {
   const collectionRef = db.collection(collectionPath);
   const query = collectionRef.orderBy('__name__').limit(batchSize);
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     deleteQueryBatch(query, resolve).catch(reject);
   });
 };
 
 const deleteQueryBatch = async (
-  query: FirebaseFirestore.Query,
-  resolve: (value?: unknown) => void
+  query: Query,
+  resolve: (value: void | PromiseLike<void>) => void
 ) => {
   const snapshot = await query.get();
 
