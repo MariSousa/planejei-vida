@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useFinancials } from '@/hooks/use-financials';
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Landmark, Receipt, Target, Wallet, Star, PlusCircle } from 'lucide-react';
-import { type Income, type Expense, type Goal, type Debt } from '@/types';
+import { type Income, type Expense, type Goal, type Debt, type Investment } from '@/types';
 
 interface SearchCommandProps {
   open: boolean;
@@ -18,7 +18,9 @@ type SearchableItem =
   | (Income & { itemType: 'income' })
   | (Expense & { itemType: 'expense' })
   | (Goal & { itemType: 'goal' })
-  | (Debt & { itemType: 'debt' });
+  | (Debt & { itemType: 'debt' })
+  | (Investment & { itemType: 'investment' });
+
 
 type ActionItem = {
     id: string;
@@ -43,7 +45,7 @@ const formatCurrency = (value: number) => {
 
 export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
   const router = useRouter();
-  const { income, expenses, goals, debts, favoriteCategories } = useFinancials();
+  const { income, expenses, goals, debts, investments, favoriteCategories } = useFinancials();
   const [query, setQuery] = useState('');
 
   const allData = useMemo<SearchableItem[]>(() => [
@@ -51,10 +53,11 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
     ...expenses.map(item => ({ ...item, itemType: 'expense' as const })),
     ...goals.map(item => ({ ...item, itemType: 'goal' as const })),
     ...debts.map(item => ({ ...item, itemType: 'debt' as const })),
-  ], [income, expenses, goals, debts]);
+    ...investments.map(item => ({ ...item, itemType: 'investment' as const })),
+  ], [income, expenses, goals, debts, investments]);
 
   const fuse = useMemo(() => new Fuse(allData, {
-    keys: ['source', 'category', 'name', 'amount'],
+    keys: ['source', 'category', 'name', 'institution'],
     threshold: 0.3,
     ignoreLocation: true,
   }), [allData]);
@@ -77,6 +80,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         case 'expense': path = '/expenses'; break;
         case 'goal': path = '/goals'; break;
         case 'debt': path = '/debts'; break;
+        case 'investment': path = '/investments'; break;
         case 'action':
         case 'favorite':
             path = item.path;
@@ -98,16 +102,13 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         id: `fav-${fav}`,
         itemType: 'favorite',
         name: `Adicionar Gasto: ${fav}`,
-        path: `/expenses?category=${encodeURIComponent(fav)}` // Example of pre-filling
+        path: `/expenses?category=${encodeURIComponent(fav)}`
     }));
     
     return [...favorites, ...actions];
   }, [favoriteCategories]);
 
-  const results = useMemo(() => {
-    if (!query) return [];
-    return fuse.search(query, { limit: 10 }).map(res => res.item);
-  }, [query, fuse]);
+  const results = query ? fuse.search(query, { limit: 10 }).map(res => res.item) : [];
 
   const renderItem = (item: ResultItem) => {
     switch (item.itemType) {
@@ -139,6 +140,13 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                     <span>{formatCurrency(item.remainingAmount)}</span>
                 </div>
             );
+        case 'investment':
+             return (
+                <div className="flex w-full items-center justify-between">
+                    <span>{item.name}</span>
+                    <span className="text-blue-500">{formatCurrency(item.amount)}</span>
+                </div>
+            );
         case 'action':
         case 'favorite':
             return <span className="w-full">{item.name}</span>;
@@ -152,11 +160,16 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         case 'expense': return <Receipt className="mr-2 h-4 w-4" />;
         case 'goal': return <Target className="mr-2 h-4 w-4" />;
         case 'debt': return <Landmark className="mr-2 h-4 w-4" />;
+        case 'investment': return <Landmark className="mr-2 h-4 w-4" />;
         case 'action': return <PlusCircle className="mr-2 h-4 w-4" />;
         case 'favorite': return <Star className="mr-2 h-4 w-4" />;
         default: return null;
     }
   }
+
+  const showInitialSuggestions = !query && initialSuggestions.length > 0;
+  const showResults = query && results.length > 0;
+  const showEmpty = query && results.length === 0;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -166,9 +179,9 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
+        {showEmpty && <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>}
         
-        {!query && initialSuggestions.length > 0 && (
+        {showInitialSuggestions && (
              <CommandGroup heading="Sugestões">
                 {initialSuggestions.map((item) => (
                 <CommandItem key={item.id} onSelect={() => handleSelect(item)} value={item.id}>
@@ -179,10 +192,10 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             </CommandGroup>
         )}
 
-        {query && results.length > 0 && (
+        {showResults && (
           <CommandGroup heading="Resultados da Busca">
             {results.map((item) => (
-              <CommandItem key={item.id} onSelect={() => handleSelect(item)} value={item.id}>
+              <CommandItem key={item.id} onSelect={() => handleSelect(item)} value={(item as any).name || (item as any).source || (item as any).category}>
                  {getIcon(item.itemType)}
                 {renderItem(item)}
               </CommandItem>
