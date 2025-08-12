@@ -24,6 +24,7 @@ import { UserAvatar } from './user-avatar';
 import Link from 'next/link';
 import { SearchCommand } from './search-command';
 import { VoiceCommandButton } from './voice-command-button';
+import { InteractiveTour } from './interactive-tour';
 
 // AppLayout is a Client Component because it uses hooks like usePathname and useAuth.
 export function AppLayout({
@@ -35,6 +36,7 @@ export function AppLayout({
   const { user, loading } = useAuth();
   const { upcomingPayments } = useFinancials();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [runTour, setRunTour] = useState(false);
   
   // Conditionally render layout based on route
   if (pathname === '/login' || pathname === '/account-deleted' || loading) {
@@ -49,6 +51,7 @@ export function AppLayout({
 
   return (
     <SidebarProvider>
+       <InteractiveTour run={runTour} setRun={setRunTour} />
       <Sidebar>
         <SidebarHeader>
           <Logo />
@@ -80,7 +83,7 @@ export function AppLayout({
             />
           </Link>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">{React.cloneElement(children as React.ReactElement, { setRunTour })}</main>
         <VoiceCommandButton />
       </SidebarInset>
     </SidebarProvider>

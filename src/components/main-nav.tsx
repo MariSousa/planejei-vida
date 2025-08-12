@@ -83,9 +83,14 @@ export function MainNav() {
     );
   };
   
-  const NavGroupLabel = ({ label }: { label: string }) => (
-    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-      {label}
+  const NavGroup = ({ id, label, items }: { id: string, label: string, items: typeof mainNavItems }) => (
+    <div id={id}>
+      <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {label}
+      </div>
+      {items.map((item) => (
+        <NavItem key={item.href} {...item} />
+      ))}
     </div>
   );
 
@@ -97,27 +102,15 @@ export function MainNav() {
       
       <SidebarSeparator />
 
-      <NavGroupLabel label="Ganhos e Gastos" />
-      {gainsAndExpensesItems.map((item) => (
-        <NavItem key={item.href} {...item} />
-      ))}
-
-      <SidebarSeparator />
-      
-      <NavGroupLabel label="Metas e Investimentos" />
-      {goalsAndInvestmentsItems.map((item) => (
-        <NavItem key={item.href} {...item} />
-      ))}
+      <NavGroup id="tour-nav-1" label="Ganhos e Gastos" items={gainsAndExpensesItems} />
       
       <SidebarSeparator />
       
-      <NavGroupLabel label="Ferramentas e Suporte" />
-      {toolsItems.map((item) => (
-        <NavItem key={item.href} {...item} />
-      ))}
-       {supportItems.map((item) => (
-        <NavItem key={item.href} {...item} />
-      ))}
+      <NavGroup id="tour-nav-2" label="Metas e Investimentos" items={goalsAndInvestmentsItems} />
+      
+      <SidebarSeparator />
+      
+      <NavGroup id="tour-nav-3" label="Ferramentas e Suporte" items={[...toolsItems, ...supportItems]} />
 
     </SidebarMenu>
   );

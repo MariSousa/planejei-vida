@@ -94,7 +94,6 @@ function DashboardContent() {
   return (
     <>
     <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setStartTour(true)} />
-    <InteractiveTour run={startTour} setRun={setStartTour} />
     <div className="flex flex-col gap-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
