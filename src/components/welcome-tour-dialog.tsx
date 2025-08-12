@@ -19,33 +19,5 @@ interface WelcomeTourDialogProps {
 }
 
 export function WelcomeTourDialog({ open, onOpenChange, onConfirm }: WelcomeTourDialogProps) {
-
-  const handleStartTour = () => {
-    onConfirm();
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <Rocket className="h-6 w-6 text-primary" />
-          </div>
-          <DialogTitle className="text-center text-2xl">Bem-vindo(a) ao Planejei!</DialogTitle>
-          <DialogDescription className="text-center">
-            Vimos que você é novo por aqui. Gostaria de fazer um tour rápido para conhecer as principais funcionalidades do aplicativo?
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-center sm:space-x-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Não, obrigado
-          </Button>
-          <Button type="button" onClick={handleStartTour}>
-            Sim, fazer tour
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+    return null;
 }
