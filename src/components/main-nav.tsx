@@ -25,9 +25,7 @@ import {
   PiggyBank,
   BookOpen,
   LifeBuoy,
-  ChevronDown
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const mainNavItems = [
@@ -58,8 +56,7 @@ const supportItems = [
 
 export function MainNav() {
   const pathname = usePathname();
-  const { setOpenMobile, state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
+  const { setOpenMobile } = useSidebar();
 
   const handleLinkClick = () => {
     if (window.innerWidth < 768) { // md breakpoint
@@ -80,7 +77,6 @@ export function MainNav() {
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
-                    className="justify-start text-sm"
                 >
                     <Link href={item.href}>
                         <Icon className="h-4 w-4" />
@@ -95,36 +91,35 @@ export function MainNav() {
 
       {/* Ganhos e Gastos */}
        <Collapsible>
-            <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                        isActive={isGroupActive(gainsAndExpensesItems)}
-                        tooltip={{children: "Ganhos e Gastos"}}
-                    >
-                        <Wallet />
-                        <span>Ganhos e Gastos</span> 
-                    </SidebarMenuButton>
-                </CollapsibleTrigger>
-            </SidebarMenuItem>
-            <CollapsibleContent>
-                <SidebarMenuSub>
-                    {gainsAndExpensesItems.map((item) => (
-                        <SidebarMenuSubItem key={item.href}>
-                            <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                                <Link href={item.href}>
-                                    <item.icon />
-                                    <span>{item.label}</span>
-                                </Link>
-                            </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                    ))}
-                </SidebarMenuSub>
-            </CollapsibleContent>
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                    isActive={isGroupActive(gainsAndExpensesItems)}
+                    tooltip={{children: "Ganhos e Gastos"}}
+                >
+                    <Wallet />
+                    <span>Ganhos e Gastos</span> 
+                </SidebarMenuButton>
+            </CollapsibleTrigger>
+          </SidebarMenuItem>
+          <CollapsibleContent>
+              <SidebarMenuSub>
+                  {gainsAndExpensesItems.map((item) => (
+                      <SidebarMenuSubItem key={item.href}>
+                          <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
+                              <Link href={item.href}>
+                                  <span>{item.label}</span>
+                              </Link>
+                          </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                  ))}
+              </SidebarMenuSub>
+          </CollapsibleContent>
         </Collapsible>
 
        {/* Metas e Investimentos */}
         <Collapsible>
-            <SidebarMenuItem>
+           <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                         isActive={isGroupActive(goalsAndInvestmentsItems)}
@@ -141,7 +136,6 @@ export function MainNav() {
                         <SidebarMenuSubItem key={item.href}>
                             <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
                                 <Link href={item.href}>
-                                    <item.icon />
                                     <span>{item.label}</span>
                                 </Link>
                             </SidebarMenuSubButton>
@@ -173,6 +167,8 @@ export function MainNav() {
             </SidebarMenuItem>
         )
       })}
+      
+      <SidebarSeparator />
       
       {/* Suporte */}
        {supportItems.map((item) => {

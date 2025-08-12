@@ -4,7 +4,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft, ChevronDown } from "lucide-react"
+import { PanelLeft, ChevronRight } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -512,12 +512,12 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center justify-start gap-3 overflow-hidden rounded-md px-3 py-2 text-sm font-medium outline-none ring-sidebar-ring transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&>span:last-child]:truncate group-data-[collapsible=icon]:[&>span]:hidden group-data-[collapsible=icon]:[&>svg:last-child]:hidden [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center justify-start gap-3 overflow-hidden rounded-md px-3 py-2 text-sm font-medium outline-none ring-sidebar-ring transition-all hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[state=open]:bg-sidebar-accent group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&>span:last-child]:truncate group-data-[collapsible=icon]:[&>span]:hidden [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        special: "bg-accent/20 text-accent-foreground hover:bg-accent/30 data-[active=true]:bg-accent data-[active=true]:text-accent-foreground",
+        default: "hover:bg-sidebar-accent hover:text-sidebar-foreground",
+        special: "bg-primary/10 text-primary hover:bg-primary/20 data-[active=true]:bg-primary data-[active=true]:text-primary-foreground",
       },
     },
     defaultVariants: {
@@ -553,6 +553,7 @@ const SidebarMenuButton = React.forwardRef<
     const buttonContent = (
       <>
         {children}
+        <ChevronRight className="ml-auto h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-90" />
       </>
     );
 
@@ -564,7 +565,7 @@ const SidebarMenuButton = React.forwardRef<
         className={cn(sidebarMenuButtonVariants({ variant }), className)}
         {...props}
       >
-        {buttonContent}
+        { Comp === CollapsibleTrigger ? buttonContent : children }
       </Comp>
     );
     
@@ -686,7 +687,7 @@ const SidebarMenuSub = React.forwardRef<
             ref={ref}
             data-sidebar="menu-sub"
             className={cn(
-            "ml-6 flex min-w-0 flex-col gap-1 border-l border-sidebar-border py-2 pl-3",
+            "ml-4 flex min-w-0 flex-col gap-0 border-l border-sidebar-border/50 py-2 pl-4",
             "group-data-[collapsible=icon]:hidden",
             className
             )}
@@ -719,7 +720,7 @@ const SidebarMenuSubButton = React.forwardRef<
       className={cn(
         "flex h-8 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm text-sidebar-foreground/80 outline-none ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-foreground/70",
         "before:absolute before:-left-px before:top-1/2 before:h-4/5 before:w-0.5 before:-translate-y-1/2 before:rounded-r-full before:bg-transparent before:transition-all",
-        "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:before:bg-primary",
+        "data-[active=true]:text-sidebar-accent-foreground data-[active=true]:before:bg-primary",
         "group-data-[collapsible=icon]:hidden",
         className
       )}
