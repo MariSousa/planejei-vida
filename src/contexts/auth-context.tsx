@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -12,7 +13,7 @@ import {
   deleteUser,
   type User 
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, app } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
@@ -119,7 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     try {
-        const functions = getFunctions();
+        const functions = getFunctions(app);
         const deleteAllUserData = httpsCallable(functions, 'deleteAllUserData');
         await deleteAllUserData(); // Call the cloud function to delete firestore data
 
