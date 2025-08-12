@@ -96,9 +96,9 @@ Query: "adicionar gasto de 8,00 na padaria ontem"
 Referência: 2024-08-13
 Output: { "action": "add_expense", "payload": { "amount": 800, "category": "Padaria", "date": "2024-08-12" } }
 
-Query: "recebi 500 reais de um freelance"
+Query: "recebi 5 mil reais de um freelance"
 Referência: 2024-08-13
-Output: { "action": "add_income", "payload": { "amount": 50000, "source": "Freelance", "date": "2024-08-13" } }
+Output: { "action": "add_income", "payload": { "amount": 500000, "source": "Freelance", "date": "2024-08-13" } }
 
 Query: "quero criar uma meta de viagem para o japão de 15 mil reais"
 Referência: 2024-08-13
