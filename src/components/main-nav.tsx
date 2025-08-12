@@ -32,13 +32,16 @@ const menuItems = [
   { href: '/planning', label: 'Planejamento Mensal', icon: CalendarCheck2 },
   { href: '/debts', label: 'Compromisso a quitar', icon: Landmark },
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
-  { href: '/investments', label: 'Meus Investimentos', icon: PiggyBank },
-  { href: '/investment-types', label: 'Tipos de Investimento', icon: BookOpen },
-  { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
-  { href: '/reports', label: 'Relatórios', icon: FileText },
+];
+
+const investmentItems = [
+    { href: '/investments', label: 'Minha Carteira', icon: PiggyBank },
+    { href: '/investment-types', label: 'Aprenda a Investir', icon: BookOpen },
 ];
 
 const secondaryMenuItems = [
+    { href: '/advice', label: 'Meu Mentor IA', icon: BrainCircuit },
+    { href: '/reports', label: 'Relatórios', icon: FileText },
     { href: '/support', label: 'Ajuda e Suporte', icon: LifeBuoy },
 ]
 
@@ -49,6 +52,8 @@ export function MainNav() {
   const handleLinkClick = () => {
     setOpenMobile(false);
   };
+
+  const isInvestmentActive = investmentItems.some(item => pathname.startsWith(item.href));
 
   return (
     <SidebarMenu>
@@ -70,26 +75,59 @@ export function MainNav() {
             </SidebarMenuItem>
         )
       })}
-        <div className="mt-auto">
-             {secondaryMenuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                    <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                        tooltip={{children: item.label}}
-                        onClick={handleLinkClick}
-                    >
-                        <Link href={item.href}>
-                            <Icon />
-                            <span>{item.label}</span>
-                        </Link>
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                )
-            })}
-        </div>
+      
+      {/* Investment Dropdown */}
+      <SidebarMenuItem>
+          <SidebarMenuButton
+            isSubmenu
+            isActive={isInvestmentActive}
+            tooltip={{children: "Investimentos"}}
+          >
+              <PiggyBank />
+              <span>Investimentos</span>
+          </SidebarMenuButton>
+          <ul className="space-y-1 py-1">
+              {investmentItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                      <li key={item.href}>
+                           <SidebarMenuButton
+                                asChild
+                                isActive={pathname.startsWith(item.href)}
+                                className="h-8"
+                           >
+                               <Link href={item.href}>
+                                    <Icon />
+                                    <span>{item.label}</span>
+                               </Link>
+                           </SidebarMenuButton>
+                      </li>
+                  )
+              })}
+          </ul>
+      </SidebarMenuItem>
+
+      <div className="mt-auto pt-4 border-t border-sidebar-border">
+          <p className="px-4 text-xs font-semibold text-muted-foreground/80 mb-2">Ferramentas e Suporte</p>
+          {secondaryMenuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+                <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={{children: item.label}}
+                    onClick={handleLinkClick}
+                >
+                    <Link href={item.href}>
+                        <Icon />
+                        <span>{item.label}</span>
+                    </Link>
+                </SidebarMenuButton>
+                </SidebarMenuItem>
+            )
+          })}
+      </div>
     </SidebarMenu>
   );
 }
