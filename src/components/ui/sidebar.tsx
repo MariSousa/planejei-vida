@@ -504,37 +504,38 @@ const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
 >(({ className, children, ...props }, ref) => {
-    const { state } = useSidebar();
-    const isCollapsed = state === 'collapsed';
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
 
-    const child = React.Children.only(children) as React.ReactElement;
-    const isSubmenu = child.props.isSubmenu;
+  const child = React.Children.only(children) as React.ReactElement;
+  const isSubmenu = child.props.isSubmenu;
 
-    if (isCollapsed || !isSubmenu) {
-      return (
-        <li
-          ref={ref}
-          data-sidebar="menu-item"
-          className={cn('group/menu-item relative', className)}
-          {...props}
-        >
-          {children}
-        </li>
-      );
-    }
-    
+  if (isCollapsed || !isSubmenu) {
     return (
-      <Collapsible asChild>
-        <li
-          ref={ref}
-          data-sidebar="menu-item"
-          className={cn('group/menu-item relative', className)}
-          {...props}
-        >
-          {children}
-        </li>
-      </Collapsible>
+      <li
+        ref={ref}
+        data-sidebar="menu-item"
+        className={cn("group/menu-item relative", className)}
+        {...props}
+      >
+        {children}
+      </li>
     )
+  }
+
+  // If it's a submenu and not collapsed, wrap it in a Collapsible
+  return (
+    <li
+      ref={ref}
+      data-sidebar="menu-item"
+      className={cn("group/menu-item relative", className)}
+      {...props}
+    >
+      <Collapsible>
+        {children}
+      </Collapsible>
+    </li>
+  )
 })
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
@@ -595,9 +596,9 @@ const SidebarMenuButton = React.forwardRef<
         )}
       </>
     );
-
-    const button = (
-      <Comp
+    
+    let button = (
+       <Comp
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
@@ -609,12 +610,12 @@ const SidebarMenuButton = React.forwardRef<
       </Comp>
     );
 
-    const trigger = isSubmenu && !isCollapsed ? (
-        <CollapsibleTrigger asChild>{button}</CollapsibleTrigger>
-    ) : button;
-
+    if (isSubmenu && !isCollapsed) {
+        button = <CollapsibleTrigger asChild>{button}</CollapsibleTrigger>;
+    }
+    
     if (!tooltip) {
-      return trigger;
+      return button;
     }
 
     if (typeof tooltip === "string") {
@@ -625,7 +626,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
