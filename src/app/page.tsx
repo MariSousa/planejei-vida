@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { ExpensesReviewDialog } from '@/components/dashboard/expenses-review-dialog';
 import { WelcomeTourDialog } from '@/components/welcome-tour-dialog';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { InteractiveTour } from '@/components/interactive-tour';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -28,6 +29,7 @@ function DashboardContent() {
   const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments, previousTotals } = useFinancials();
   const [greeting, setGreeting] = useState('');
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const [startTour, setStartTour] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -91,13 +93,14 @@ function DashboardContent() {
 
   return (
     <>
-    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} />
+    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} onConfirm={() => setStartTour(true)} />
+    <InteractiveTour run={startTour} setRun={setStartTour} />
     <div className="flex flex-col gap-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <div id="tour-step-1" className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <FinancialHealthGauge healthScore={financialHealth} previousHealthScore={prevFinancialHealth} />
             <Card className="flex flex-col justify-center">
                 <CardContent className="p-6">
@@ -115,7 +118,7 @@ function DashboardContent() {
             </Card>
         </div>
 
-        <div className="grid gap-4 grid-cols-2">
+        <div id="tour-step-2" className="grid gap-4 grid-cols-2">
             <SummaryCard 
                 title="Saldo disponível"
                 value={formatCurrency(totals.savings)}
@@ -138,11 +141,15 @@ function DashboardContent() {
             />
         </div>
 
-        <GoalsProgressCard goals={goals} />
+        <div id="tour-step-3">
+            <GoalsProgressCard goals={goals} />
+        </div>
         
         <UpcomingPayments payments={upcomingPayments} />
 
-        <RecentActivity transactions={recentTransactions} />
+        <div id="tour-step-4">
+            <RecentActivity transactions={recentTransactions} />
+        </div>
     </div>
     </>
   );

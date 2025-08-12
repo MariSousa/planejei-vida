@@ -12,22 +12,18 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Rocket } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 interface WelcomeTourDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
 }
 
-export function WelcomeTourDialog({ open, onOpenChange }: WelcomeTourDialogProps) {
-  const { toast } = useToast();
+export function WelcomeTourDialog({ open, onOpenChange, onConfirm }: WelcomeTourDialogProps) {
 
   const handleStartTour = () => {
+    onConfirm();
     onOpenChange(false);
-    toast({
-      title: 'Funcionalidade em Breve!',
-      description: 'O tour interativo ainda está em desenvolvimento.',
-    });
   };
 
   return (
