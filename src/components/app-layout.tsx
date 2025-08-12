@@ -1,6 +1,7 @@
 
 'use client';
 
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
@@ -14,13 +15,14 @@ import {
 import { Logo } from '@/components/logo';
 import { MainNav } from '@/components/main-nav';
 import { Button } from '@/components/ui/button';
-import { Bell, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { LogoutButton } from '@/components/logout-button';
 import { NotificationsPopover } from '@/components/notifications-popover';
 import { useFinancials } from '@/hooks/use-financials';
 import { UserAvatar } from './user-avatar';
 import Link from 'next/link';
+import { SearchCommand } from './search-command';
 
 // AppLayout is a Client Component because it uses hooks like usePathname and useAuth.
 export function AppLayout({
@@ -31,6 +33,7 @@ export function AppLayout({
   const pathname = usePathname();
   const { user, loading } = useAuth();
   const { upcomingPayments } = useFinancials();
+  const [searchOpen, setSearchOpen] = useState(false);
   
   // Conditionally render layout based on route
   if (pathname === '/login' || loading) {
@@ -60,9 +63,10 @@ export function AppLayout({
         <header className="flex h-16 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm lg:px-6 sticky top-0 z-30">
           <SidebarTrigger className="md:hidden" />
           <div className="w-full flex-1">
-             <h1 className="text-xl font-bold font-headline text-foreground">FinMentor</h1>
+             {/* This can be a breadcrumb or page title */}
           </div>
-          <Button variant="ghost" size="icon">
+          <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)}>
             <Search className="h-5 w-5" />
             <span className="sr-only">Buscar</span>
           </Button>
