@@ -501,27 +501,14 @@ SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
-  React.ComponentProps<"li"> & { isSubmenu?: boolean }
->(({ className, children, isSubmenu, ...props }, ref) => {
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
-
-  if (isSubmenu && !isCollapsed) {
-    return (
-      <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
-        <Collapsible>
-          {children}
-        </Collapsible>
-      </li>
-    );
-  }
-  
-  return (
-    <li ref={ref} className={cn("group/menu-item relative", className)} {...props}>
-      {children}
-    </li>
-  );
-});
+  React.ComponentProps<"li">
+>(({ className, ...props }, ref) => (
+  <li
+    ref={ref}
+    className={cn("group/menu-item relative", className)}
+    {...props}
+  />
+));
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
@@ -544,7 +531,6 @@ const SidebarMenuButton = React.forwardRef<
   React.ComponentProps<"button"> & {
     asChild?: boolean
     isActive?: boolean
-    isSubmenuTrigger?: boolean;
     tooltip?: string | React.ComponentProps<typeof TooltipContent>,
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
@@ -552,7 +538,6 @@ const SidebarMenuButton = React.forwardRef<
     {
       asChild = false,
       isActive = false,
-      isSubmenuTrigger = false,
       variant = "default",
       tooltip,
       className,
@@ -562,13 +547,9 @@ const SidebarMenuButton = React.forwardRef<
     ref
   ) => {
     const { isMobile, state } = useSidebar()
-    const isCollapsed = state === 'collapsed';
     
     let Comp: React.ElementType = asChild ? Slot : "button"
-    if (isSubmenuTrigger && !isCollapsed) {
-        Comp = CollapsibleTrigger
-    }
-
+    
     const buttonContent = (
       <>
         {children}

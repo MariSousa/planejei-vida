@@ -28,6 +28,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const mainNavItems = [
     { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
@@ -93,15 +94,17 @@ export function MainNav() {
 
       {/* Ganhos e Gastos */}
       <SidebarMenuItem>
-          <SidebarMenuButton
-            isSubmenu
-            isActive={isGroupActive(gainsAndExpensesItems)}
-            tooltip={{children: "Ganhos e Gastos"}}
-          >
-              <Wallet />
-              <span>Ganhos e Gastos</span> 
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-          </SidebarMenuButton>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                isActive={isGroupActive(gainsAndExpensesItems)}
+                tooltip={{children: "Ganhos e Gastos"}}
+              >
+                  <Wallet />
+                  <span>Ganhos e Gastos</span> 
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              </SidebarMenuButton>
+          </CollapsibleTrigger>
           <SidebarMenuSub>
             {gainsAndExpensesItems.map((item) => (
                 <SidebarMenuSubItem key={item.href}>
@@ -114,31 +117,35 @@ export function MainNav() {
                 </SidebarMenuSubItem>
             ))}
           </SidebarMenuSub>
+        </Collapsible>
       </SidebarMenuItem>
 
        {/* Metas e Investimentos */}
       <SidebarMenuItem>
-          <SidebarMenuButton
-            isSubmenu
-            isActive={isGroupActive(goalsAndInvestmentsItems)}
-            tooltip={{children: "Metas e Investimentos"}}
-          >
-              <Target />
-              <span>Metas e Investimentos</span> 
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-          </SidebarMenuButton>
-          <SidebarMenuSub>
-            {goalsAndInvestmentsItems.map((item) => (
-                <SidebarMenuSubItem key={item.href}>
-                    <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                        <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </Link>
-                    </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
+        <Collapsible>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                isActive={isGroupActive(goalsAndInvestmentsItems)}
+                tooltip={{children: "Metas e Investimentos"}}
+              >
+                  <Target />
+                  <span>Metas e Investimentos</span> 
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <SidebarMenuSub>
+                {goalsAndInvestmentsItems.map((item) => (
+                    <SidebarMenuSubItem key={item.href}>
+                        <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
+                            <Link href={item.href}>
+                                <item.icon />
+                                <span>{item.label}</span>
+                            </Link>
+                        </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                ))}
+            </SidebarMenuSub>
+        </Collapsible>
       </SidebarMenuItem>
       
       <SidebarSeparator />
