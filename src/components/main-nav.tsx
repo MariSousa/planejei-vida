@@ -28,7 +28,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Collapsible, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const mainNavItems = [
     { href: '/', label: 'Visão Geral', icon: LayoutDashboard },
@@ -80,9 +80,10 @@ export function MainNav() {
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
+                    className="justify-start text-sm" // Changed from flex-col to row layout
                 >
                     <Link href={item.href}>
-                        <Icon />
+                        <Icon className="h-4 w-4" />
                         <span>{item.label}</span>
                     </Link>
                 </SidebarMenuButton>
@@ -93,60 +94,64 @@ export function MainNav() {
       <SidebarSeparator />
 
       {/* Ganhos e Gastos */}
-      <SidebarMenuItem>
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-              <SidebarMenuButton
-                isActive={isGroupActive(gainsAndExpensesItems)}
-                tooltip={{children: "Ganhos e Gastos"}}
-              >
-                  <Wallet />
-                  <span>Ganhos e Gastos</span> 
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-              </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <SidebarMenuSub>
-            {gainsAndExpensesItems.map((item) => (
-                <SidebarMenuSubItem key={item.href}>
-                    <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                        <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </Link>
-                    </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-            ))}
-          </SidebarMenuSub>
+       <Collapsible>
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        isActive={isGroupActive(gainsAndExpensesItems)}
+                        tooltip={{children: "Ganhos e Gastos"}}
+                        className="flex-col"
+                    >
+                        <Wallet />
+                        <span>Ganhos e Gastos</span> 
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+            </SidebarMenuItem>
+            <CollapsibleContent>
+                <SidebarMenuSub>
+                    {gainsAndExpensesItems.map((item) => (
+                        <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
+                                <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    ))}
+                </SidebarMenuSub>
+            </CollapsibleContent>
         </Collapsible>
-      </SidebarMenuItem>
 
        {/* Metas e Investimentos */}
-      <SidebarMenuItem>
         <Collapsible>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton
-                isActive={isGroupActive(goalsAndInvestmentsItems)}
-                tooltip={{children: "Metas e Investimentos"}}
-              >
-                  <Target />
-                  <span>Metas e Investimentos</span> 
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <SidebarMenuSub>
-                {goalsAndInvestmentsItems.map((item) => (
-                    <SidebarMenuSubItem key={item.href}>
-                        <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
-                            <Link href={item.href}>
-                                <item.icon />
-                                <span>{item.label}</span>
-                            </Link>
-                        </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                ))}
-            </SidebarMenuSub>
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        isActive={isGroupActive(goalsAndInvestmentsItems)}
+                        tooltip={{children: "Metas e Investimentos"}}
+                        className="flex-col"
+                    >
+                        <Target />
+                        <span>Metas e Investimentos</span> 
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+            </SidebarMenuItem>
+            <CollapsibleContent>
+                <SidebarMenuSub>
+                    {goalsAndInvestmentsItems.map((item) => (
+                        <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton asChild isActive={pathname === item.href} onClick={handleLinkClick}>
+                                <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                    ))}
+                </SidebarMenuSub>
+            </CollapsibleContent>
         </Collapsible>
-      </SidebarMenuItem>
       
       <SidebarSeparator />
       
@@ -161,6 +166,7 @@ export function MainNav() {
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
                     variant={item.special ? 'special' : 'default'}
+                    className="flex-col"
                 >
                     <Link href={item.href}>
                         <Icon />
@@ -181,6 +187,7 @@ export function MainNav() {
                     isActive={pathname === item.href}
                     tooltip={{children: item.label}}
                     onClick={handleLinkClick}
+                    className="flex-col"
                 >
                     <Link href={item.href}>
                         <Icon />
