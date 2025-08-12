@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Loader2, Frown } from 'lucide-react';
+import { Mic, Loader2, Frown, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseExpenseFromText } from '@/ai/flows/expense-parser';
 import { useFinancials } from '@/hooks/use-financials';
@@ -17,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 
 type Status = 'idle' | 'listening' | 'processing' | 'error' | 'success';
@@ -30,6 +29,7 @@ export function VoiceCommandButton() {
   const [status, setStatus] = useState<Status>('idle');
   const [isMounted, setIsMounted] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const finalTranscriptRef = useRef(''); // Use a ref to hold the final transcript
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { addExpense } = useFinancials();
   const { toast } = useToast();
@@ -49,6 +49,7 @@ export function VoiceCommandButton() {
     recognition.onstart = () => {
       setStatus('listening');
       setTranscript('');
+      finalTranscriptRef.current = '';
     };
 
     recognition.onresult = (event) => {
@@ -61,11 +62,15 @@ export function VoiceCommandButton() {
           interim += event.results[i][0].transcript;
         }
       }
-      setTranscript(interim || final);
+      finalTranscriptRef.current = final || interim;
+      setTranscript(final || interim);
     };
 
     recognition.onend = async () => {
-      if (transcript.trim() === '') {
+      // Use the ref for the most up-to-date value
+      const finalTranscript = finalTranscriptRef.current.trim();
+      
+      if (finalTranscript === '') {
           setStatus('idle');
           return;
       }
@@ -73,14 +78,13 @@ export function VoiceCommandButton() {
       setStatus('processing');
       try {
         const referenceDate = format(new Date(), 'yyyy-MM-dd');
-        const result = await parseExpenseFromText({ query: transcript, referenceDate });
+        const result = await parseExpenseFromText({ query: finalTranscript, referenceDate });
 
         if (result.error) {
           toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
           setStatus('error');
           setTimeout(() => {
-              setStatus('idle');
-              setTranscript('');
+              handleOpenChange(false);
           }, 3000);
           return;
         }
@@ -99,9 +103,7 @@ export function VoiceCommandButton() {
         });
         setStatus('success');
          setTimeout(() => {
-            setOpen(false);
-            setStatus('idle');
-            setTranscript('');
+            handleOpenChange(false);
         }, 2000);
 
       } catch (e) {
@@ -109,22 +111,26 @@ export function VoiceCommandButton() {
         toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive' });
         setStatus('error');
         setTimeout(() => {
-            setStatus('idle');
-            setTranscript('');
+            handleOpenChange(false);
         }, 3000);
       }
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error', event.error);
-       if (event.error !== 'no-speech' && event.error !== 'aborted' && status !== 'processing') {
+       if (event.error !== 'no-speech' && event.error !== 'aborted') {
           toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});
           setStatus('error');
+           setTimeout(() => {
+                handleOpenChange(false);
+            }, 3000);
+      } else {
+        setStatus('idle');
       }
     };
     
     recognitionRef.current = recognition;
-  }, [addExpense, toast, transcript, status]);
+  }, [addExpense, toast]);
   
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen && status === 'listening') {
@@ -133,6 +139,7 @@ export function VoiceCommandButton() {
     setOpen(isOpen);
     setStatus('idle');
     setTranscript('');
+    finalTranscriptRef.current = '';
   }
 
   const handleToggleListening = () => {
@@ -141,7 +148,6 @@ export function VoiceCommandButton() {
 
     if (status === 'listening') {
       recognition.stop();
-      setStatus('idle');
     } else {
       recognition.start();
     }
@@ -166,6 +172,7 @@ export function VoiceCommandButton() {
                 <div className="flex flex-col items-center justify-center h-full">
                     <Loader2 className="h-12 w-12 animate-spin mb-4" />
                     <p className="font-semibold">Processando...</p>
+                     <p className="text-muted-foreground text-lg h-14 mt-2">{transcript}</p>
                 </div>
               );
         case 'error':
@@ -173,12 +180,13 @@ export function VoiceCommandButton() {
                 <div className="flex flex-col items-center justify-center h-full">
                     <Frown className="h-12 w-12 text-destructive mb-4" />
                     <p className="font-semibold text-destructive">Ocorreu um erro</p>
+                    <p className="text-muted-foreground text-center mt-2">Não foi possível adicionar seu gasto. Tente novamente.</p>
                 </div>
             );
         case 'success':
              return (
                 <div className="flex flex-col items-center justify-center h-full">
-                    <Loader2 className="h-12 w-12 text-green-500 mb-4" />
+                    <CheckCircle2 className="h-12 w-12 text-green-500 mb-4" />
                     <p className="font-semibold text-green-500">Gasto adicionado!</p>
                 </div>
             );
@@ -197,7 +205,6 @@ export function VoiceCommandButton() {
             );
       }
   }
-
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -221,8 +228,8 @@ export function VoiceCommandButton() {
         </div>
 
         <DialogFooter>
-          {status !== 'listening' && status !== 'processing' && (
-             <Button type="button" onClick={handleToggleListening} disabled={status === 'listening' || status === 'processing'}>
+           {status === 'idle' && (
+             <Button type="button" onClick={handleToggleListening}>
                 Começar a Ouvir
              </Button>
           )}
