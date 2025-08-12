@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -18,6 +19,7 @@ const SpeechRecognition =
 export function VoiceCommandButton() {
   const [status, setStatus] = useState<Status>('idle');
   const [isMounted, setIsMounted] = useState(false);
+  const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { addExpense } = useFinancials();
   const { toast } = useToast();
@@ -30,63 +32,75 @@ export function VoiceCommandButton() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.lang = 'pt-BR';
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
     recognition.onstart = () => {
       setStatus('listening');
+      setTranscript('');
     };
 
     recognition.onresult = async (event) => {
-      const transcript = event.results[0][0].transcript;
-      setStatus('processing');
-      
-      try {
-        const referenceDate = format(new Date(), 'yyyy-MM-dd');
-        const result = await parseExpenseFromText({ query: transcript, referenceDate });
+        let finalTranscript = '';
+        let interimTranscript = '';
 
-        if (result.error) {
-            toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
-            setStatus('error');
-            setTimeout(() => setStatus('idle'), 3000);
-            return;
+        for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
         }
-
-        const { amount, category, date } = result;
         
-        await addExpense({
-            amount: amount / 100, // Convert cents to float
-            category,
-            // The AI returns YYYY-MM-DD, which needs to be parsed correctly.
-            // new Date() will parse it as UTC, so add timezone offset to get local date.
-            date: new Date(date + 'T00:00:00')
-        });
+        setTranscript(interimTranscript);
 
-        toast({
-            title: 'Gasto Adicionado!',
-            description: `Gasto de ${category} no valor de R$ ${(amount / 100).toFixed(2)} foi adicionado.`,
-            className: 'border-accent'
-        });
-        setStatus('idle');
-      } catch (e) {
-        console.error('Error processing voice command:', e);
-        toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive'});
-        setStatus('error');
-        setTimeout(() => setStatus('idle'), 3000);
-      }
+        if (finalTranscript) {
+            setStatus('processing');
+            recognition.stop();
+            
+            try {
+                const referenceDate = format(new Date(), 'yyyy-MM-dd');
+                const result = await parseExpenseFromText({ query: finalTranscript, referenceDate });
+
+                if (result.error) {
+                    toast({ title: 'Não entendi direito', description: result.error, variant: 'destructive' });
+                    setStatus('error');
+                    setTimeout(() => setStatus('idle'), 3000);
+                    return;
+                }
+
+                const { amount, category, date } = result;
+                
+                await addExpense({
+                    amount: amount / 100, // Convert cents to float
+                    date: new Date(date + 'T00:00:00')
+                }, new Date(date + 'T00:00:00'));
+
+                toast({
+                    title: 'Gasto Adicionado!',
+                    description: `Gasto de ${category} no valor de R$ ${(amount / 100).toFixed(2)} foi adicionado.`,
+                    className: 'border-accent'
+                });
+                setStatus('idle');
+            } catch (e) {
+                console.error('Error processing voice command:', e);
+                toast({ title: 'Erro ao processar comando', description: 'Houve um problema com a IA. Tente novamente.', variant: 'destructive'});
+                setStatus('error');
+                setTimeout(() => setStatus('idle'), 3000);
+            }
+        }
     };
     
     recognition.onerror = (event) => {
       console.error('Speech recognition error', event.error);
-      if (event.error !== 'no-speech') {
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
         toast({ title: 'Erro no reconhecimento de voz', description: 'Não consegui te ouvir. Verifique a permissão do microfone.', variant: 'destructive'});
       }
       setStatus('idle');
     };
 
     recognition.onend = () => {
-        // Avoid setting to idle if we are processing
         if (status === 'listening') {
             setStatus('idle');
         }
@@ -101,7 +115,6 @@ export function VoiceCommandButton() {
 
     if (status === 'listening') {
       recognition.stop();
-      setStatus('idle');
     } else {
       recognition.start();
     }
@@ -126,17 +139,24 @@ export function VoiceCommandButton() {
   };
   
   return (
-    <Button
-      size="icon"
-      className={cn(
-        'fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300',
-        status === 'listening' && 'bg-red-500/20 hover:bg-red-500/30',
-        status === 'error' && 'bg-destructive/20'
+    <>
+      {status === 'listening' && transcript && (
+          <div className="fixed bottom-28 right-8 max-w-sm bg-primary text-primary-foreground p-3 rounded-lg shadow-lg z-50">
+            <p className="text-sm">{transcript}</p>
+          </div>
       )}
-      onClick={handleToggleListening}
-      disabled={status === 'processing'}
-    >
-      {getButtonContent()}
-    </Button>
+      <Button
+        size="icon"
+        className={cn(
+          'fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-lg z-50 transition-colors duration-300',
+          status === 'listening' && 'bg-red-500/20 hover:bg-red-500/30',
+          status === 'error' && 'bg-destructive/20'
+        )}
+        onClick={handleToggleListening}
+        disabled={status === 'processing'}
+      >
+        {getButtonContent()}
+      </Button>
+    </>
   );
 }
