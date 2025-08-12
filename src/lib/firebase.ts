@@ -5,6 +5,7 @@ import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getDatabase, connectDatabaseEmulator } from "firebase/database";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -20,19 +21,19 @@ const firebaseConfig = {
 
 
 // Initialize Firebase
-// const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const app = initializeApp(firebaseConfig);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
+const functions = getFunctions(app);
 
 // Connect to emulators if running locally in dev mode
 if (typeof window !== 'undefined' && window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development') {
     console.log("Connecting to Firebase Emulators");
-    // Point to the emulators for auth and firestore
     connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
     connectFirestoreEmulator(db, 'localhost', 8080);
     connectDatabaseEmulator(rtdb, 'localhost', 9000);
+    connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
 
@@ -46,4 +47,4 @@ if (typeof window !== 'undefined') {
 }
 
 
-export { app, auth, db, rtdb };
+export { app, auth, db, rtdb, functions };
