@@ -25,6 +25,7 @@ import { AvatarSelector } from '@/components/profile/avatar-selector';
 import { UserAvatar } from '@/components/user-avatar';
 import { DeleteAccountDialog } from '@/components/profile/delete-account-dialog';
 import { useFinancials } from '@/hooks/use-financials';
+import { Label } from '@/components/ui/label';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, { message: 'O nome deve ter pelo menos 2 caracteres.' }),
@@ -165,7 +166,7 @@ function ProfilePageContent() {
                 </CardHeader>
                 <CardContent>
                      <div className="space-y-2">
-                        <FormLabel htmlFor="email">Seu E-mail</FormLabel>
+                        <Label htmlFor="email">Seu E-mail</Label>
                         <Input id="email" value={user.email || ''} disabled />
                         <p className="text-sm text-muted-foreground">O e-mail não pode ser alterado.</p>
                     </div>
