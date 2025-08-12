@@ -136,14 +136,14 @@ function SupportPageContent() {
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
-                                <FormItem>
-                                    <FormLabel>Seu Nome</FormLabel>
-                                    <Input value={user?.displayName || ''} disabled />
-                                </FormItem>
-                                <FormItem>
-                                    <FormLabel>Seu E-mail</FormLabel>
-                                    <Input value={user?.email || ''} disabled />
-                                </FormItem>
+                                <div className="space-y-2">
+                                    <FormLabel htmlFor="support-name">Seu Nome</FormLabel>
+                                    <Input id="support-name" value={user?.displayName || ''} disabled />
+                                </div>
+                                <div className="space-y-2">
+                                    <FormLabel htmlFor="support-email">Seu E-mail</FormLabel>
+                                    <Input id="support-email" value={user?.email || ''} disabled />
+                                </div>
                             </div>
                             <FormField
                                 control={form.control}

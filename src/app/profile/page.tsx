@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -159,11 +160,15 @@ function ProfilePageContent() {
                 <CardHeader>
                 <CardTitle>Informações de Login</CardTitle>
                 <CardDescription>
-                    Gerencie suas informações de acesso. Seu e-mail é: {user.email}
+                    Gerencie suas informações de acesso.
                 </CardDescription>
                 </CardHeader>
                 <CardContent>
-                <p className="text-sm text-muted-foreground">O e-mail não pode ser alterado.</p>
+                     <div className="space-y-2">
+                        <FormLabel htmlFor="email">Seu E-mail</FormLabel>
+                        <Input id="email" value={user.email || ''} disabled />
+                        <p className="text-sm text-muted-foreground">O e-mail não pode ser alterado.</p>
+                    </div>
                 </CardContent>
             </Card>
             

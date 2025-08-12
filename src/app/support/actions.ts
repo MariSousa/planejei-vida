@@ -4,7 +4,7 @@
 import { rtdb } from '@/lib/firebase';
 import { ref, push, set } from 'firebase/database';
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/firebase/auth'; // Assuming this is the correct import path for your auth instance
+import { auth } from '@/lib/firebase'; // Assuming this is the correct import path for your auth instance
 
 interface TicketInput {
     subject: string;
