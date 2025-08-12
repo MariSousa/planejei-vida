@@ -72,9 +72,10 @@ export function VoiceCommandButton() {
 
                 const { amount, category, date } = result;
                 
+                // The addExpense hook will now handle category creation
                 await addExpense({
                     amount: amount / 100, // Convert cents to float
-                    date: new Date(date + 'T00:00:00')
+                    category: category,
                 }, new Date(date + 'T00:00:00'));
 
                 toast({

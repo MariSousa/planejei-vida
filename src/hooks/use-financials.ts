@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc, getDoc } from 'firebase/firestore';
 import { addDays, isAfter, isBefore, startOfToday, format, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
+import { expenseCategoryGroups } from '@/lib/categories';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -26,7 +27,8 @@ const wantCategories = [
     'Streaming', 'Assinaturas', 'Hobbies', 'Roupas/Calçados', 'Lavanderia', 
     'Salão/Barbearia', 'Cosméticos', 'Higiene Pessoal', 'Utensílios', 
     'Eletrodomésticos', 'Móveis/Decoração', 'Produtos de Limpeza', 
-    'Higiene Pet', 'Pet Shop', 'Presentes', 'Doações', 'Eventos Especiais', 'Outros'
+    'Higiene Pet', 'Pet Shop', 'Presentes', 'Doações', 'Eventos Especiais', 'Outros',
+    'Amazon', 'Mercado Livre', 'Shopee', 'Shein', 'Magalu', 'AliExpress', 'Outras Compras Online'
 ];
 
 
@@ -229,7 +231,27 @@ export const useFinancials = () => {
   }
 
   const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addMonthlyDocWithDate('income', newIncome), [user]);
-  const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>, date?: Date) => addMonthlyDocWithDate('expenses', newExpense, date), [user]);
+  
+  const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
+  
+  const addExpense = useCallback(async (newExpense: Omit<Expense, 'id' | 'date'>, date?: Date) => {
+    if (!user) return;
+
+    // Check if category exists
+    const allDefaultCategories = expenseCategoryGroups.flatMap(group => group.options);
+    const allCustomCategories = customCategories.map(c => c.name);
+    const allCategories = [...allDefaultCategories, ...allCustomCategories];
+
+    const categoryExists = allCategories.some(c => c.toLowerCase() === newExpense.category.toLowerCase());
+    
+    // If category does not exist, create it
+    if (!categoryExists) {
+        await addCategory({ name: newExpense.category });
+    }
+
+    // Add the expense
+    await addMonthlyDocWithDate('expenses', newExpense, date);
+  }, [user, customCategories, addCategory]);
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'status'>) => {
     if (!user) return;
@@ -300,7 +322,6 @@ export const useFinancials = () => {
   }, [user]);
 
   const addAdvice = useCallback((newAdvice: Omit<Advice, 'id' | 'date'>) => addDocToCollection('advices', newAdvice), [user]);
-  const addCategory = useCallback((newCategory: Omit<CustomCategory, 'id' | 'date'>) => addDocToCollection('categories', newCategory), [user]);
 
   const addFavorite = useCallback(async (categoryName: string) => {
     if (!user) return;
@@ -462,15 +483,15 @@ export const useFinancials = () => {
     }
   }, [planningMonthItems]);
 
+  const normalize = (str: string | undefined) => (str || '').trim().toLowerCase();
+
   const pendingPlannedIncome = useMemo(() => {
-    const normalize = (str: string | undefined) => (str || '').trim().toLowerCase();
     const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'ganho' && p.status === 'Previsto' && p.name);
     const actualSources = income.filter(i => i.source).map(i => normalize(i.source));
     return planned.filter(p => !actualSources.includes(normalize(p.name)));
   }, [currentMonthPlanItemsForSuggestions, income]);
 
   const pendingPlannedExpenses = useMemo(() => {
-      const normalize = (str: string | undefined) => (str || '').trim().toLowerCase();
       const planned = currentMonthPlanItemsForSuggestions.filter(p => p.type === 'gasto' && p.status === 'Previsto' && p.name);
       const actualCategories = expenses.filter(e => e.category).map(e => normalize(e.category));
       return planned.filter(p => !actualCategories.includes(normalize(p.name)));
