@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
 import { TrendingDown, Wallet, PiggyBank, Scale } from 'lucide-react';
-import { BudgetPieChart } from '@/components/dashboard/budget-pie-chart';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
 import { FinancialHealthGauge } from '@/components/dashboard/financial-health-gauge';
@@ -98,12 +96,6 @@ function DashboardContent() {
                 icon={<PiggyBank />}
             />
         </div>
-        
-        <BudgetPieChart
-            totalIncome={totals.totalIncome}
-            totalNecessities={totals.totalNecessities}
-            totalWants={totals.totalWants}
-        />
 
         <GoalsProgressCard goals={goals} />
         
