@@ -229,7 +229,7 @@ export const useFinancials = () => {
   }
 
   const addIncome = useCallback((newIncome: Omit<Income, 'id' | 'date'>) => addMonthlyDocWithDate('income', newIncome), [user]);
-  const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>) => addMonthlyDocWithDate('expenses', newExpense), [user]);
+  const addExpense = useCallback((newExpense: Omit<Expense, 'id' | 'date'>, date?: Date) => addMonthlyDocWithDate('expenses', newExpense, date), [user]);
   
   const addPlanItem = useCallback(async (item: Omit<MonthlyPlanItem, 'id' | 'status'>) => {
     if (!user) return;

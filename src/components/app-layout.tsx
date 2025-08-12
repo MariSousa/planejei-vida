@@ -23,6 +23,7 @@ import { useFinancials } from '@/hooks/use-financials';
 import { UserAvatar } from './user-avatar';
 import Link from 'next/link';
 import { SearchCommand } from './search-command';
+import { VoiceCommandButton } from './voice-command-button';
 
 // AppLayout is a Client Component because it uses hooks like usePathname and useAuth.
 export function AppLayout({
@@ -36,7 +37,7 @@ export function AppLayout({
   const [searchOpen, setSearchOpen] = useState(false);
   
   // Conditionally render layout based on route
-  if (pathname === '/login' || loading) {
+  if (pathname === '/login' || pathname === '/account-deleted' || loading) {
     return <>{children}</>;
   }
 
@@ -80,6 +81,7 @@ export function AppLayout({
           </Link>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40">{children}</main>
+        <VoiceCommandButton />
       </SidebarInset>
     </SidebarProvider>
   );
