@@ -1,8 +1,7 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface BudgetPieChartProps {
     totalIncome: number;
@@ -18,57 +17,11 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
     const savings = Math.max(0, totalIncome - (totalNecessities + totalWants));
 
     const data = [
-        { name: 'Necessidades', value: totalNecessities },
-        { name: 'Desejos', value: totalWants },
-        { name: 'Poupança', value: savings },
+        { name: 'Necessidades', value: totalNecessities, color: 'hsl(var(--chart-1))' },
+        { name: 'Desejos', value: totalWants, color: 'hsl(var(--chart-2))' },
+        { name: 'Poupança', value: savings, color: 'hsl(var(--chart-3))' },
     ];
-
-    const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))'];
     
-    const RADIAN = Math.PI / 180;
-    const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
-        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-        if (percent * 100 < 5) return null; // Do not render label if slice is too small
-
-        return (
-            <text 
-                x={x} 
-                y={y} 
-                fill="white" 
-                textAnchor="middle" 
-                dominantBaseline="central"
-                style={{ fontSize: '12px', fontWeight: 'bold', textShadow: '0px 0px 4px rgba(0, 0, 0, 0.5)' }}
-            >
-                {`${(percent * 100).toFixed(0)}%`}
-            </text>
-        );
-    };
-
-    const CustomLegend = (props: any) => {
-        const { payload } = props;
-        return (
-            <ul className="flex flex-col space-y-2 text-sm">
-                {payload.map((entry: any, index: number) => {
-                    const { color, value: name } = entry;
-                    const item = data.find(d => d.name === name);
-                    if (!item) return null;
-                    return (
-                        <li key={`item-${index}`} className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: color, borderRadius: '50%' }}></span>
-                                <span>{name}</span>
-                            </div>
-                            <span className="font-medium">{formatCurrency(item.value)}</span>
-                        </li>
-                    );
-                })}
-            </ul>
-        );
-    };
-
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
           return (
@@ -85,13 +38,20 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Resumo do Orçamento</CardTitle>
-                <CardDescription>Sua distribuição de gastos no mês.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Resumo do Orçamento</CardTitle>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Em relação ao</p>
+                        <p className="text-xs text-muted-foreground">mês anterior</p>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
                 {totalIncome > 0 ? (
-                     <div className="flex flex-col md:flex-row gap-6 items-center">
-                        <div className="w-full md:w-1/2 h-[250px]">
+                     <div className="grid grid-cols-2 gap-6 items-center">
+                        <div className="w-full h-[150px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -99,24 +59,34 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
                                         cx="50%"
                                         cy="50%"
                                         labelLine={false}
-                                        label={renderCustomizedLabel}
-                                        outerRadius={100}
-                                        innerRadius={60}
+                                        outerRadius={70}
+                                        innerRadius={50}
                                         fill="#8884d8"
                                         dataKey="value"
                                         stroke="hsl(var(--background))"
-                                        strokeWidth={2}
+                                        strokeWidth={3}
                                     >
                                         {data.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <Tooltip content={<CustomTooltip />} />
                                 </PieChart>
                             </ResponsiveContainer>
                         </div>
-                        <div className="w-full md:w-1/2">
-                           <CustomLegend payload={data.map((item, index) => ({ value: item.name, color: COLORS[index] }))} />
+                        <div className="w-full space-y-3">
+                           {data.map((item, index) => {
+                                if (!item) return null;
+                                return (
+                                    <div key={`item-${index}`} className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: item.color, borderRadius: '50%' }}></span>
+                                            <span>{item.name}</span>
+                                        </div>
+                                        <span className="font-medium">{formatCurrency(item.value)}</span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 ) : (

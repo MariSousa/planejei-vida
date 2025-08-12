@@ -1,16 +1,18 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useFinancials } from '@/hooks/use-financials';
 import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
-import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
-import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
-import { TrendingUp, TrendingDown, Target, Landmark } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Landmark, Wallet, ShieldCheck, PiggyBank, Scale } from 'lucide-react';
 import { BudgetPieChart } from '@/components/dashboard/budget-pie-chart';
+import { RecentActivity } from '@/components/dashboard/recent-activity';
+import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
+import { FinancialHealthGauge } from '@/components/dashboard/financial-health-gauge';
+import { SmartAlert } from '@/components/dashboard/smart-alert';
+import { UpcomingPayments } from '@/components/dashboard/upcoming-payments';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -18,7 +20,7 @@ const formatCurrency = (value: number) => {
 
 function DashboardContent() {
   const { user } = useAuth();
-  const { totals, goals, income, expenses, isClient, debts } = useFinancials();
+  const { totals, goals, income, expenses, isClient, debts, upcomingPayments } = useFinancials();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -34,20 +36,18 @@ function DashboardContent() {
   if (!isClient) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
-            <Skeleton className="h-28" />
+        <Skeleton className="h-9 w-48" />
+        <div className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-36" />
+            <Skeleton className="h-36" />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-                <Skeleton className="h-[300px] w-full" />
-            </div>
-            <div className="lg:col-span-1">
-                <Skeleton className="h-[300px] w-full" />
-            </div>
+         <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
         </div>
+        <Skeleton className="h-[300px] w-full" />
         <Skeleton className="h-[200px] w-full" />
       </div>
     );
@@ -58,53 +58,55 @@ function DashboardContent() {
     .slice(0, 5);
   
   const totalDebts = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.remainingAmount, 0);
+  const totalInvested = useFinancials().investments.reduce((acc, inv) => acc + inv.amount, 0);
+  const financialHealth = totals.totalIncome > 0 ? ((totals.totalIncome - totals.totalExpenses) / totals.totalIncome) * 100 : 0;
 
   return (
     <div className="flex flex-col gap-6">
         <div>
-            <h1 className="text-2xl font-bold font-headline">{greeting}, {user?.displayName || user?.email?.split('@')[0] || 'Usuário'}!</h1>
-            <p className="text-muted-foreground">Aqui está um resumo da sua vida financeira este mês.</p>
+            <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <FinancialHealthGauge healthScore={financialHealth} />
+            <SmartAlert
+                totalWants={totals.totalWants}
+                wantsBudget={totals.totalIncome * 0.3}
+            />
+        </div>
+
+        <div className="grid gap-4 grid-cols-2">
             <SummaryCard 
-                title="Ganhos do Mês"
-                value={formatCurrency(totals.totalIncome)}
-                icon={<TrendingUp className="text-green-500" />}
-                className="border-green-500/50"
+                title="Saldo disponível"
+                value={formatCurrency(totals.savings)}
+                icon={<Wallet />}
             />
              <SummaryCard 
-                title="Gastos do Mês"
+                title="Gasto no mês"
                 value={formatCurrency(totals.totalExpenses)}
-                icon={<TrendingDown className="text-red-500" />}
-                className="border-red-500/50"
+                icon={<TrendingDown />}
             />
             <SummaryCard 
-                title="Saldo para Metas"
-                value={formatCurrency(totals.totalSavedForGoals)}
-                icon={<Target className="text-blue-500" />}
-                className="border-blue-500/50"
-            />
-            <SummaryCard 
-                title="Compromissos a Pagar"
+                title="Reservado para dívidas"
                 value={formatCurrency(totalDebts)}
-                icon={<Landmark className="text-yellow-500" />}
-                className="border-yellow-500/50"
+                icon={<Scale />}
+            />
+            <SummaryCard 
+                title="Poupança acumulada"
+                value={formatCurrency(totalInvested)}
+                icon={<PiggyBank />}
             />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-             <div className="lg:col-span-2">
-                 <BudgetPieChart
-                    totalIncome={totals.totalIncome}
-                    totalNecessities={totals.totalNecessities}
-                    totalWants={totals.totalWants}
-                />
-            </div>
-             <div className="lg:col-span-1">
-                 <GoalsProgressCard goals={goals} />
-            </div>
-        </div>
+        <BudgetPieChart
+            totalIncome={totals.totalIncome}
+            totalNecessities={totals.totalNecessities}
+            totalWants={totals.totalWants}
+        />
+
+        <GoalsProgressCard goals={goals} />
+        
+        <UpcomingPayments payments={upcomingPayments} />
 
         <RecentActivity transactions={recentTransactions} />
     </div>

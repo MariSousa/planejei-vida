@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,28 +26,24 @@ export function GoalsProgressCard({ goals }: GoalsProgressCardProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Progresso dos Sonhos</CardTitle>
-                <CardDescription>Acompanhe a evolução das suas principais metas.</CardDescription>
+                <CardTitle>Metas e Sonhos</CardTitle>
             </CardHeader>
             <CardContent>
                 {sortedGoals.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {sortedGoals.map(goal => {
                             const progress = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0;
                             return (
                                 <div key={goal.id}>
                                     <div className="flex justify-between items-center mb-1">
                                         <p className="text-sm font-medium">{goal.name}</p>
-                                        <p className="text-sm text-accent font-semibold">{progress.toFixed(0)}%</p>
+                                        <p className="text-sm font-semibold">{formatCurrency(goal.targetAmount)}</p>
                                     </div>
                                     <Progress value={progress} className="h-2" />
-                                    <p className="text-xs text-muted-foreground mt-1 text-right">
-                                        {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
-                                    </p>
                                 </div>
                             )
                         })}
-                         <Button variant="outline" className="w-full" asChild>
+                         <Button variant="outline" className="w-full mt-4" asChild>
                             <Link href="/goals">Ver todos os sonhos</Link>
                         </Button>
                     </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -30,7 +29,7 @@ const menuItems = [
   { href: '/income', label: 'Meus Ganhos', icon: Wallet },
   { href: '/expenses', label: 'Meus Gastos', icon: Receipt },
   { href: '/planning', label: 'Planejamento Mensal', icon: CalendarCheck2 },
-  { href: '/debts', label: 'Compromisso a quitar', icon: Landmark },
+  { href: '/debts', label: 'Compromissos', icon: Landmark },
   { href: '/goals', label: 'Meus Sonhos', icon: Target },
 ];
 
@@ -86,7 +85,7 @@ export function MainNav() {
               <PiggyBank />
               <span>Investimentos</span>
           </SidebarMenuButton>
-          <ul className="space-y-1 py-1">
+          <ul className="space-y-1 py-1 data-[state=closed]:hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
               {investmentItems.map((item) => {
                   const Icon = item.icon;
                   return (
