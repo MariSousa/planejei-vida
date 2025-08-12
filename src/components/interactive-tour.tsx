@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Joyride, { type Step } from 'react-joyride';
-import { useSidebar } from './ui/sidebar';
 
 interface InteractiveTourProps {
   run: boolean;
@@ -10,8 +9,6 @@ interface InteractiveTourProps {
 }
 
 export function InteractiveTour({ run, setRun }: InteractiveTourProps) {
-  const { setOpen } = useSidebar();
-
   const steps: Step[] = [
     {
       target: '#tour-step-1',
@@ -37,37 +34,10 @@ export function InteractiveTour({ run, setRun }: InteractiveTourProps) {
       title: 'Atividade Recente',
        placement: 'top',
     },
-    {
-      target: '#tour-nav-1',
-      content: 'Nesta seção você controla o dia a dia: cadastre seus ganhos, gastos, compromissos e planeje seu mês.',
-      title: 'Ganhos e Gastos',
-      placement: 'right',
-    },
-    {
-      target: '#tour-nav-2',
-      content: 'Aqui você foca no futuro: crie metas, acompanhe seus investimentos e aprenda mais sobre o mercado financeiro.',
-      title: 'Metas e Investimentos',
-      placement: 'right',
-    },
-    {
-      target: '#tour-nav-3',
-      content: 'Use nossas ferramentas de IA para receber conselhos personalizados e exporte relatórios completos de suas finanças.',
-      title: 'Ferramentas e Suporte',
-      placement: 'right',
-    },
   ];
 
   const handleCallback = (data: any) => {
-      const { status, type, action } = data;
-
-      if (type === 'tour:start' || (type === 'step:after' && action === 'next')) {
-        // Automatically open the sidebar if it is a navigation step
-        const currentStep = steps.find(s => s.target === data.step.target);
-        if(currentStep?.target.toString().startsWith('#tour-nav')) {
-            setOpen(true);
-        }
-      }
-
+      const { status } = data;
       if (status === 'finished' || status === 'skipped') {
         setRun(false);
       }

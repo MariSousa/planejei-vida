@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -83,8 +82,8 @@ export function MainNav() {
     );
   };
   
-  const NavGroup = ({ id, label, items }: { id: string, label: string, items: typeof mainNavItems }) => (
-    <div id={id}>
+  const NavGroup = ({ label, items }: { label: string, items: typeof mainNavItems }) => (
+    <div>
       <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {label}
       </div>
@@ -102,15 +101,15 @@ export function MainNav() {
       
       <SidebarSeparator />
 
-      <NavGroup id="tour-nav-1" label="Ganhos e Gastos" items={gainsAndExpensesItems} />
+      <NavGroup label="Ganhos e Gastos" items={gainsAndExpensesItems} />
       
       <SidebarSeparator />
       
-      <NavGroup id="tour-nav-2" label="Metas e Investimentos" items={goalsAndInvestmentsItems} />
+      <NavGroup label="Metas e Investimentos" items={goalsAndInvestmentsItems} />
       
       <SidebarSeparator />
       
-      <NavGroup id="tour-nav-3" label="Ferramentas e Suporte" items={[...toolsItems, ...supportItems]} />
+      <NavGroup label="Ferramentas e Suporte" items={[...toolsItems, ...supportItems]} />
 
     </SidebarMenu>
   );
