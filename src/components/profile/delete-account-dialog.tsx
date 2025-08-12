@@ -36,8 +36,10 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       // Reset state on close
-      setStep(1);
-      setConfirmationText('');
+      setTimeout(() => {
+        setStep(1);
+        setConfirmationText('');
+      }, 200);
     }
     setOpen(isOpen);
   };
@@ -142,9 +144,9 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
                     </Button>
                     <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => setStep(2)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <Button onClick={() => setStep(2)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Entendo, prosseguir com a exclusão
-                        </AlertDialogAction>
+                        </Button>
                     </div>
                 </AlertDialogFooter>
             </>
