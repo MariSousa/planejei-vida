@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +16,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ExpensesReviewDialog } from '@/components/dashboard/expenses-review-dialog';
+import { WelcomeTourDialog } from '@/components/welcome-tour-dialog';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -24,6 +27,17 @@ function DashboardContent() {
   const { user } = useAuth();
   const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments, previousTotals } = useFinancials();
   const [greeting, setGreeting] = useState('');
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get('new_user') === 'true') {
+      setShowWelcomeTour(true);
+      // Clean up URL without reloading
+      router.replace('/', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     const getGreeting = () => {
@@ -76,6 +90,8 @@ function DashboardContent() {
   const totalInvested = investments.reduce((acc, inv) => acc + inv.amount, 0);
 
   return (
+    <>
+    <WelcomeTourDialog open={showWelcomeTour} onOpenChange={setShowWelcomeTour} />
     <div className="flex flex-col gap-6">
         <div>
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
@@ -128,6 +144,7 @@ function DashboardContent() {
 
         <RecentActivity transactions={recentTransactions} />
     </div>
+    </>
   );
 }
 
