@@ -40,6 +40,11 @@ export const expenseCategoryGroups = [
         options: ['Cinema/Teatro', 'Shows/Eventos', 'Viagens', 'Streaming', 'Assinaturas', 'Hobbies']
     },
     {
+        label: 'Compras Online',
+        icon: ShoppingCart,
+        options: ['Amazon', 'Mercado Livre', 'Shopee', 'Shein', 'Magalu', 'AliExpress', 'Outras Compras Online']
+    },
+    {
         label: 'Roupas & Cuidados Pessoais',
         icon: Shirt,
         options: ['Roupas/Calçados', 'Lavanderia', 'Salão/Barbearia', 'Cosméticos', 'Higiene Pessoal']
