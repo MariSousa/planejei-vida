@@ -24,6 +24,7 @@
       "source": "functions",
       "codebase": "default",
       "runtime": "nodejs22",
+      "location": "southamerica-east1",
       "ignore": [
         "node_modules",
         ".git",
