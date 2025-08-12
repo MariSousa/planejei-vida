@@ -6,8 +6,8 @@ export function Logo() {
       <Image
         src="/icon.svg"
         alt="Planejei Logo"
-        width={128}
-        height={32}
+        width={100}
+        height={25}
         className="h-auto"
       />
     </div>
