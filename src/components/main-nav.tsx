@@ -92,9 +92,9 @@ export function MainNav() {
       <SidebarSeparator />
 
       {/* Ganhos e Gastos */}
-      <SidebarMenuItem isSubmenu>
+      <SidebarMenuItem>
           <SidebarMenuButton
-            isSubmenuTrigger
+            isSubmenu
             isActive={isGroupActive(gainsAndExpensesItems)}
             tooltip={{children: "Ganhos e Gastos"}}
           >
@@ -117,9 +117,9 @@ export function MainNav() {
       </SidebarMenuItem>
 
        {/* Metas e Investimentos */}
-      <SidebarMenuItem isSubmenu>
+      <SidebarMenuItem>
           <SidebarMenuButton
-            isSubmenuTrigger
+            isSubmenu
             isActive={isGroupActive(goalsAndInvestmentsItems)}
             tooltip={{children: "Metas e Investimentos"}}
           >
