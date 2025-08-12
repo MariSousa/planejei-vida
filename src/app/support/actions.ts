@@ -2,26 +2,27 @@
 'use server';
 
 import { rtdb } from '@/lib/firebase';
-import { ref, push, serverTimestamp, set } from 'firebase/database';
+import { ref, push, set } from 'firebase/database';
 import { revalidatePath } from 'next/cache';
 
 interface TicketInput {
     subject: string;
     message: string;
     userEmail: string;
-    userId: string; // Add userId to the input
+    userId: string;
 }
 
 export async function sendSupportTicket(input: TicketInput): Promise<{ error?: string }> {
-    // We get the userId from the client now, which is more reliable.
     if (!input.userId) {
         return { error: 'Você precisa estar logado para enviar uma solicitação de suporte.' };
     }
 
     try {
-        // Save tickets under the user's specific path
+        // The security rules are set at /supportTickets/$uid.
+        // So, we need to write to a path like /supportTickets/{userId}/{ticketId}.
         const userTicketsRef = ref(rtdb, `supportTickets/${input.userId}`);
-        const newTicketRef = push(userTicketsRef);
+        const newTicketRef = push(userTicketsRef); // This creates a new unique key for the ticket
+        
         await set(newTicketRef, {
             subject: input.subject,
             message: input.message,
@@ -30,13 +31,11 @@ export async function sendSupportTicket(input: TicketInput): Promise<{ error?: s
             date: new Date().toISOString(),
         });
         
-        // This won't revalidate a client component, but it's good practice
-        // in case we ever want to display sent tickets.
         revalidatePath('/support');
 
         return {};
     } catch (error) {
         console.error("Error sending support ticket to RTDB: ", error);
-        return { error: 'Não foi possível enviar sua mensagem. Tente novamente mais tarde.' };
+        return { error: 'Não foi possível enviar sua mensagem. Verifique as regras de segurança do seu Realtime Database e tente novamente.' };
     }
 }
