@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -18,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Loader2 } from 'lucide-react';
-import { generateReportHtml } from '../reports-downloader'; // Assuming this can be exported and used
+import { generateReportHtml } from '../reports-downloader';
 import type { useFinancials } from '@/hooks/use-financials';
 
 interface DeleteAccountDialogProps {
@@ -29,16 +30,20 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [confirmationText, setConfirmationText] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { deleteUserAccount } = useAuth();
+  const [error, setError] = useState('');
+  const { deleteUserAccount, reauthenticateUser } = useAuth();
   const { toast } = useToast();
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // Reset state on close
       setTimeout(() => {
         setStep(1);
         setConfirmationText('');
+        setPassword('');
+        setError('');
+        setIsLoading(false);
       }, 200);
     }
     setOpen(isOpen);
@@ -69,10 +74,7 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
         <body>
     `;
 
-    // A helper function to avoid duplicating the HTML generation logic here
     const generateSingleReportHtml = (type: any) => {
-        // This is a simplified version of the logic in ReportsDownloader
-        // For a real app, this would be properly refactored into a shared utility
         const dataMap: any = {
             reportIncome: financials.reportIncome,
             reportExpenses: financials.reportExpenses,
@@ -105,19 +107,33 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
   };
 
 
-  const handleDeleteAccount = async () => {
+  const performDelete = async () => {
     setIsLoading(true);
+    setError('');
     try {
         await deleteUserAccount();
-        // The redirection will be handled by the auth context
+        // Redirection will be handled by auth context
     } catch (error: any) {
-        toast({
-            title: 'Erro ao Deletar Conta',
-            description: error.message,
-            variant: 'destructive',
-        });
+        if (error.code === 'auth/requires-recent-login') {
+            setStep(3); // Go to reauthentication step
+        } else {
+            toast({ title: 'Erro ao Deletar Conta', description: error.message, variant: 'destructive' });
+            handleOpenChange(false);
+        }
+    } finally {
         setIsLoading(false);
-        setOpen(false); // Close dialog on error
+    }
+  };
+
+  const handleReauthentication = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      await reauthenticateUser(password);
+      await performDelete(); // Retry deletion after successful reauthentication
+    } catch (error: any) {
+      setError('A senha está incorreta. Tente novamente.');
+      setIsLoading(false);
     }
   }
 
@@ -144,7 +160,7 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
                     </Button>
                     <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <Button onClick={() => setStep(2)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <Button onClick={() => setStep(2)} variant="destructive">
                             Entendo, prosseguir com a exclusão
                         </Button>
                     </div>
@@ -174,10 +190,43 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
                     <Button 
                         variant="destructive"
                         disabled={confirmationText !== 'DELETAR' || isLoading}
-                        onClick={handleDeleteAccount}
+                        onClick={performDelete}
                     >
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Deletar minha conta permanentemente
+                    </Button>
+                </AlertDialogFooter>
+            </>
+        )}
+         {step === 3 && (
+             <>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Reautenticação Necessária</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Para sua segurança, precisamos que você confirme sua senha para continuar com a exclusão da conta.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 space-y-2">
+                    <Label htmlFor="password-confirm">Sua Senha</Label>
+                    <Input
+                        id="password-confirm"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        autoFocus
+                    />
+                    {error && <p className="text-sm text-destructive">{error}</p>}
+                </div>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => handleOpenChange(false)}>Cancelar Exclusão</AlertDialogCancel>
+                    <Button 
+                        variant="destructive"
+                        disabled={!password || isLoading}
+                        onClick={handleReauthentication}
+                    >
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Confirmar e Deletar
                     </Button>
                 </AlertDialogFooter>
             </>

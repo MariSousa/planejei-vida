@@ -11,6 +11,8 @@ import {
   sendPasswordResetEmail,
   updatePassword,
   deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   type User 
 } from 'firebase/auth';
 import { auth, app } from '@/lib/firebase';
@@ -32,6 +34,7 @@ interface AuthContextType {
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   updateUserPassword: (password: string) => Promise<void>;
   deleteUserAccount: () => Promise<void>;
+  reauthenticateUser: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -113,6 +116,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  const reauthenticateUser = async (password: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser || !currentUser.email) {
+      throw new Error("Usuário não encontrado ou sem e-mail associado.");
+    }
+    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    await reauthenticateWithCredential(currentUser, credential);
+  }
+
   const deleteUserAccount = async () => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -122,15 +134,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
         const functions = getFunctions(app);
         const deleteAllUserData = httpsCallable(functions, 'deleteAllUserData');
-        await deleteAllUserData(); // Call the cloud function to delete firestore data
+        await deleteAllUserData();
 
-        await deleteUser(currentUser); // Delete the user from Auth
+        await deleteUser(currentUser);
         
         router.push('/account-deleted');
     } catch (error: any) {
         console.error("Erro ao deletar conta:", error);
+         // Propagate the specific error code for handling in the UI
         if (error.code === 'auth/requires-recent-login') {
-            throw new Error('Esta é uma operação sensível. Por favor, faça login novamente antes de deletar sua conta.');
+            const err = new Error('Esta é uma operação sensível. Por favor, faça login novamente antes de deletar sua conta.');
+            err.code = 'auth/requires-recent-login';
+            throw err;
         }
         throw new Error('Não foi possível deletar a conta. Tente novamente mais tarde.');
     }
@@ -146,6 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     updateUserProfile,
     updateUserPassword,
     deleteUserAccount,
+    reauthenticateUser,
   };
 
   return (
