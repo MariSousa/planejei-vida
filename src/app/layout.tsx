@@ -8,6 +8,9 @@ import { AppLayout } from '@/components/app-layout';
 export const metadata: Metadata = {
   title: 'Planejei - Vida Financeira Planejada',
   description: 'Sua vida financeira organizada e planejada.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 // RootLayout is a Server Component.
