@@ -6,12 +6,12 @@ import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
-import { TrendingDown, Wallet, PiggyBank, Scale } from 'lucide-react';
+import { TrendingDown, Wallet, PiggyBank, Scale, Lightbulb } from 'lucide-react';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
 import { FinancialHealthGauge } from '@/components/dashboard/financial-health-gauge';
-import { SmartAlert } from '@/components/dashboard/smart-alert';
 import { UpcomingPayments } from '@/components/dashboard/upcoming-payments';
+import { Card, CardContent } from '@/components/ui/card';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -66,12 +66,21 @@ function DashboardContent() {
             <h1 className="text-3xl font-bold font-headline">{greeting}, {user?.displayName?.split(' ')[0] || 'Usuário'}!</h1>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <FinancialHealthGauge healthScore={financialHealth} />
-            <SmartAlert
-                totalWants={totals.totalWants}
-                wantsBudget={totals.totalIncome * 0.3}
-            />
+            <Card className="flex flex-col justify-center">
+                <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                        <Lightbulb className="h-8 w-8 text-yellow-400 mt-1" />
+                        <div>
+                             <h3 className="font-semibold mb-2">Entenda seu Medidor</h3>
+                             <p className="text-sm text-muted-foreground">
+                                Este medidor é como um termômetro para suas finanças do mês. Ele simplesmente mostra o quanto da sua renda está sobrando após pagar os gastos. Não se preocupe com os termos técnicos, o objetivo é simples: quanto mais 'saudável' o medidor, mais perto você está dos seus sonhos!
+                             </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
 
         <div className="grid gap-4 grid-cols-2">
