@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,12 +7,14 @@ import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
-import { TrendingDown, Wallet, PiggyBank, Scale, Lightbulb } from 'lucide-react';
+import { TrendingDown, Wallet, PiggyBank, Scale, Lightbulb, TriangleAlert, BadgeCheck } from 'lucide-react';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
 import { FinancialHealthGauge } from '@/components/dashboard/financial-health-gauge';
 import { UpcomingPayments } from '@/components/dashboard/upcoming-payments';
 import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -19,7 +22,7 @@ const formatCurrency = (value: number) => {
 
 function DashboardContent() {
   const { user } = useAuth();
-  const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments } = useFinancials();
+  const { totals, goals, income, expenses, isClient, debts, upcomingPayments, investments, previousTotals } = useFinancials();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -31,6 +34,19 @@ function DashboardContent() {
     }
     setGreeting(getGreeting());
   }, []);
+
+  const financialHealth = totals.totalIncome > 0 ? ((totals.totalIncome - totals.totalExpenses) / totals.totalIncome) * 100 : 0;
+  const prevFinancialHealth = previousTotals.totalIncome > 0 ? ((previousTotals.totalIncome - previousTotals.totalExpenses) / previousTotals.totalIncome) * 100 : 0;
+  
+  const getHealthStatus = (score: number) => {
+    if (score > 66) return { name: 'Saudável', icon: BadgeCheck, color: 'text-green-500', description: 'Excelente! Você está no caminho certo. Que tal usar parte da sua sobra para acelerar uma meta ou fazer um novo investimento?' };
+    if (score > 33) return { name: 'Em Atenção', icon: TriangleAlert, color: 'text-yellow-500', description: 'Cuidado! Seus gastos estão próximos da sua renda. Revise suas despesas variáveis e veja onde pode economizar.' };
+    return { name: 'Crítico', icon: TriangleAlert, color: 'text-red-500', description: 'Alerta vermelho! Seus gastos superaram sua renda. É crucial cortar despesas não essenciais imediatamente.' };
+  };
+
+  const healthStatus = getHealthStatus(financialHealth);
+  const StatusIcon = healthStatus.icon;
+
 
   if (!isClient) {
     return (
@@ -58,7 +74,6 @@ function DashboardContent() {
   
   const totalDebts = debts.filter(d => d.status === 'Pendente').reduce((acc, debt) => acc + debt.remainingAmount, 0);
   const totalInvested = investments.reduce((acc, inv) => acc + inv.amount, 0);
-  const financialHealth = totals.totalIncome > 0 ? ((totals.totalIncome - totals.totalExpenses) / totals.totalIncome) * 100 : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -67,16 +82,19 @@ function DashboardContent() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            <FinancialHealthGauge healthScore={financialHealth} />
+            <FinancialHealthGauge healthScore={financialHealth} previousHealthScore={prevFinancialHealth} />
             <Card className="flex flex-col justify-center">
                 <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                        <Lightbulb className="h-8 w-8 text-yellow-400 mt-1" />
+                        <StatusIcon className={`h-8 w-8 ${healthStatus.color} mt-1`} />
                         <div>
-                             <h3 className="font-semibold mb-2">Entenda seu Medidor</h3>
+                             <h3 className="font-semibold mb-2">Plano de Ação Rápido</h3>
                              <p className="text-sm text-muted-foreground">
-                                Este medidor é como um termômetro para suas finanças do mês. Ele simplesmente mostra o quanto da sua renda está sobrando após pagar os gastos. Não se preocupe com os termos técnicos, o objetivo é simples: quanto mais 'saudável' o medidor, mais perto você está dos seus sonhos!
+                                {healthStatus.description}
                              </p>
+                              <Button variant="link" asChild className="p-0 h-auto mt-2">
+                                <Link href="/expenses">Revisar meus gastos</Link>
+                              </Button>
                         </div>
                     </div>
                 </CardContent>

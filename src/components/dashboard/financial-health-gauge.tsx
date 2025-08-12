@@ -3,12 +3,14 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 
 interface FinancialHealthGaugeProps {
   healthScore: number; // A score from 0 to 100
+  previousHealthScore?: number;
 }
 
-export function FinancialHealthGauge({ healthScore }: FinancialHealthGaugeProps) {
+export function FinancialHealthGauge({ healthScore, previousHealthScore }: FinancialHealthGaugeProps) {
   const score = Math.max(0, Math.min(100, healthScore));
   const angle = (score / 100) * 180; // Map score (0-100) to angle (0-180)
 
@@ -19,6 +21,21 @@ export function FinancialHealthGauge({ healthScore }: FinancialHealthGaugeProps)
   };
 
   const status = getStatus();
+
+  const renderEvolution = () => {
+    if (previousHealthScore === undefined || previousHealthScore === healthScore) {
+      return null;
+    }
+    const evolution = healthScore - previousHealthScore;
+    const isPositive = evolution > 0;
+    
+    return (
+        <div className={`flex items-center gap-1 text-xs font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            {Math.abs(evolution).toFixed(0)}% vs. mês anterior
+        </div>
+    );
+  }
 
   return (
       <Card className="flex flex-col items-center justify-center p-6 bg-card">
@@ -51,7 +68,9 @@ export function FinancialHealthGauge({ healthScore }: FinancialHealthGaugeProps)
           </div>
         </div>
         <p className={`mt-2 text-lg font-bold ${status.color}`}>{status.text}</p>
-        <p className="text-xs text-muted-foreground">Sua saúde financeira este mês</p>
+        <div className="h-4 mt-1">
+            {renderEvolution()}
+        </div>
       </Card>
   );
 }

@@ -5,8 +5,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType, type Investment, type Debt } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc } from 'firebase/firestore';
-import { addDays, isAfter, isBefore, startOfToday, format, addMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc, getDoc } from 'firebase/firestore';
+import { addDays, isAfter, isBefore, startOfToday, format, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 
 const necessityCategories = [
     'Aluguel', 'Financiamento', 'Condomínio', 'IPTU', 'Luz', 'Água', 'Gás', 
@@ -36,6 +36,8 @@ export const useFinancials = () => {
   // States for main dashboard data (always current month)
   const [income, setIncome] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [previousMonthIncome, setPreviousMonthIncome] = useState<Income[]>([]);
+  const [previousMonthExpenses, setPreviousMonthExpenses] = useState<Expense[]>([]);
   const [currentMonthPlanItemsForSuggestions, setCurrentMonthPlanItemsForSuggestions] = useState<MonthlyPlanItem[]>([]);
 
   // States for planning page
@@ -79,44 +81,59 @@ export const useFinancials = () => {
           setters[col](data);
         });
       });
+      
+      const setupMonthlyListeners = async () => {
+          const now = new Date();
+          const currentMonthStr = format(now, 'yyyy-MM');
+          const prevMonth = subMonths(now, 1);
+          const prevMonthStr = format(prevMonth, 'yyyy-MM');
 
-      // Listener for current month's income (for dashboard)
-      const currentMonthStr = format(new Date(), 'yyyy-MM');
-      const incomeItemsCollectionRef = collection(db, `users/${user.uid}/income/${currentMonthStr}/items`);
-      const incomeQuery = query(incomeItemsCollectionRef, orderBy('date', 'desc'));
-      const unsubIncome = onSnapshot(incomeQuery, (snapshot) => {
-        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
-        setIncome(items);
-      });
+          // Listener for current month's income (for dashboard)
+          const incomeItemsCollectionRef = collection(db, `users/${user.uid}/income/${currentMonthStr}/items`);
+          const incomeQuery = query(incomeItemsCollectionRef, orderBy('date', 'desc'));
+          onSnapshot(incomeQuery, (snapshot) => {
+              const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income));
+              setIncome(items);
+          });
 
-       // Listener for current month's expenses (for dashboard)
-      const expensesItemsCollectionRef = collection(db, `users/${user.uid}/expenses/${currentMonthStr}/items`);
-      const expensesQuery = query(expensesItemsCollectionRef, orderBy('date', 'desc'));
-      const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
-        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-        setExpenses(items);
-      });
+          // Listener for current month's expenses (for dashboard)
+          const expensesItemsCollectionRef = collection(db, `users/${user.uid}/expenses/${currentMonthStr}/items`);
+          const expensesQuery = query(expensesItemsCollectionRef, orderBy('date', 'desc'));
+          onSnapshot(expensesQuery, (snapshot) => {
+              const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+              setExpenses(items);
+          });
 
-      // Listener for the current month's plan to generate suggestions
-      const currentPlanMonthStr = format(new Date(), 'yyyy-MM');
-      const currentPlanItemsRef = collection(db, `users/${user.uid}/monthlyPlan/${currentPlanMonthStr}/items`);
-      const currentPlanQuery = query(currentPlanItemsRef, orderBy('dueDate', 'asc'));
-      const unsubCurrentPlan = onSnapshot(currentPlanQuery, (snapshot) => {
-        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
-        setCurrentMonthPlanItemsForSuggestions(items);
-      });
+          // Fetch previous month's data once
+          const prevIncomeItemsRef = collection(db, `users/${user.uid}/income/${prevMonthStr}/items`);
+          const prevIncomeSnapshot = await getDocs(prevIncomeItemsRef);
+          setPreviousMonthIncome(prevIncomeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Income)));
 
+          const prevExpensesItemsRef = collection(db, `users/${user.uid}/expenses/${prevMonthStr}/items`);
+          const prevExpensesSnapshot = await getDocs(prevExpensesItemsRef);
+          setPreviousMonthExpenses(prevExpensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
+
+          // Listener for the current month's plan to generate suggestions
+          const currentPlanItemsRef = collection(db, `users/${user.uid}/monthlyPlan/${currentMonthStr}/items`);
+          const currentPlanQuery = query(currentPlanItemsRef, orderBy('dueDate', 'asc'));
+          onSnapshot(currentPlanQuery, (snapshot) => {
+              const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MonthlyPlanItem));
+              setCurrentMonthPlanItemsForSuggestions(items);
+          });
+      }
+
+      setupMonthlyListeners();
       setIsClient(true);
 
       return () => {
         unsubscribes.forEach(unsub => unsub());
-        unsubIncome();
-        unsubExpenses();
-        unsubCurrentPlan();
+        // Listeners will be detached when component unmounts
       };
     } else {
         setIncome([]);
         setExpenses([]);
+        setPreviousMonthIncome([]);
+        setPreviousMonthExpenses([]);
         setPlanningMonthItems([]);
         setCurrentMonthPlanItemsForSuggestions([]);
         setGoals([]);
@@ -400,6 +417,12 @@ export const useFinancials = () => {
     };
   }, [income, expenses, goals, customCategories]);
 
+  const previousTotals = useMemo(() => {
+    const totalIncome = previousMonthIncome.reduce((acc, i) => acc + i.amount, 0);
+    const totalExpenses = previousMonthExpenses.reduce((acc, e) => acc + e.amount, 0);
+    return { totalIncome, totalExpenses };
+  }, [previousMonthIncome, previousMonthExpenses]);
+
   const expensesByCategory = useMemo(() => {
     return expenses.reduce((acc, expense) => {
       const { category, amount } = expense;
@@ -503,6 +526,7 @@ export const useFinancials = () => {
     updateGoalContribution,
     payDownDebt,
     totals,
+    previousTotals,
     expensesByCategory,
     upcomingPayments,
     planningTotals,
