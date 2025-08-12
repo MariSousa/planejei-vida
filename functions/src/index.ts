@@ -1,7 +1,8 @@
 import {setGlobalOptions} from 'firebase-functions/v2';
 import * as functions from 'firebase-functions';
 import * as logger from 'firebase-functions/logger';
-import {onCall, onCallGenkit, type CallableRequest} from 'firebase-functions/v2/https';
+import {onCall, onCallGenkit} from 'firebase-functions/v2/https';
+import type {CallableRequest} from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import type {Query} from 'firebase-admin/firestore';
 import {genkit, z} from 'genkit';
@@ -92,34 +93,16 @@ const deleteCollection = async (collectionPath: string, batchSize: number) => {
   const collectionRef = db.collection(collectionPath);
   const query = collectionRef.orderBy('__name__').limit(batchSize);
 
-  return new Promise<void>((resolve, reject) => {
-    deleteQueryBatch(query, resolve).catch(reject);
-  });
-};
-
-const deleteQueryBatch = async (
-  query: Query,
-  resolve: (value?: unknown) => void
-) => {
-  const snapshot = await query.get();
-
-  const batchSize = snapshot.size;
-  if (batchSize === 0) {
-    resolve();
-    return;
+  let snapshot = await query.get();
+  while (snapshot.size > 0) {
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+    snapshot = await query.get();
   }
-
-  const batch = db.batch();
-  snapshot.docs.forEach((doc) => {
-    batch.delete(doc.ref);
-  });
-  await batch.commit();
-
-  process.nextTick(() => {
-    deleteQueryBatch(query, resolve);
-  });
 };
-
 
 // Genkit Sample Flow
 const menuSuggestionFlow = ai.defineFlow(
