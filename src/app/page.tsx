@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,18 +6,13 @@ import { PrivateRoute } from '@/components/private-route';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/auth-context';
 import { SummaryCard } from '@/components/summary-card';
-import { TrendingDown, Wallet, PiggyBank, Scale, Lightbulb, TriangleAlert, BadgeCheck } from 'lucide-react';
+import { TrendingDown, Wallet, PiggyBank, Scale, BadgeCheck, TriangleAlert } from 'lucide-react';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { GoalsProgressCard } from '@/components/dashboard/goals-progress-card';
 import { FinancialHealthGauge } from '@/components/dashboard/financial-health-gauge';
 import { UpcomingPayments } from '@/components/dashboard/upcoming-payments';
 import { Card, CardContent } from '@/components/ui/card';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { ExpensesReviewDialog } from '@/components/dashboard/expenses-review-dialog';
-import { WelcomeTourDialog } from '@/components/welcome-tour-dialog';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { InteractiveTour } from '@/components/interactive-tour';
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);

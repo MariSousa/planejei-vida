@@ -1,16 +1,6 @@
 'use client';
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Rocket } from 'lucide-react';
 
 interface WelcomeTourDialogProps {
   open: boolean;

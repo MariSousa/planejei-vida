@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Joyride, { type Step } from 'react-joyride';
 
 interface InteractiveTourProps {
   run: boolean;
