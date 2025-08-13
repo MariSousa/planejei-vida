@@ -1,9 +1,12 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye } from 'lucide-react';
 import type { Income, Expense, MonthlyPlanItem, Goal, Advice, Investment, Debt } from '@/types';
+
+type ReportData = Income | Expense | MonthlyPlanItem | Goal | Advice | Investment | Debt;
 
 interface ReportsDownloaderProps {
   income: Income[];
@@ -17,8 +20,8 @@ interface ReportsDownloaderProps {
 
 type ReportType = 'income' | 'expenses' | 'monthlyPlanItems' | 'goals' | 'advices' | 'investments' | 'debts';
 
-const getReportTitle = (type: ReportType): string => {
-  const titles = {
+const getReportTitle = (type: string): string => {
+  const titles: { [key: string]: string } = {
       income: 'Relatório de Ganhos',
       expenses: 'Relatório de Gastos',
       monthlyPlanItems: 'Relatório de Planejamento Mensal',
@@ -27,10 +30,10 @@ const getReportTitle = (type: ReportType): string => {
       investments: 'Relatório de Investimentos',
       debts: 'Relatório de Compromissos',
   };
-  return titles[type];
+  return titles[type] || 'Relatório';
 }
 
-const getHeaders = (data: any[], type: ReportType): string[] => {
+const getHeaders = (data: ReportData[], type: string): string[] => {
   if (!data || data.length === 0) return [];
 
   const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
@@ -75,7 +78,7 @@ const getHeaders = (data: any[], type: ReportType): string[] => {
   return orderedHeaders.map(key => headerTranslations[key] || key);
 };
 
-const getBodyRows = (data: any[], type: ReportType): string[][] => {
+const getBodyRows = (data: ReportData[], type: string): string[][] => {
     if (!data || data.length === 0) return [];
     
     const ignoredFields = ['id', 'goalId', 'date', 'lastPaymentDate'];
@@ -90,13 +93,13 @@ const getBodyRows = (data: any[], type: ReportType): string[][] => {
 
     return data.map(item =>
         orderedHeaders.map(header => {
-            const value = (item as any)[header];
+            const value = (item as { [key: string]: string | number | null | undefined })[header];
             if (typeof value === 'number' && ['amount', 'targetAmount', 'currentAmount', 'yieldRate', 'monthlyPaymentGoal', 'originalAmount', 'remainingAmount'].includes(header)) {
                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
             }
             if (['date', 'dueDate', 'lastPaymentDate', 'startDate'].includes(header) && value) {
                 try {
-                    return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    return new Date(value as string).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 } catch (e) {
                     return String(value);
                 }
@@ -110,7 +113,7 @@ const getBodyRows = (data: any[], type: ReportType): string[][] => {
     );
 };
 
-export const generateReportHtml = (type: ReportType, data: any[]) => {
+export const generateReportHtml = (type: string, data: ReportData[]) => {
   const title = getReportTitle(type);
   const headers = getHeaders(data, type);
   const rows = getBodyRows(data, type);

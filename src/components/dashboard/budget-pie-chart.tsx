@@ -2,7 +2,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts';
+import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface BudgetPieChartProps {
     totalIncome: number;
@@ -23,12 +24,12 @@ export function BudgetPieChart({ totalIncome, totalNecessities, totalWants }: Bu
         { name: 'Poupança', value: savings, color: 'hsl(var(--chart-3))' },
     ];
     
-    const CustomTooltip = ({ active, payload }: any) => {
+    const CustomTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
         if (active && payload && payload.length) {
           return (
             <div className="p-2 bg-background/80 border rounded-md shadow-lg">
               <p className="font-bold">{`${payload[0].name}`}</p>
-              <p className="text-sm">{`${formatCurrency(payload[0].value)}`}</p>
+              <p className="text-sm">{`${formatCurrency(payload[0].value as number)}`}</p>
             </div>
           );
         }

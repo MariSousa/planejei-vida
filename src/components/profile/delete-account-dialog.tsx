@@ -21,6 +21,8 @@ import { Label } from '../ui/label';
 import { Loader2 } from 'lucide-react';
 import { generateReportHtml } from '../reports-downloader';
 import type { useFinancials } from '@/hooks/use-financials';
+import { FirebaseError } from 'firebase/app';
+import { Advice, Debt, Expense, Goal, Income, Investment, MonthlyPlanItem } from '@/types';
 
 interface DeleteAccountDialogProps {
     financials: ReturnType<typeof useFinancials>;
@@ -74,8 +76,8 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
         <body>
     `;
 
-    const generateSingleReportHtml = (type: any) => {
-        const dataMap: any = {
+    const generateSingleReportHtml = (type: string) => {
+        const dataMap: { [key: string]: (Income | Expense | MonthlyPlanItem | Goal | Advice | Investment | Debt)[] } = {
             reportIncome: financials.reportIncome,
             reportExpenses: financials.reportExpenses,
             reportMonthlyPlanItems: financials.reportMonthlyPlanItems,
@@ -116,15 +118,16 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
         await deleteUserAccount();
         console.log("performDelete: deleteUserAccount concluída."); // Adicionado
         // Redirection will be handled by auth context
-    } catch (error: any) {
+    } catch (error) {
          console.log("performDelete: Erro capturado."); // Adicionado
-        if (error.code === 'auth/requires-recent-login') {
+        if (error instanceof FirebaseError && error.code === 'auth/requires-recent-login') {
             console.log("performDelete: Erro auth/requires-recent-login. Indo para o passo 3."); // Adicionado
             setStep(3); // Go to reauthentication step
         } else {
              console.error("performDelete: Erro desconhecido:", error); // Adicionado para capturar outros erros
-            toast({ title: 'Erro ao Deletar Conta', description: error.message, variant: 'destructive' });
-            handleOpenChange(false);
+             const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+             toast({ title: 'Erro ao Deletar Conta', description: errorMessage, variant: 'destructive' });
+             handleOpenChange(false);
         }
     } finally {
         console.log("performDelete: Finalizando."); // Adicionado
@@ -139,7 +142,7 @@ export function DeleteAccountDialog({ financials }: DeleteAccountDialogProps) {
     try {
       await reauthenticateUser(password);
       await performDelete(); // Retry deletion after successful reauthentication
-    } catch (error: any) {
+    } catch (error) {
       setError('A senha está incorreta. Tente novamente.');
       setIsLoading(false);
     }

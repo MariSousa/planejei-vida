@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
@@ -100,27 +101,29 @@ export default function LoginPage() {
         });
         setIsLogin(true); // Switch to login view after successful signup
       }
-    } catch (error: any) {
+    } catch (error) {
       let friendlyMessage = 'Ocorreu um erro. Tente novamente.';
       
-      switch (error.code) {
-        case 'auth/invalid-credential':
-        case 'auth/wrong-password':
-        case 'auth/user-not-found':
-            friendlyMessage = 'E-mail ou senha inválidos.';
-            break;
-        case 'auth/email-already-in-use':
-            friendlyMessage = 'Este e-mail já está em uso.';
-            break;
-        case 'auth/network-request-failed':
-             friendlyMessage = 'Erro de rede ou configuração. Verifique se o método de login por Email/Senha está ativo no console do Firebase.';
-             break;
-        case 'auth/permission-denied':
-            friendlyMessage = 'Permissão negada. A chave de API do Firebase pode ter sido suspensa. Verifique o console do Firebase.';
-            break;
-        default:
-            console.error("Firebase Auth Error:", error);
-            break;
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/invalid-credential':
+          case 'auth/wrong-password':
+          case 'auth/user-not-found':
+              friendlyMessage = 'E-mail ou senha inválidos.';
+              break;
+          case 'auth/email-already-in-use':
+              friendlyMessage = 'Este e-mail já está em uso.';
+              break;
+          case 'auth/network-request-failed':
+              friendlyMessage = 'Erro de rede ou configuração. Verifique se o método de login por Email/Senha está ativo no console do Firebase.';
+              break;
+          case 'auth/permission-denied':
+              friendlyMessage = 'Permissão negada. A chave de API do Firebase pode ter sido suspensa. Verifique o console do Firebase.';
+              break;
+          default:
+              console.error("Firebase Auth Error:", error);
+              break;
+        }
       }
       
       toast({
@@ -150,9 +153,9 @@ export default function LoginPage() {
             className: 'border-accent',
         });
         return true; // Indicate success to close dialog
-    } catch (error: any) {
+    } catch (error) {
         let friendlyMessage = 'Não foi possível enviar o e-mail. Tente novamente.';
-        if (error.code === 'auth/user-not-found') {
+        if (error instanceof FirebaseError && error.code === 'auth/user-not-found') {
             friendlyMessage = 'Nenhuma conta encontrada com este e-mail.';
         }
         setResetError(friendlyMessage);

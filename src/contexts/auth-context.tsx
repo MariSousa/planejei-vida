@@ -28,8 +28,8 @@ interface UserProfile {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<any>;
-  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string) => Promise<unknown>;
+  signIn: (email: string, password: string) => Promise<unknown>;
   logout: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;

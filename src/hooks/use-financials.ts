@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { type Income, type Expense, type MonthlyPlanItem, type Goal, type Advice, type Contribution, type CustomCategory, type Favorite, type Priority, type Status, type PlanItemType, type Investment, type Debt } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, runTransaction, where, getDocs, updateDoc, writeBatch, setDoc, getDoc, DocumentData } from 'firebase/firestore';
 import { addDays, isAfter, isBefore, startOfToday, format, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth } from 'date-fns';
 import { expenseCategoryGroups } from '@/lib/categories';
 
@@ -66,21 +66,20 @@ export const useFinancials = () => {
   useEffect(() => {
     if (user) {
       // Listener for non-monthly data (goals, advices, categories, favorites)
-      const collections = ['goals', 'advices', 'categories', 'favorites', 'investments', 'debts'];
-      const setters: any = {
-        goals: setGoals,
-        advices: setAdvices,
-        categories: setCustomCategories,
-        favorites: setFavorites,
-        investments: setInvestments,
-        debts: setDebts,
-      };
-
+      const collections: { name: string, setter: React.Dispatch<React.SetStateAction<DocumentData[]>> }[] = [
+        { name: 'goals', setter: setGoals as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+        { name: 'advices', setter: setAdvices as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+        { name: 'categories', setter: setCustomCategories as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+        { name: 'favorites', setter: setFavorites as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+        { name: 'investments', setter: setInvestments as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+        { name: 'debts', setter: setDebts as React.Dispatch<React.SetStateAction<DocumentData[]>> },
+      ];
+      
       const unsubscribes = collections.map(col => {
-        const q = query(collection(db, `users/${user.uid}/${col}`), orderBy('date', 'desc'));
+        const q = query(collection(db, `users/${user.uid}/${col.name}`), orderBy('date', 'desc'));
         return onSnapshot(q, (querySnapshot) => {
           const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setters[col](data);
+          col.setter(data);
         });
       });
       
@@ -195,7 +194,7 @@ export const useFinancials = () => {
   }, [user, reportMonth]);
 
 
-  const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: any, date = new Date()) => {
+  const addMonthlyDocWithDate = async (collectionName: 'income' | 'expenses', data: Omit<Income, 'id' | 'date'> | Omit<Expense, 'id' | 'date'>, date = new Date()) => {
       if (!user) return;
       const monthStr = format(date, 'yyyy-MM');
       const monthDocRef = doc(db, `users/${user.uid}/${collectionName}`, monthStr);
@@ -216,7 +215,7 @@ export const useFinancials = () => {
   }
 
   // Generic functions for collections not structured by month
-  const addDocToCollection = async (collectionName: string, data: any) => {
+  const addDocToCollection = async (collectionName: string, data: Omit<DocumentData, 'id' | 'date'>) => {
       if (!user) return;
       await addDoc(collection(db, `users/${user.uid}/${collectionName}`), {
           ...data,

@@ -71,10 +71,10 @@ function ProfilePageContent() {
             description: 'Seu nome foi alterado com sucesso.',
             className: 'border-accent'
         });
-    } catch (error: any) {
+    } catch (error) {
         toast({
             title: 'Erro ao Atualizar',
-            description: error.message || 'Não foi possível atualizar seu perfil.',
+            description: error instanceof Error ? error.message : 'Não foi possível atualizar seu perfil.',
             variant: 'destructive',
         });
     } finally {
@@ -92,7 +92,7 @@ function ProfilePageContent() {
             className: 'border-accent'
         });
         passwordForm.reset();
-    } catch (error: any) {
+    } catch (error) {
          toast({
             title: 'Erro ao Alterar Senha',
             description: 'Ocorreu um erro. Pode ser necessário fazer login novamente para alterar a senha.',
