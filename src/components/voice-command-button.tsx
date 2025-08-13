@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mic, Loader2, Frown, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseFinancialAction } from '@/ai/flows/universal-parser';
+import { parseFinancialAction, UniversalParserOutput } from '@/ai/flows/universal-parser';
 import { useFinancials } from '@/hooks/use-financials';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -31,7 +31,7 @@ export function VoiceCommandButton() {
   const [transcript, setTranscript] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const finalTranscriptRef = useRef('');
-  const recognitionRef = useRef<typeof window.SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { addExpense, addIncome, addGoal } = useFinancials();
   const { toast } = useToast();
 
@@ -78,7 +78,7 @@ export function VoiceCommandButton() {
       setStatus('processing');
       try {
         const referenceDate = format(new Date(), 'yyyy-MM-dd');
-        const result = await parseFinancialAction({ query: finalTranscript, referenceDate });
+        const result: UniversalParserOutput = await parseFinancialAction({ query: finalTranscript, referenceDate });
 
         if (result.action === 'error') {
           toast({ title: 'Não entendi direito', description: result.payload.message, variant: 'destructive' });
@@ -129,6 +129,7 @@ export function VoiceCommandButton() {
       }
     };
     
+    // @ts-ignore
     recognitionRef.current = recognition;
   }, [addExpense, addIncome, addGoal, toast]);
   
@@ -200,9 +201,9 @@ export function VoiceCommandButton() {
                     <div className="my-6 p-4 bg-muted rounded-lg w-full text-left">
                         <p className="text-sm font-medium">Por exemplo:</p>
                         <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
-                            <li>"gastei 50 reais no supermercado ontem"</li>
-                            <li>"recebi 1200 do meu salário hoje"</li>
-                            <li>"criar meta 'viagem' de 3000 reais"</li>
+                            <li>&quot;gastei 50 reais no supermercado ontem&quot;</li>
+                            <li>&quot;recebi 1200 do meu salário hoje&quot;</li>
+                            <li>&quot;criar meta &apos;viagem&apos; de 3000 reais&quot;</li>
                         </ul>
                     </div>
                 </div>

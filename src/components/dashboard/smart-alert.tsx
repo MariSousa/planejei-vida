@@ -41,7 +41,7 @@ export function SmartAlert({ totalWants, wantsBudget }: SmartAlertProps) {
              <TriangleAlert className="h-4 w-4 !text-yellow-600" />
              <AlertTitle className="text-yellow-900 font-bold">Atenção ao Orçamento</AlertTitle>
              <AlertDescription className="text-yellow-800">
-                Você já usou <strong>{percentageUsed.toFixed(0)}%</strong> do seu orçamento para "Desejos".
+                Você já usou <strong>{percentageUsed.toFixed(0)}%</strong> do seu orçamento para &quot;Desejos&quot;.
              </AlertDescription>
         </Alert>
     )
