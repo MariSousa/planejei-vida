@@ -95,7 +95,7 @@ export function AvatarSelector() {
               <ScrollArea className="h-64">
                 <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-4">
                   {group.icons.map(iconName => {
-                    // @ts-ignore
+                    // @ts-expect-error
                     const IconComponent = icons[iconName] || FallbackIcon;
                     return (
                       <Button

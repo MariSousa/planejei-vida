@@ -29,7 +29,7 @@ export function UserAvatar({ userName, photoURL, className }: UserAvatarProps) {
   
   if (isIconAvatar) {
     const iconName = photoURL.split(':')[1];
-    // @ts-ignore
+    // @ts-expect-error
     const IconComponent = icons[iconName] || FallbackIcon;
     return (
       <Avatar className={cn('bg-primary text-primary-foreground', className)}>
